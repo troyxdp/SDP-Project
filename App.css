@@ -1,0 +1,53 @@
+
+.container {
+  display: grid;
+  grid-template-columns: 1fr 0.5fr; /* Three columns: two flexible and one 200px wide */
+  height: 100vh;
+}
+
+.horizontal-panels {
+  display: grid;
+  grid-template-rows: 1fr 1fr; /* Two rows, each taking up 1/2 of the available height */
+}
+
+.top-panel {
+  background-color: #f2f2f2;
+  padding: 20px;
+}
+
+.bottom-panel {
+  background-color: #e0e0e0;
+  padding: 20px;
+}
+
+.tabs {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  border-bottom: 1px solid #333; /* Add a border at the bottom of the tabs */
+  padding-bottom: 10px; /* Add some space between the tabs and content */
+}
+
+.tabs button {
+  padding: 10px 20px;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.tabs button:hover {
+  background-color: #ddd;
+}
+
+.tab-content {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 18px;
+  color: #333;
+}
+
+ .vertical-panel {
+  background-color: #c8c8c8;
+  padding: 100px;
+} 
