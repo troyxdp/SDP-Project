@@ -6,6 +6,7 @@ import { BrowserRouter as Router, Routes, Route} from "react-router-dom";
 //import LoginPage from "./Pages/LoginPage";
 import ProfilePage from "./Pages/ProfilePage.js";
 import LoginPage from "./Pages/LoginPage.js";
+import RegistrationPage from './Pages/RegistrationPage';
 
 
 //INITIALIZE FIREBASE
@@ -16,9 +17,10 @@ function App() {
     <>
       <Router>
         <Routes>
-          <Route path = "/profilePage" component = {<ProfilePage/>} />
-          <Route path = "/loginPage" component = {<LoginPage/>} />
-          <Route path = "*" element = {<ProfilePage/>} />
+          <Route path = "/profilePage" element = {<ProfilePage/>} />
+          <Route path = "/loginPage" element = {<LoginPage/>} />
+          <Route path = "/registrationPage" element = {<RegistrationPage/>} />
+          <Route path = "*" element = {<LoginPage/>} />
         </Routes>
       </Router>
     </>
