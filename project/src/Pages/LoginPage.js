@@ -93,22 +93,25 @@ const LoginPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         console.log(email, pass);
-        try {
+        try 
+        {
             await signInWithEmailAndPassword(getAuth(),email,pass);
             setIsIncorrectDetails(false);
-        } catch(err) {
+            if(getAuth().currentUser != null)
+            {
+                sessionStorage.setItem('userEmail', email);
+                setIsIncorrectDetails(false);
+                navigate("/profilePage", {state : email});
+                window.location.reload(false);
+            }
+        } 
+        catch(err) 
+        {
             //alert("ERROR: Incorrect Password Enterred!");
             setIsIncorrectDetails(true);
+            console.log("Error - incorrect details enterred!");
         }
         //add comparison between submitted email and password and stored password;
-
-        // if(getAuth().currentUser!=null && !isIncorrectDetails){
-        if (true) { //SET TO TRUE FOR NOW SO THAT I CAN TEST NAVIGATION BETWEEN PAGES
-            sessionStorage.setItem('userEmail', email);
-            setIsIncorrectDetails(false);
-            navigate("/profilePage", {state : email});
-            window.location.reload(false);
-        }
         setEmail('');
         setPass('');
     }
