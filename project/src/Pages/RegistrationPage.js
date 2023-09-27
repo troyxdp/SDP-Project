@@ -6,18 +6,21 @@ import styled from "styled-components";
 //import StyledButton from "../components/styledButton";
 //import logo from '../logo.png';
 import {getAuth,createUserWithEmailAndPassword} from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, collection, addDoc } from "firebase/firestore";
 import { db } from '../firebase-config/firebase';
 
+import User from '../classes/User';
+import Performer from '../classes/Performer'; 
+import Event from '../classes/Event'; 
+import Review from '../classes/Review'; 
+import EventPlanner from '../classes/EventPlanner';
+
 // Check for one instance before @; Check for @; Check for "wits.ac.za" or "students.wits.ac.za".
-const USER_REGEX = /^[\w-\.]+@([\w-]+\.)?(wits\.ac\.za)$/; //Only Wits emails allowed.
+const USER_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+(\.[a-zA-Z0-9.-]+){0,3}$/;
 // Check for 1 lowercase, 1 uppercase, 1 number and 1 special character; Must be between 8 and 24 characters.
 const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%]).{8,24}$/;
-
 // Check that the text is one or more Regex words.
 const TEXT_REGEX = /^\w+([ -]+\w+)*$/;
-// Check that the pronouns are in 'word/word' format.
-const PRONOUNS_REGEX = /^(\w+)\/(\w+)$/;
 // Check that the bio contains words, numbers and only the special characters ',', '.' and '-' and that it is between 1 and 64 characters.
 const BIO_REGEX = /^[a-zA-Z0-9,.-\s!]{1,280}$/;
 
@@ -80,9 +83,47 @@ const StyledParagraph = styled.p`
 
 
 const RegistrationPage = () => {
-    
     const userRef = useRef();
     const errRef = useRef();
+    
+    let date = new Date();
+
+    const dummyEventData = {
+        creatingUserEmail : "troydp7@gmail.com",
+        eventName : "Afrobiza",
+        eventType : "Event",
+        date : [date],
+        venue : "Maracana",
+        eventDescription : "Afro Tech and Afro House event",
+        genres : ["Afro Tech", "Afro House", "Amapiano"]
+    };
+
+    const dummyReview = {
+        userEmail : "troydp7@gmail.com",
+        rating : 10,
+        comment : "Great DJ! Played very well and played some BANGING tunes!"
+    };
+
+    const dummyEventPlannerInfo = {
+        userEmail : "troydp8@gmail.com",
+        types : ["Events", "Rave"],
+        pastEvents : [],
+        upcomingEvents : [dummyEventData],
+        links : ["https://www.instagram.com/troyxdp_/"],
+        media : []
+    };
+
+    const dummyPerformerInfo = {
+        userEmail : "troydp8@gmail.com",
+        type : "DJ",
+        genres : ["House", "Techno", "Hip Hop"],
+        equipment : ["DDJ-400"],
+        hourlyRate : 350.0,
+        pastEvents : [],
+        upcomingEvents : [dummyEventData],
+        links : ["https://www.instagram.com/troyxdp_/"],
+        media : []
+    };
 
     //Consts for Email
     const [user,setUser] = useState('');
@@ -105,14 +146,9 @@ const RegistrationPage = () => {
     const [fullNameFocus, setFullNameFocus] = useState(false);
 
     //Consts for Pronouns
-    const [pronouns,setPronouns] = useState('');
-    const [validPronouns, setValidPronouns] = useState(false);
-    const [pronounsFocus, setPronounsFocus] = useState(false);
-
-    //Consts for Qualifications
-    const [qualifications,setQualifications] = useState('');
-    const [validQualifications, setValidQualifications] = useState(false);
-    const [qualificationFocus, setQualificationFocus] = useState(false);
+    const [location,setLocation] = useState('');
+    const [validLocation, setValidLocation] = useState(false);
+    const [locationFocus, setLocationFocus] = useState(false);
 
     //Consts for Bio
     const [bio,setBio] = useState('');
@@ -127,7 +163,7 @@ const RegistrationPage = () => {
         userRef.current.focus();
     }, [])
 
-    // useEffect Hook: Validate username via USER_REGEX.
+    // useEffect Hook: Validate username via USER_REGEX.     -- DON'T NEED
     useEffect(() => {
         const result = USER_REGEX.test(user);
         console.log(result);
@@ -154,22 +190,6 @@ const RegistrationPage = () => {
         setValidFullName(result);
     }, [fullName])
 
-    // useEffect Hook: Validate pronouns via PRONOUNS_REGEX.
-    useEffect(() => {
-        const result = PRONOUNS_REGEX.test(pronouns);
-        console.log(result);
-        console.log(pronouns);
-        setValidPronouns(result);
-    }, [pronouns])
-
-    // useEffect Hook: Validate qualifications via TEXT_REGEX.
-    useEffect(() => {
-        const result =TEXT_REGEX.test(qualifications);
-        console.log(result);
-        console.log(qualifications);
-        setValidQualifications(result);
-    }, [qualifications])
-
     // useEffect Hook: Validate bio via BIO_REGEX.
     useEffect(() => {
         const result =BIO_REGEX.test(bio);
@@ -182,58 +202,88 @@ const RegistrationPage = () => {
     // the user fixing the error).
     useEffect(() => {
         setErrMsg('');
-    }, [user, pwd, matchPwd, fullName, pronouns, qualifications, bio])
+    }, [user, pwd, matchPwd, fullName, location, bio])
 
     const navigate = useNavigate();
     const HandleSubmit = async (e) => {
         e.preventDefault();
+
         // CHecks in case user enables the submit button via JS hack:
         const v1 = USER_REGEX.test(user);
         const v2 = PWD_REGEX.test(pwd);
         const v3 = TEXT_REGEX.test(fullName);
-        const v4 = PRONOUNS_REGEX.test(pronouns);
-        const v5 = TEXT_REGEX.test(qualifications);
         const v6 = BIO_REGEX.test(bio);
         
         //Display error if any validation criteria not met
-        if (!v1 || !v2 || !v3 || !v4 || !v5 || !v6) {
+        if (!v1 || !v2 || !v3 || !v6) {
             setErrMsg("Invalid Entry");
             return;
         } // End of precaution.
-        console.log(user, pwd, fullName, pronouns, qualifications);
+
+        // const usrData = {
+        //     email : user,
+        //     fullName : fullName,
+        //     location : location,
+        //     bio : bio,
+        //     profilePic : null,
+
+        //     eventPlannerInfo : dummyEventPlannerInfo,
+        //     performerInfo : dummyPerformerInfo,
+        //     groupMemberships : [],
+        //     friends : [],
+        //     reviews : [dummyReviewData],
+
+        //     isPerformer : true,
+        //     isEventPlanner : true,
+        //     isInGroup : false
+        // };
+
+        const usrData = {
+            email : user,
+            fullName : fullName,
+            location : location,
+            bio : bio,
+            profilePic : null,
+            eventPlannerInfo : dummyEventPlannerInfo,
+            isPerformer : true,
+            isEventPlanner : true,
+            isInGroup : false
+        };
+
         //Create user in Firebase Authentication  
-        await createUserWithEmailAndPassword(getAuth(),user,pwd);
+        try
+        {
+            await createUserWithEmailAndPassword(getAuth(),user,pwd);
+        }
+        catch (err)
+        {
+            console.log(err);
+        }
         
-        //Const for reference to User table
-        const userDocRef = doc(db, "users", user);
-        //Add user if they are a moderator
-        if(user.indexOf("student") === -1){
-            const userData = {
-            email: user,
-            name: fullName,
-            pronouns: pronouns,
-            qualifications: qualifications,
-            bio: bio,
-            moderator: true
-            };
-            await setDoc(userDocRef, userData);
-        }else{
-            //Add user if they are not a moderator
-            const userData = {
-            email: user,
-            name: fullName,
-            pronouns: pronouns,
-            qualifications: qualifications,
-            bio: bio,
-            moderator: false
-            };
-            await setDoc(userDocRef, userData);
+        
+        //try add the user to the firestore database
+        try
+        {
+            const userDocRef = doc(db, "users", usrData.email);
+            await setDoc(userDocRef, usrData);
+            //const docRef = await addDoc(collection(db, "users"), usrData);
+            console.log("ID: " + userDocRef.id);
+
+            const performerInfoCollection = collection(db, "users", userDocRef.id, "performerInfo");
+            await addDoc(performerInfoCollection, dummyPerformerInfo);
+
+            const reviewCollection = collection(db, "users", userDocRef.id, "reviews");
+            await addDoc(reviewCollection, dummyReview);
+        }
+        catch (err)
+        {
+            console.log(err);
         }
         
         //Declare the current user's email in the session storage
-        sessionStorage.setItem('userEmail', user);
+        sessionStorage.setItem('userEmail', usrData.email);
         //Navigate to the questions page
-        navigate("/questionsPage", {state : user});
+        navigate("/profilePage", {state : user});
         window.location.reload(false);
     }
     
@@ -244,6 +294,7 @@ const RegistrationPage = () => {
             {/* Render the Header */}
             <StyledHeader>Register</StyledHeader>
             <StyledForm onSubmit={HandleSubmit}>
+            {/* <StyledForm> */}
                 {/* Input for the Email field */}
                 <label htmlFor="username">
                     Email: 
@@ -303,8 +354,8 @@ const RegistrationPage = () => {
                 </p>
 
                 {/* Input for the Pronouns field */}
-                <label htmlFor="pronouns">
-                    Pronouns: 
+                <label htmlFor="location">
+                    Location: 
                     {/* Display Tick or Cross based on validation criteria */}
                     {/* <span style={validPronouns ? {} : {display: "none"}}>
                         <FontAwesomeIcon icon={faCheck} />
@@ -314,50 +365,20 @@ const RegistrationPage = () => {
                     </span> */}
                 </label>
                 <StyledInput 
-                    placeholder="EG: They/Them"
                     type="text"
-                    id="pronouns"
+                    id="location"
                     //ref={userRef}
                     autoComplete="off"
-                    onChange={(e) => setPronouns(e.target.value)}
+                    onChange={(e) => setLocation(e.target.value)}
                     required
-                    aria-invalid={validPronouns ? "false" : "true"}
+                    aria-invalid={validLocation ? "false" : "true"}
                     aria-describedby="uidnote"
-                    onFocus={() => setPronounsFocus(true)}
-                    onBlur={() => setPronounsFocus(false)}
+                    onFocus={() => setLocationFocus(true)}
+                    onBlur={() => setLocationFocus(false)}
                 />
-                <p id="uidnote" style={pronounsFocus && pronouns && !validPronouns ? {} : {display: "none"}}>
+                <p id="uidnote" style={locationFocus && location && !validLocation ? {} : {display: "none"}}>
                     {/* <FontAwesomeIcon icon={faInfoCircle} /> */}
-                    Please enter your pronouns. <br />
-                    Use the format of they/them.
-                </p>
-
-                {/* Input for the Qualifications field */}
-                <label htmlFor="qualifications">
-                    Qualifications: 
-                    {/* Display Tick or Cross based on validation criteria */}
-                    {/* <span style={validQualifications ? {} : {display: "none"}}>
-                        <FontAwesomeIcon icon={faCheck} />
-                    </span>
-                    <span style={!validQualifications || !qualifications ? {} : {display: "none"}}>
-                        <FontAwesomeIcon icon={faTimes} />
-                    </span> */}
-                </label>
-                <StyledInput 
-                    type="text"
-                    id="qualifications"
-                    //ref={userRef}
-                    autoComplete="off"
-                    onChange={(e) => setQualifications(e.target.value)}
-                    required
-                    aria-invalid={validQualifications ? "false" : "true"}
-                    aria-describedby="uidnote"
-                    onFocus={() => setQualificationFocus(true)}
-                    onBlur={() => setQualificationFocus(false)}
-                />
-                <p id="uidnote" style={qualificationFocus && qualifications && !validQualifications ? {} : {display: "none"}}>
-                    {/* <FontAwesomeIcon icon={faInfoCircle} /> */}
-                    Please enter your most recent qualifications. <br />
+                    Please enter what area you operate from. <br />
                 </p>
 
                 {/* Input for the Bio field */}
@@ -452,7 +473,8 @@ const RegistrationPage = () => {
                 </p>
 
                 {/* Button to Register, which is disabled if any validation criteria is not met */}
-                <StyledButton disabled={!validName || !validPwd || !validMatch || !validFullName || !validPronouns || !validQualifications || !validBio}>
+                {/* <StyledButton disabled={!validName || !validPwd || !validMatch || !validFullName || !validPronouns || !validQualifications || !validBio}> */}
+                <StyledButton onClick={HandleSubmit}>
                     Sign Up
                 </StyledButton>
             </StyledForm>
