@@ -96,7 +96,6 @@ const LoginPage = () => {
         try 
         {
             await signInWithEmailAndPassword(getAuth(),email,pass);
-            setIsIncorrectDetails(false);
             if(getAuth().currentUser != null)
             {
                 sessionStorage.setItem('userEmail', email);

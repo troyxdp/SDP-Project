@@ -77,7 +77,7 @@ const ProfilePage = () => {
     let navigate = useNavigate();
 
     //variable to be used to determine what to display for profile picture
-    let isProfilePic = false;
+    let isProfilePic = true;
     //let isProfilePic = true; //used to allow display of dummy profile pic during early stages of project
 
     //dummy data - to be replaced by actual data from the firestore database
