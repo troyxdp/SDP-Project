@@ -15,6 +15,8 @@ import Event from '../classes/Event';
 import Review from '../classes/Review'; 
 import EventPlanner from '../classes/EventPlanner';
 
+import {PerformerDetailsForm} from "../components/PerformerDetailsForm";
+
 // Check for one instance before @; Check for @; Check for "wits.ac.za" or "students.wits.ac.za".
 const USER_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+(\.[a-zA-Z0-9.-]+){0,3}$/;
 // Check for 1 lowercase, 1 uppercase, 1 number and 1 special character; Must be between 8 and 24 characters.
@@ -81,7 +83,6 @@ const StyledParagraph = styled.p`
     margin-top: 10px;
 `;
 
-
 const RegistrationPage = () => {
     const userRef = useRef();
     const errRef = useRef();
@@ -115,6 +116,7 @@ const RegistrationPage = () => {
 
     const dummyPerformerInfo = {
         userEmail : "troydp8@gmail.com",
+        name : "Algorhythmic",
         type : "DJ",
         genres : ["House", "Techno", "Hip Hop"],
         equipment : ["DDJ-400"],
@@ -162,7 +164,6 @@ const RegistrationPage = () => {
     useEffect(() => {
         userRef.current.focus();
     }, [])
-
     // useEffect Hook: Validate username via USER_REGEX.     -- DON'T NEED
     useEffect(() => {
         const result = USER_REGEX.test(user);
@@ -170,7 +171,6 @@ const RegistrationPage = () => {
         console.log(user);
         setValidName(result);
     }, [user])
-
     // useEffect Hook: Validate password against PWD_REGEX.
     useEffect(() => {
         const result = PWD_REGEX.test(pwd);
@@ -181,7 +181,6 @@ const RegistrationPage = () => {
         const match = pwd === matchPwd;
         setValidMatch(match);
     }, [pwd, matchPwd])
-
     // useEffect Hook: Validate full name via TEXT_REGEX.
     useEffect(() => {
         const result =TEXT_REGEX.test(fullName);
@@ -189,7 +188,6 @@ const RegistrationPage = () => {
         console.log(fullName);
         setValidFullName(result);
     }, [fullName])
-
     // useEffect Hook: Validate bio via BIO_REGEX.
     useEffect(() => {
         const result =BIO_REGEX.test(bio);
@@ -197,9 +195,7 @@ const RegistrationPage = () => {
         console.log(bio);
         setValidBio(result);
     }, [bio])
-
-    // Clear error message every time user, pwd, matchPwd, fullName, pronouns, qualifications or bio is changed (to account for-
-    // the user fixing the error).
+    // Clear error message every time user, pwd, matchPwd, fullName, pronouns, qualifications or bio is changed (to account for the user fixing the error).
     useEffect(() => {
         setErrMsg('');
     }, [user, pwd, matchPwd, fullName, location, bio])
@@ -208,7 +204,7 @@ const RegistrationPage = () => {
     const HandleSubmit = async (e) => {
         e.preventDefault();
 
-        // CHecks in case user enables the submit button via JS hack:
+        // Checks in case user enables the submit button via JS hack:
         const v1 = USER_REGEX.test(user);
         const v2 = PWD_REGEX.test(pwd);
         const v3 = TEXT_REGEX.test(fullName);
@@ -220,24 +216,6 @@ const RegistrationPage = () => {
             return;
         } // End of precaution.
 
-        // const usrData = {
-        //     email : user,
-        //     fullName : fullName,
-        //     location : location,
-        //     bio : bio,
-        //     profilePic : null,
-
-        //     eventPlannerInfo : dummyEventPlannerInfo,
-        //     performerInfo : dummyPerformerInfo,
-        //     groupMemberships : [],
-        //     friends : [],
-        //     reviews : [dummyReviewData],
-
-        //     isPerformer : true,
-        //     isEventPlanner : true,
-        //     isInGroup : false
-        // };
-
         const usrData = {
             email : user,
             fullName : fullName,
@@ -245,8 +223,8 @@ const RegistrationPage = () => {
             bio : bio,
             profilePic : null,
             eventPlannerInfo : dummyEventPlannerInfo,
-            isPerformer : true,
-            isEventPlanner : true,
+            isPerformer : false,
+            isEventPlanner : false,
             isInGroup : false
         };
 
@@ -258,8 +236,8 @@ const RegistrationPage = () => {
         catch (err)
         {
             console.log(err);
+            return;
         }
-        
         
         //try add the user to the firestore database
         try
@@ -268,22 +246,17 @@ const RegistrationPage = () => {
             await setDoc(userDocRef, usrData);
             //const docRef = await addDoc(collection(db, "users"), usrData);
             console.log("ID: " + userDocRef.id);
-
-            const performerInfoCollection = collection(db, "users", userDocRef.id, "performerInfo");
-            await addDoc(performerInfoCollection, dummyPerformerInfo);
-
-            const reviewCollection = collection(db, "users", userDocRef.id, "reviews");
-            await addDoc(reviewCollection, dummyReview);
         }
         catch (err)
         {
             console.log(err);
+            return;
         }
         
         //Declare the current user's email in the session storage
         sessionStorage.setItem('userEmail', usrData.email);
         //Navigate to the questions page
-        navigate("/profilePage", {state : user});
+        navigate("/detailsPage", {state : {email : user}});
         window.location.reload(false);
     }
     
@@ -352,6 +325,7 @@ const RegistrationPage = () => {
                     {/* <FontAwesomeIcon icon={faInfoCircle} /> */}
                     Please enter your full name. <br />
                 </p>
+                
 
                 {/* Input for the Pronouns field */}
                 <label htmlFor="location">
@@ -472,8 +446,6 @@ const RegistrationPage = () => {
                     Must match the first password input.
                 </p>
 
-                {/* Button to Register, which is disabled if any validation criteria is not met */}
-                {/* <StyledButton disabled={!validName || !validPwd || !validMatch || !validFullName || !validPronouns || !validQualifications || !validBio}> */}
                 <StyledButton onClick={HandleSubmit}>
                     Sign Up
                 </StyledButton>

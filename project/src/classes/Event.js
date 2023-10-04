@@ -6,7 +6,7 @@ class Event {
         this.eventDates = dates; //Date[]
         this.eventVenue = venue; //string
         this.eventDescription = eventDescription; //string
-        this.genres = genres;
+        this.genres = genres; //string
         
         this.eventPlannerEmails = [creatingUserEmail]; //string
         this.performerEmails = []; //string
