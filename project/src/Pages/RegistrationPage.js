@@ -1,10 +1,8 @@
 import { useRef, useState, useEffect } from "react";
 import { useNavigate} from "react-router-dom";
 import styled from "styled-components";
-// import { faCheck, faTimes, faInfoCircle } from "@fortawesome/free-solid-svg-icons";
-// import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-//import StyledButton from "../components/styledButton";
-//import logo from '../logo.png';
+import { faCheck, faTimes, faInfoCircle } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {getAuth,createUserWithEmailAndPassword} from "firebase/auth";
 import { doc, setDoc, collection, addDoc } from "firebase/firestore";
 import { db } from '../firebase-config/firebase';
@@ -82,6 +80,11 @@ const StyledParagraph = styled.p`
     display: block;
     margin-top: 10px;
 `;
+
+/*
+    TO-DO:
+    - Add error messages for when email address is already in use
+*/
 
 const RegistrationPage = () => {
     const userRef = useRef();
@@ -222,7 +225,7 @@ const RegistrationPage = () => {
             location : location,
             bio : bio,
             profilePic : null,
-            eventPlannerInfo : dummyEventPlannerInfo,
+            eventPlannerInfo : null,
             isPerformer : false,
             isEventPlanner : false,
             isInGroup : false
@@ -271,13 +274,10 @@ const RegistrationPage = () => {
                 {/* Input for the Email field */}
                 <label htmlFor="username">
                     Email: 
-                    {/* Display Tick or Cross based on validation criteria */}
-                    {/* <span style={validName ? {} : {display: "none"}}>
+                    {/* Display tick if name meets validation criteria */}
+                    <span style={validName ? {} : {display: "none"}}>
                         <FontAwesomeIcon icon={faCheck} />
                     </span>
-                    <span style={!validName || !user ? {} : {display: "none"}}>
-                        <FontAwesomeIcon icon={faTimes} />
-                    </span> */}
                 </label>
                 <StyledInput 
                     type="text"
@@ -292,7 +292,7 @@ const RegistrationPage = () => {
                     onBlur={() => setUserFocus(false)}
                 />
                 <p id="uidnote" style={userFocus && user && !validName ? {} : {display: "none"}}>
-                    {/* <FontAwesomeIcon icon={faInfoCircle} /> */}
+                    <FontAwesomeIcon icon={faInfoCircle} />
                     Only wits emails allowed. <br />
                     Must begin with a letter or number. <br />
                     Letter, numbers, special characters and dots allowed.
@@ -301,13 +301,10 @@ const RegistrationPage = () => {
                 {/* Input for the Full Name field */}
                 <label htmlFor="fullname">
                     Full Name: 
-                    {/* Display Tick or Cross based on validation criteria */}
-                    {/* <span style={validFullName ? {} : {display: "none"}}>
+                    {/* Display tick based on validation criteria */}
+                    <span style={validFullName ? {} : {display: "none"}}>
                         <FontAwesomeIcon icon={faCheck} />
                     </span>
-                    <span style={!validFullName || !fullName ? {} : {display: "none"}}>
-                        <FontAwesomeIcon icon={faTimes} />
-                    </span> */}
                 </label>
                 <StyledInput 
                     type="text"
@@ -322,7 +319,7 @@ const RegistrationPage = () => {
                     onBlur={() => setFullNameFocus(false)}
                 />
                 <p id="uidnote" style={fullNameFocus && fullName && !validFullName ? {} : {display: "none"}}>
-                    {/* <FontAwesomeIcon icon={faInfoCircle} /> */}
+                    <FontAwesomeIcon icon={faInfoCircle} />
                     Please enter your full name. <br />
                 </p>
                 
@@ -330,13 +327,10 @@ const RegistrationPage = () => {
                 {/* Input for the Pronouns field */}
                 <label htmlFor="location">
                     Location: 
-                    {/* Display Tick or Cross based on validation criteria */}
-                    {/* <span style={validPronouns ? {} : {display: "none"}}>
+                    {/* Display tick based on validation criteria */}
+                    <span style={validLocation ? {} : {display: "none"}}>
                         <FontAwesomeIcon icon={faCheck} />
                     </span>
-                    <span style={!validPronouns || !pronouns ? {} : {display: "none"}}>
-                        <FontAwesomeIcon icon={faTimes} />
-                    </span> */}
                 </label>
                 <StyledInput 
                     type="text"
@@ -351,20 +345,17 @@ const RegistrationPage = () => {
                     onBlur={() => setLocationFocus(false)}
                 />
                 <p id="uidnote" style={locationFocus && location && !validLocation ? {} : {display: "none"}}>
-                    {/* <FontAwesomeIcon icon={faInfoCircle} /> */}
+                    <FontAwesomeIcon icon={faInfoCircle} />
                     Please enter what area you operate from. <br />
                 </p>
 
                 {/* Input for the Bio field */}
                 <label htmlFor="bio">
                     Bio: 
-                    {/* Display Tick or Cross based on validation criteria */}
-                    {/* <span style={validBio ? {} : {display: "none"}}>
+                    {/* Display tick based on validation criteria */}
+                    <span style={validBio ? {} : {display: "none"}}>
                         <FontAwesomeIcon icon={faCheck} />
                     </span>
-                    <span style={!validBio || !bio ? {} : {display: "none"}}>
-                        <FontAwesomeIcon icon={faTimes} />
-                    </span> */}
                 </label>
                 <StyledInput 
                     type="text"
@@ -379,7 +370,7 @@ const RegistrationPage = () => {
                     onBlur={() => setBioFocus(false)}
                 />
                 <p id="uidnote" style={bioFocus && bio && !validBio ? {} : {display: "none"}}>
-                    {/* <FontAwesomeIcon icon={faInfoCircle} /> */}
+                    <FontAwesomeIcon icon={faInfoCircle} />
                     Please enter your bio. <br />
                     Must be 1-280 characters. <br />
                     Special characters allowed: .,-!
@@ -389,12 +380,9 @@ const RegistrationPage = () => {
                 <label htmlFor="password">
                     Password: 
                     {/* Display Tick or Cross based on validation criteria */}
-                    {/* <span style={validPwd ? {} : {display: "none"}}>
+                    <span style={validPwd ? {} : {display: "none"}}>
                         <FontAwesomeIcon icon={faCheck} />
                     </span>
-                    <span style={!validPwd || !pwd ? {} : {display: "none"}}>
-                        <FontAwesomeIcon icon={faTimes} />
-                    </span> */}
                 </label>
                 <StyledInput 
                     type="password"
@@ -422,13 +410,6 @@ const RegistrationPage = () => {
                 {/* Input for the Confirm Password field */}
                 <label htmlFor="confirm_pwd">
                     Confirm Password: 
-                    {/* Display Tick or Cross based on validation criteria */}
-                    {/* <span style={validMatch && matchPwd ? {} : {display: "none"}}>
-                        <FontAwesomeIcon icon={faCheck} />
-                    </span>
-                    <span style={!validPwd || !matchPwd ? {} : {display: "none"}}>
-                        <FontAwesomeIcon icon={faTimes} />
-                    </span> */}
                 </label>
                 <StyledInput 
                     type="password"
@@ -442,7 +423,7 @@ const RegistrationPage = () => {
                     onBlur={() => setMatchFocus(false)}
                 />
                 <p id="confirmnote" style={matchFocus && !validMatch ? {} : {display: "none"}}>
-                    {/* <FontAwesomeIcon icon={faInfoCircle} /> */}
+                    <FontAwesomeIcon icon={faInfoCircle} />
                     Must match the first password input.
                 </p>
 
