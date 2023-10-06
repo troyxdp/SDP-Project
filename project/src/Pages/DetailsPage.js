@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation} from "react-router-dom";
 import styled from "styled-components";
-import { getAuth,signInWithEmailAndPassword } from "firebase/auth";
-import {PerformerDetailsForm} from "../components/PerformerDetailsForm";
+import { PerformerDetailsForm } from "../components/PerformerDetailsForm";
+import { EventPlannerDetailsForm } from "../components/EventPlannerDetailsForm";
 import { doc, setDoc, collection, addDoc, getDoc } from "firebase/firestore";
 import { db } from '../firebase-config/firebase';
 
@@ -33,6 +33,23 @@ const StyledButton = styled.button`
     color: white;
     margin-top: 10px;
 `;
+const DisplayOptionContainer = styled.div`
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    margin-top: 10px;
+`;
+const DisplayFormButton = styled.button`
+    display: flex;
+    background: #fff;
+    border: 0px solid #fff;
+    color: black;
+    height: 20px;
+    width: 20px;
+    font-size: 20px;
+    margin-right: 2px;
+`;
+
 
 
 /*
@@ -40,9 +57,11 @@ const StyledButton = styled.button`
     - Add error messages for invalid details enterred
     - Add the functionality of being able to have multiple forms and multiple submissions
     - See if there is a way to add multiple documents at the same time instead of adding each performer type details one at a time
+    - Add submission of equipment item or link in AdderContainer on the pressing of the enter key
 */
 
 export default function DetailsPage() {
+    //fetch email from session storage
     let email = sessionStorage.getItem("userEmail");
 
     //useState to store user data fetched from database that has already been added
@@ -52,12 +71,16 @@ export default function DetailsPage() {
     const [isPerformer, setIsPerformer] = useState(false);
     const [performerDetails, setPerformerDetails] = useState([]);
     const [displayPerformerForm, setDisplayPerformerForm] = useState(false);
+    const [displayAddPerformerButton, setDisplayAddPerformerButton] = useState(false);
 
     //useState for event planner details
+    const [isEventPlanner, setIsEventPlanner] = useState(false);
     const [displayEventPlannerForm, setDisplayEventPlannerForm] = useState(false);
+    const [eventPlannerDetails, setEventPlannerDetails] = useState(null);
 
     //useState to check that all of the details enterred are valid
     const [isAllValidDetails, setIsAllValidDetails] = useState(true);
+    const [isTypeSelected, setIsTypeSelected] = useState(true);
 
     //useEffect used to fetch user data
     useEffect(() => {
@@ -65,6 +88,7 @@ export default function DetailsPage() {
             const docRef = doc(db, "users", email);
             const docSnap = await getDoc(docRef);
     
+            //set user data in useState to that which has been fetched from the firestore database
             let userData = {
                 email : email,
                 fullName : docSnap.data().fullName,
@@ -76,12 +100,12 @@ export default function DetailsPage() {
                 isEventPlanner : docSnap.data().isEventPlanner,
                 isInGroup : docSnap.data().isInGroup
             }
-    
             setUser(userData);
         };
         getUserData();
     }, []);
 
+    //callback functions called by the PerformerDetails and EventPlannerDetails forms to get their data
     const onSubmitPerformerDetails = (name, type, genres, equipment, hourlyRate, links, media) => {
         let currPerformerDetails = performerDetails;
 
@@ -122,26 +146,74 @@ export default function DetailsPage() {
         } 
         setPerformerDetails(currPerformerDetails);
         setIsPerformer(true);
+        setDisplayPerformerForm(false);
+        setIsTypeSelected(true);
 
         console.log("New Performer Details:");
         console.log(performerDetails);
     }
+    const onSubmitEventPlannerDetails = (types, links) => {
+        let newEventPlannerDetails = {
+            userEmail : email,
+            types : types,
+            pastEvents : [],
+            upcomingEvents : [],
+            links : links,
+            media : []
+        }
+        console.log(newEventPlannerDetails);
+        setEventPlannerDetails(newEventPlannerDetails);
+        setIsEventPlanner(true);
+        setDisplayEventPlannerForm(false);
+    }
 
+    //function used to control the render of the AddPerformer button and the PerformerDetails form
+    const handleDisplayPerformerDetailsChange = () => {
+        setDisplayAddPerformerButton(!displayAddPerformerButton);
+        setDisplayPerformerForm(false);
+    }
+
+    //function used to handle submission of all the forms and navigate to the profile page
     let navigate = useNavigate();
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (isAllValidDetails)
+        if (isAllValidDetails && (isEventPlanner || isPerformer))
         {
+            setIsTypeSelected(true);
+
+            //update the user object with the eventPlanner data
+            let eventPlanningUser = user;
+            if (isEventPlanner)
+            {
+                eventPlanningUser.isEventPlanner = true;
+                eventPlanningUser.eventPlannerInfo = eventPlannerDetails;
+            }
+            if (isPerformer)
+            {
+                eventPlanningUser.isPerformer = true;
+            }
+
             //try add the details to the firebase
             try
             {
+                //reference to document in database
                 const userDocRef = doc(db, "users", email);
-    
-                const performerInfoCollection = collection(db, "users", userDocRef.id, "performerInfo");
-                for (let i = 0; i < performerDetails.length; i++)
+                
+                //updates the document in database to include event planning details
+                if (isEventPlanner)
                 {
-                    await addDoc(performerInfoCollection, performerDetails[i]);
+                    await setDoc(userDocRef, user);
+                }
+    
+                //add all of the different performance information to the database
+                if (isPerformer && displayAddPerformerButton === true)
+                {
+                    const performerInfoCollection = collection(db, "users", userDocRef.id, "performerInfo");
+                    for (let i = 0; i < performerDetails.length; i++)
+                    {
+                        await addDoc(performerInfoCollection, performerDetails[i]);
+                    }
                 }
                 
                 //commenting out the reviewCollection because when they first create their page there will be no reviews
@@ -157,8 +229,10 @@ export default function DetailsPage() {
             navigate("/profilePage", {state : email});
             window.location.reload(false);
         }
-
-        setDisplayPerformerForm(false);
+        else if (!isEventPlanner && !isPerformer)
+        {
+            setIsTypeSelected(false);
+        }
     }
 
     return(
@@ -166,12 +240,15 @@ export default function DetailsPage() {
             <StyledHeader>
                 User Details
             </StyledHeader>
+            <p>
+                What type/s of user are you?
+            </p>
             <StyledCheckboxContainer>
                 <label>
                     <input 
                         type="checkbox"
-                        value={displayPerformerForm}
-                        onChange={(e) => setDisplayPerformerForm(!displayPerformerForm)}
+                        value={displayAddPerformerButton}
+                        onChange={handleDisplayPerformerDetailsChange}
                     />
                     I am a performer
                 </label>
@@ -184,12 +261,34 @@ export default function DetailsPage() {
                     I am an event planner
                 </label>
             </StyledCheckboxContainer>
-            {displayPerformerForm &&
-                    <PerformerDetailsForm parentCallback={onSubmitPerformerDetails}/>
+
+            {displayAddPerformerButton &&
+                <DisplayOptionContainer onClick={() => setDisplayPerformerForm(true)}>
+                    <DisplayFormButton>+</DisplayFormButton>
+                    <label>
+                        Add Performer Details
+                    </label>
+                </DisplayOptionContainer>
             }
+
+            {/* Form for inputting performer details */}
+            {displayPerformerForm &&
+                <PerformerDetailsForm parentCallback={onSubmitPerformerDetails}/>
+            }
+
+            {/* Form for inputting event planner details */}
+            {displayEventPlannerForm &&
+                <EventPlannerDetailsForm parentCallback={onSubmitEventPlannerDetails}/>
+            }
+
             <StyledButton onClick={handleSubmit}>
                 Submit All Details
             </StyledButton>
+
+            <p id="uidnote" style={!isTypeSelected ? {} : {display: "none"}}>
+                    {/* <FontAwesomeIcon icon={faInfoCircle} /> */}
+                    Error: Please select a type and input details for it.<br/>
+            </p>
     </Container>
     )
 }

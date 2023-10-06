@@ -1,7 +1,5 @@
-import { useRef, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import styled from "styled-components";
-import Dropdown from "react-bootstrap/Dropdown";
-import DropdownButton from "react-bootstrap/DropdownButton";
 
 const Container = styled.div`
     padding: 15px 0;
@@ -78,13 +76,16 @@ const StyledLabel = styled.label`
 `;
 
 //REGEX expressions
-const PERFORMER_NAME_REGEX = /^(?=.*[a-zA-Z0-9])[a-zA-Z0-9$&,+\-_]+$/;
+const PERFORMER_NAME_REGEX = /^(?=.*[a-zA-Z0-9])[a-zA-Z0-9$&,+\-_ ]+$/;
+
+const LINK_REGEX = /^(https?|ftp):\/\/([^\s/$.?#]+\.)+[^\s/$.?#]+(\/[^\s]*)?$/;
 
 /*
     TO-DO:
     - Add error checking to see if any genres were selected
     - Add error message for repeated equipment items
-    - 
+    - Add functionality that allows for specification when type "Other" is selected
+    - Add error message for invalid performer name being enterred
 */
 
 export function PerformerDetailsForm({parentCallback}) {
@@ -115,52 +116,90 @@ export function PerformerDetailsForm({parentCallback}) {
         {value: "Metal", label: "Metal"},
         {value: "RnB", label: "RnB"},
         {value: "Country", label: "Country"},
+        {value: "Classical", label: "Classical"},
+        {value: "Jazz", label: "Jazz"},
         {value: "Other", label: "Other"}
     ];
 
     let callback = parentCallback;
 
-    const genreSelectedInitializer = [];
+    const genresSelectedInitializer = [];
     for (let i = 0; i < genreOptions.length; i++)
     {
-        genreSelectedInitializer.push(false);
+        genresSelectedInitializer.push(false);
     }
 
+    //useStates storing data for performer details
     const [performerName, setPerformerName] = useState("");
-    const [isValidPerformerName, setIsValidPerformerName] = useState(true);
-    const [genresSelected, setGenresSelected] = useState(genreSelectedInitializer);
-
-    const [type, setType] = useState("");
-    const [genres, setGenres] = useState([]);
+    const [type, setType] = useState("DJ");
     const [equipment, setEquipment] = useState([]);
-    const [equipmentItem, setEquipmentItem] = useState("");
     const [hourlyRate, setHourlyRate] = useState(0.0);
     const [links, setLinks] = useState([]);
-    const [linkToAdd, setLinkToAdd] = useState("");
     const [media, setMedia] = useState([]);
 
-    //use effect to check if an enterred performer name is valid
+    //useStates for taking input
+    const [genresSelected, setGenresSelected] = useState(genresSelectedInitializer);
+    const [equipmentItem, setEquipmentItem] = useState("");
+    const [linkToAdd, setLinkToAdd] = useState("");
+    
+    //useStates for stating if a component has focus
+    const [performerNameFocus, setPerformerNameFocus] = useState(false);
+    const [linkToAddFocus, setLinkToAddFocus] = useState(false);
+    const [equipmentItemFocus, setEquipmentItemFocus] = useState(false);
+
+    //useStates for checking if values entered in fields are valid
+    const [isValidPerformerName, setIsValidPerformerName] = useState(false);
+    const [isValidLinkToAdd, setIsValidLinkToAdd] = useState(false);
+
+    //useEffects to check if an enterred fields are valid
+    //checks performer name
     useEffect(() => {
         const result = PERFORMER_NAME_REGEX.test(performerName);
-        console.log(result);
-        console.log(performerName);
+        //console.log(result);
+        //console.log(performerName);
         setIsValidPerformerName(result);
     }, [performerName])
+    //checks link to add
+    useEffect(() => {
+        const result = LINK_REGEX.test(linkToAdd);
+        //console.log(result);
+        //console.log(linkToAdd);
+        setIsValidLinkToAdd(result);
+    }, [linkToAdd])
 
     //method that is executed when form is submitted
     const handleSubmit = async (e) => {
-        let currGenres = [];
+        let genres = [];
         for (let i = 0; i < genreOptions.length; i++)
         {
             if (genresSelected[i] === true)
             {
-                currGenres.push(genreOptions[i]);
+                genres.push(genreOptions[i].label);
             }
         }
-        setGenres(currGenres);
-        
-        callback(performerName, type, genres, equipment, hourlyRate, links, media);
-        e.preventDefault();
+
+        //check to see that performer name is valid and if it is execute callback function, otherwise display error
+        if (isValidPerformerName)
+        {
+            callback(performerName, type, genres, equipment, hourlyRate, links, media);
+            e.preventDefault();
+        }
+        else
+        {
+            //DISPLAY ERROR MESSAGE
+
+            console.log("Invalid performer name enterred!");
+            console.log(performerName);
+        }
+
+        //reset all the fields back to empty
+        setPerformerName("");
+        setType("");
+        setEquipment([]);
+        setEquipmentItem("");
+        setLinks([]);
+        setLinkToAdd("");
+        setGenresSelected(genresSelectedInitializer);
     }
 
     const handleGenreSelectedChange = async (index) => {
@@ -187,22 +226,29 @@ export function PerformerDetailsForm({parentCallback}) {
     }
     const handleAddLink = async () => {
         console.log(linkToAdd);
-        let currLinks = links;
-        for (let i = 0; i < links.length; i++)
+        if (isValidLinkToAdd)
         {
-            if (linkToAdd === links[i])
+            if (LINK_REGEX.test(linkToAdd) === true)
             {
+                let currLinks = links;
+                for (let i = 0; i < links.length; i++)
+                {
+                    if (linkToAdd === links[i])
+                    {
+                        setLinkToAdd("");
+                        //display some sort of error message
+                        return;
+                    }
+                }
+                currLinks.push(linkToAdd);
+                setLinks(currLinks);
                 setLinkToAdd("");
-                //display some sort of error message
-                return;
+                console.log(links);
             }
         }
-        currLinks.push(linkToAdd);
-        setLinks(currLinks);
-        setLinkToAdd("");
-        console.log(links);
     }
 
+    //create genre checkbox components array for rendering
     const genreCheckboxes = [];
     for (let i = 0; i < genreOptions.length; i++)
     {
@@ -229,8 +275,16 @@ export function PerformerDetailsForm({parentCallback}) {
                     id="performerName"
                     autoComplete="off"
                     onChange={(e) => setPerformerName(e.target.value)}
+                    onFocus={() => setPerformerNameFocus(true)}
+                    onBlur={() => setPerformerNameFocus(false)}
                     required
                 />
+                <p id="uidnote" style={performerNameFocus && performerName && !isValidPerformerName ? {} : {display: "none"}}>
+                    {/* <FontAwesomeIcon icon={faInfoCircle} /> */}
+                    Error: Invalid name entered. <br/>
+                    Please enter a performer name containing at least one alphanumeric character <br/>
+                    consisting of only alphanumeric characters and special characters $&,+\-_
+                </p>
 
                 <StyledLabel htmlFor="type">
                     Type of Performer:
@@ -258,11 +312,18 @@ export function PerformerDetailsForm({parentCallback}) {
                         autoComplete="off"
                         onChange={(e) => setEquipmentItem(e.target.value)}
                         value={equipmentItem}
+                        onFocus={() => setEquipmentItemFocus(true)}
+                        onBlur={() => setEquipmentItemFocus(false)}
                     />
                     <AdderButton onClick={handleAddEquipmentItem}>
                         Add Item
                     </AdderButton>
                 </AdderContainer>
+                <p id="uidnote" style={equipmentItemFocus && equipmentItem==="" ? {} : {display: "none"}}>
+                    {/* <FontAwesomeIcon icon={faInfoCircle} /> */}
+                    Error: Invalid name entered. <br/>
+                    Please enter a non-empty value.
+                </p>
 
                 <StyledLabel htmlFor="hourlyRate">
                     Hourly Rate:
@@ -286,12 +347,19 @@ export function PerformerDetailsForm({parentCallback}) {
                         id="links"
                         autoComplete="off"
                         onChange={(e) => setLinkToAdd(e.target.value)}
+                        onFocus={() => setLinkToAddFocus(true)}
+                        onBlur={() => setLinkToAddFocus(false)}
                         value={linkToAdd}
                     />
                     <AdderButton onClick={handleAddLink}>
                         Add Link
                     </AdderButton>
                 </AdderContainer>
+                <p id="uidnote" style={linkToAddFocus && linkToAdd && !isValidLinkToAdd ? {} : {display: "none"}}>
+                    {/* <FontAwesomeIcon icon={faInfoCircle} /> */}
+                    Error: Invalid link entered. <br/>
+                    Please enter a valid link.
+                </p>
 
                 <StyledButton onClick={handleSubmit}>
                     Save Details
