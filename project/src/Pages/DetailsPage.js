@@ -183,15 +183,15 @@ export default function DetailsPage() {
             setIsTypeSelected(true);
 
             //update the user object with the eventPlanner data
-            let eventPlanningUser = user;
+            let currUser = user;
             if (isEventPlanner)
             {
-                eventPlanningUser.isEventPlanner = true;
-                eventPlanningUser.eventPlannerInfo = eventPlannerDetails;
+                currUser.isEventPlanner = true;
+                currUser.eventPlannerInfo = eventPlannerDetails;
             }
             if (isPerformer)
             {
-                eventPlanningUser.isPerformer = true;
+                currUser.isPerformer = true;
             }
 
             //try add the details to the firebase
@@ -203,7 +203,7 @@ export default function DetailsPage() {
                 //updates the document in database to include event planning details
                 if (isEventPlanner)
                 {
-                    await setDoc(userDocRef, user);
+                    await setDoc(userDocRef, currUser);
                 }
     
                 //add all of the different performance information to the database

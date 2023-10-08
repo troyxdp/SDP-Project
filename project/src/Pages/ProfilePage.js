@@ -5,12 +5,30 @@ import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import { db } from '../firebase-config/firebase';
 import dummy_profile_pic from "../profile-pics/dummy-profile-pic.jpg";
 import no_profile_pic from "../profile-pics/no-profile-pic-image.jpg";
+import { PerformerDetailsProfileOverview } from "../components/PerformerDetailsProfileOverview";
+import { EventPlannerDetailsProfileOverview } from "../components/EventPlannerDetailsProfileOverview";
+import { GroupDetailsProfileOverview } from "../components/GroupDetailsProfileOverview";
 
 //components of the page's css
 const Container = styled.div`
   display: grid;
   grid-template-columns: 1fr 0.5fr; /* Three columns: two flexible and one 200px wide */
   height: 100vh;
+`;
+const UserDetailsContainer = styled.div`
+  padding: 0px 12px 0px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: left;
+`;
+const PerformerDetailsContainer = styled.div`
+  padding: 0px;
+  margin-bottom: 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: left;
+  overflow-x: hidden;
+  overflow-y: auto;
 `;
 const HorizontalPanel = styled.div``;
 const TopPanel = styled.div`
@@ -40,13 +58,15 @@ const DetailsBox = styled.div`
   margin-top: 16px;
 `;
 const BottomPanel = styled.div`
-  border-top: 1px solid #333;
+  display: flex;
+  flex-direction: column;
+  align-items: left;
+  justify-content: center;
 `;
 const Tabs = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
-  padding-top: 10px;
   padding-bottom: 10px;
 `;
 const TabsButton = styled.button`
@@ -91,6 +111,11 @@ const ProfilePage = () => {
     const [groupDetails, setGroupDetails] = useState([]); //for later - add details of groups that user is member of
     const [isProfilePic, setIsProfilePic] = useState(false);
 
+    //useStates for dictating the conditional rendering of details
+    const [displayPerformerDetails, setDisplayPerformerDetails] = useState(false);
+    const [displayEventPlannerDetails, setDisplayEventPlannerDetails] = useState(false);
+    const [displayGroupDetails, setDisplayGroupDetails] = useState(false);
+
     //useEffect to fetch user data from database
     useEffect(() => {
       const getUserData = async () => {
@@ -134,22 +159,57 @@ const ProfilePage = () => {
       getUserData();
     }, [])
 
+    //methods executed on the click of tab buttons in bottom panel
+    const onClickPerformerDetailsButton = () => {
+      setDisplayPerformerDetails(true);
+      setDisplayEventPlannerDetails(false);
+      setDisplayGroupDetails(false);
+    }
+    const onClickEventPlannerDetailsButton = () => {
+      setDisplayPerformerDetails(false);
+      setDisplayEventPlannerDetails(true);
+      setDisplayGroupDetails(false);
+    }
+    const onClickGroupDetailsButton = () => {
+      setDisplayPerformerDetails(false);
+      setDisplayEventPlannerDetails(false);
+      setDisplayGroupDetails(true);
+    }
+
     //array of buttons displayed in the tab section - will be added conditionally to array once basics have been implemented
     const tabButtons = [];
     if (user.isPerformer)
     {
-      tabButtons.push(<TabsButton>Performer Details</TabsButton>);
+      tabButtons.push(<TabsButton onClick={onClickPerformerDetailsButton}>Performer Details</TabsButton>);
     }
     if (user.isEventPlanner)
     {
-      tabButtons.push(<TabsButton>Event Planner Details</TabsButton>);
+      tabButtons.push(<TabsButton onClick={onClickEventPlannerDetailsButton}>Event Planner Details</TabsButton>);
     }
     if (user.isInGroup)
     {
-      tabButtons.push(<TabsButton>Group Details</TabsButton>);
+      tabButtons.push(<TabsButton onClick={onClickGroupDetailsButton}>Group Details</TabsButton>);
     }
 
-    //empty profile pic and dummy profile pic - to be replaced by 
+    //get PerformerDetailsProfileOverview components ready if user is a performer
+    const performerDetailsOverviewComponents = [];
+    if (user.isPerformer)
+    {
+      for (let i = 0; i < performerDetails.length; i++)
+      {
+        performerDetailsOverviewComponents.push(
+          <PerformerDetailsProfileOverview
+            email={email}
+            name={performerDetails[i].name}
+            type={performerDetails[i].type}
+            genres={performerDetails[i].genres}
+            links={performerDetails[i].links}
+          />
+        );
+      }
+    }
+
+    //empty profile pic and dummy profile pic - to be replaced by profile pic imported from database
     let profilePic = [<img style={{ width : 135, height: 135, borderRadius: 135 }} src={no_profile_pic} alt="Profile" />];
     if (isProfilePic)
     {
@@ -163,9 +223,9 @@ const ProfilePage = () => {
             <StyledHeader>Profile Page</StyledHeader>
             {profilePic}
             <Name>{user.fullName}</Name>
-            {user.isPerformer && 
+            {/* {user.isPerformer && 
               <Name>"{performerDetails[0].name}"</Name>
-            }
+            } */}
             <DetailsBox>
               <Detail><b>Email:</b> {user.email}</Detail>
               <Detail><b>Location:</b> {user.location}</Detail>
@@ -176,6 +236,30 @@ const ProfilePage = () => {
             <Tabs>
               {tabButtons}
             </Tabs>
+            {displayPerformerDetails &&
+              <UserDetailsContainer>
+                <StyledHeader>Performer Details:</StyledHeader>
+                <PerformerDetailsContainer>
+                  {performerDetailsOverviewComponents}
+                </PerformerDetailsContainer>
+              </UserDetailsContainer>
+            }
+            {displayEventPlannerDetails &&
+              <UserDetailsContainer>
+                <StyledHeader>Event Planner Details:</StyledHeader>
+                <EventPlannerDetailsProfileOverview
+                  email={email}
+                  types={user.eventPlannerInfo.types}
+                  pastEvents={user.eventPlannerInfo.pastEvents}
+                  upcomingEvents={user.eventPlannerInfo.upcomingEvents}
+                  links={user.eventPlannerInfo.links}
+                  media={user.eventPlannerInfo.media}
+                />
+              </UserDetailsContainer>
+            }
+            {displayGroupDetails &&
+              <p>DISPLAY HERE: GroupDetailsProfileOverview components</p>
+            }
           </BottomPanel>
         </HorizontalPanel>
         <VerticalPanel>

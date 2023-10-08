@@ -321,7 +321,7 @@ export function PerformerDetailsForm({parentCallback}) {
                 </AdderContainer>
                 <p id="uidnote" style={equipmentItemFocus && equipmentItem==="" ? {} : {display: "none"}}>
                     {/* <FontAwesomeIcon icon={faInfoCircle} /> */}
-                    Error: Invalid name entered. <br/>
+                    Error: Invalid item entered. <br/>
                     Please enter a non-empty value.
                 </p>
 
