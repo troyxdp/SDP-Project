@@ -1,3 +1,5 @@
+import Slot from "../classes/Slot";
+
 class Event {
     constructor(creatingUserEmail, eventName, eventType, dates, venue, eventDescription, genres)
     {
@@ -10,6 +12,7 @@ class Event {
         
         this.eventPlannerEmails = [creatingUserEmail]; //string
         this.performerEmails = []; //string
+        this.slots = [];
         this.links = []; //string[]
         this.media = []; //[]
     }
@@ -25,6 +28,12 @@ class Event {
         }
         this.genres.push(genre);
         return true;
+    }
+    addSlot(creatingUserEmail, eventName, startDate, endDate, stageDetails, genres, description)
+    {
+        let newSlot = new Slot(creatingUserEmail, eventName, startDate, endDate, stageDetails, genres, description);
+        //check it doesn't conflict with other slots
+        this.slots.push(newSlot);
     }
     addEventPlanner(planner)
     {

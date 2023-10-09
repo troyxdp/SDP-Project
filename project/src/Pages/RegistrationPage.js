@@ -65,7 +65,6 @@ const StyledLink = styled.a`
     text-decoration: none;
     color: #a13333;
 `;
-
 const StyledButton = styled.button`
     display: inline-block;
     border: 0px solid #fff;
@@ -75,7 +74,6 @@ const StyledButton = styled.button`
     color: white;
     margin-top: 10px;
 `;
-
 const StyledParagraph = styled.p`
     display: block;
     margin-top: 10px;
@@ -443,4 +441,4 @@ const RegistrationPage = () => {
     )
 }
 
-export default RegistrationPage;
+export default RegistrationPage; 
