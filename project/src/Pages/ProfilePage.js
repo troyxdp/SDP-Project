@@ -1,13 +1,12 @@
+import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
 import styled from "styled-components";
-import { doc, getDoc, collection, getDocs } from "firebase/firestore";
+import { EventPlannerDetailsProfileOverview } from "../components/EventPlannerDetailsProfileOverview";
+import { PerformerDetailsProfileOverview } from "../components/PerformerDetailsProfileOverview";
 import { db } from '../firebase-config/firebase';
 import dummy_profile_pic from "../profile-pics/dummy-profile-pic.jpg";
 import no_profile_pic from "../profile-pics/no-profile-pic-image.jpg";
-import { PerformerDetailsProfileOverview } from "../components/PerformerDetailsProfileOverview";
-import { EventPlannerDetailsProfileOverview } from "../components/EventPlannerDetailsProfileOverview";
-import { GroupDetailsProfileOverview } from "../components/GroupDetailsProfileOverview";
 
 //components of the page's css
 const Container = styled.div`
@@ -32,6 +31,7 @@ const PerformerDetailsContainer = styled.div`
 `;
 const HorizontalPanel = styled.div``;
 const TopPanel = styled.div`
+  position: relative;
   padding: 16px;
   height: auto;
 `;
@@ -76,7 +76,7 @@ const TabsButton = styled.button`
   border: 0px solid #fff;
   border-radius: 10px;
   background: #a13333;
-  padding: 15px 30px;
+  padding: 10px 20px;
   color: white;
   margin-left: 12px;
 `;
@@ -84,12 +84,41 @@ const VerticalPanel = styled.div`
   background-color: #32a6a6;
   padding: 20px;
 `;
+const CreationButtonsBox = styled.div`
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+`;
+const CreateButton = styled.button`
+    display: inline-block;
+    border: 0px solid #fff;
+    border-radius: 10px;
+    background: #a13333;
+    padding: 15px 15px;
+    color: white;
+    margin-top: 10px;
+`;
 
+/*
+  TO-DO:
+  - Add profile picture functionality
+  - Add display of media
+  - Add different rendering of profile page depending on if it is the user's profile page vs someone else's
+  - Add "Edit Profile" button that takes the user to a page that allows them to edit all of their details.
+    ~ This button only renders when the user is on their own profile page
+  - Add "Add Friend"/"Remove Friend" button
+    ~ This button only renders when the user is on someone else's profile page
+    ~ The button displays "Add Friend" when they aren't friends and "Remove Friend" when they are friends
+    ~ When button is pressed when it is displaying "Add Friend",  a pending friend request is sent to the profile page's user
+    ~ When button is pressed when it is display "Remove Friend", the profile page's user is removed from the user's friend list and vice versa
+  - Add header bar that redirects to different pages
+  - Add moving of events from upcoming to past for EventPlanner users
+*/
 const ProfilePage = () => {
     //fetch email from session storage
     let email = sessionStorage.getItem("userEmail");
-
-    let navigate = useNavigate();
 
     //initializing object for user field
     const userInitializer = {
@@ -155,6 +184,8 @@ const ProfilePage = () => {
         }
 
         //add importing of group details
+
+        //add moving of events from upcoming to past based on current date and time
       };
       getUserData();
     }, [])
@@ -209,6 +240,19 @@ const ProfilePage = () => {
       }
     }
 
+    //handle navigation to other pages
+    let navigate = useNavigate();
+    const goToCreateEventPage = async (e) => {
+      e.preventDefault();
+      navigate("/createEventPage");
+      window.location.reload(false);
+    }
+    const goToCreateGroupPage = async (e) => {
+      e.preventDefault();
+      navigate("/createGroupPage");
+      window.location.reload(false);
+    }
+
     //empty profile pic and dummy profile pic - to be replaced by profile pic imported from database
     let profilePic = [<img style={{ width : 135, height: 135, borderRadius: 135 }} src={no_profile_pic} alt="Profile" />];
     if (isProfilePic)
@@ -220,12 +264,17 @@ const ProfilePage = () => {
       <Container>
         <HorizontalPanel>
           <TopPanel background-color = "#f2f2f2">
+            <CreationButtonsBox>
+              {user.isEventPlanner &&
+                <CreateButton onClick={goToCreateEventPage}>Create Event</CreateButton>
+              }
+              {user.isPerformer &&
+                <CreateButton onClick={goToCreateGroupPage}>Create Group</CreateButton>
+              }
+            </CreationButtonsBox>
             <StyledHeader>Profile Page</StyledHeader>
             {profilePic}
             <Name>{user.fullName}</Name>
-            {/* {user.isPerformer && 
-              <Name>"{performerDetails[0].name}"</Name>
-            } */}
             <DetailsBox>
               <Detail><b>Email:</b> {user.email}</Detail>
               <Detail><b>Location:</b> {user.location}</Detail>

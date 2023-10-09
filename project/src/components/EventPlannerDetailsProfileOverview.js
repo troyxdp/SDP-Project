@@ -9,6 +9,14 @@ const EventPlannerDetailsContainer = styled.div`
     border: 1px solid #333;
     border-radius: 5px;
 `;
+const DetailsContainer = styled.div`
+  padding: 0px;
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: left;
+  justify-content: center;
+`;
 const StyledHeader = styled.h1`
   font-size: 1.8rem;
   font-weight: bold;
@@ -17,7 +25,7 @@ const StyledHeader = styled.h1`
 `;
 const StyledLabel = styled.label`
     font-size: 0.9rem;
-    margin-bottom: 8px;
+    margin-bottom: 1px;
     font-weight: bold;
 `;
 const DetailsBox = styled.div`
@@ -25,19 +33,12 @@ const DetailsBox = styled.div`
   flex-direction: column;
 `;
 const Detail = styled.text`
-  padding: 1px;
-  margin-bottom: 8px;
+  padding: 0px;
+  margin-bottom: 0px;
   font-size: 0.8rem;
   justify-content: center;
 `;
-const LinkBox = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: left;
-  justify-content: center;
-  margin-bottom: 8px;
-`;
-const StyledLink = styled.text`
+const StyledLink = styled.a`
   font-size: 0.8rem;
   color: #0000ff;
 `;
@@ -62,22 +63,25 @@ export function EventPlannerDetailsProfileOverview({email, types, pastEvents, up
     for (let i = 0; i < links.length; i++)
     {
       LinkDisplays.push(
-        <StyledLink>{links[i]}</StyledLink>
+        <StyledLink href={links[i]}>{links[i]}</StyledLink>
       );
     }
 
     return(
         <EventPlannerDetailsContainer>
             <DetailsBox>
-                <StyledLabel><b>Types of Events Planned:</b></StyledLabel>
-                {eventTypes}
-                <StyledLabel></StyledLabel>
+                <StyledLabel>Types of Events Planned:</StyledLabel>
+                <DetailsContainer>
+                    {eventTypes}
+                </DetailsContainer>
+                <StyledLabel>Past Events:</StyledLabel>
                 {/* Add pastEvents display links here */}
+                <StyledLabel>Upcoming Events:</StyledLabel>
                 {/* Add upcomingEvents display links here */}
-                <StyledLabel><b>Links:</b></StyledLabel>
-                <LinkBox>
+                <StyledLabel>Links:</StyledLabel>
+                <DetailsContainer>
                     {LinkDisplays}
-                </LinkBox>
+                </DetailsContainer>
             </DetailsBox>
         </EventPlannerDetailsContainer>
     );
