@@ -57,6 +57,48 @@ export function EventPlannerDetailsProfileOverview({email, types, pastEvents, up
             <Detail>{types[i]}</Detail>
         )
     }
+
+    let pastEventNames = [];
+    for (let i = 0; i < pastEvents.length; i++)
+    {
+      let pastEventName = pastEvents[i].eventName;
+      let isAlreadyListed = false;
+      for (let j = 0; j < pastEventNames.length; j++)
+      {
+        if (pastEventName === pastEventNames[j])
+        {
+          isAlreadyListed = true;
+          break;
+        }
+      }
+      if (!isAlreadyListed & pastEventNames.length < 5)
+      {
+        pastEventNames.push(
+          <Detail>{pastEventName}</Detail>
+        );
+      }
+    }
+
+    let upcomingEventNames = [];
+    for (let i = 0; i < upcomingEvents.length; i++)
+    {
+      let upcomingEventName = upcomingEvents[i].eventName;
+      let isAlreadyListed = false;
+      for (let j = 0; j < upcomingEventNames.length; j++)
+      {
+        if (upcomingEventName === upcomingEventNames[j])
+        {
+          isAlreadyListed = true;
+          break;
+        }
+      }
+      if (!isAlreadyListed & upcomingEventNames.length < 5)
+      {
+        upcomingEventNames.push(
+          <Detail>{upcomingEventName}</Detail>
+        );
+      }
+    }
     
     //create Link components using the links array passed as a prop
     const LinkDisplays = [];
@@ -75,9 +117,13 @@ export function EventPlannerDetailsProfileOverview({email, types, pastEvents, up
                     {eventTypes}
                 </DetailsContainer>
                 <StyledLabel>Past Events:</StyledLabel>
-                {/* Add pastEvents display links here */}
+                <DetailsContainer>
+                  {pastEventNames}
+                </DetailsContainer>
                 <StyledLabel>Upcoming Events:</StyledLabel>
-                {/* Add upcomingEvents display links here */}
+                <DetailsContainer>
+                  {upcomingEventNames}
+                </DetailsContainer>
                 <StyledLabel>Links:</StyledLabel>
                 <DetailsContainer>
                     {LinkDisplays}

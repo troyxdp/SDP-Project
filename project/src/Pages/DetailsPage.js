@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect } from "react";
-import { useNavigate, useLocation} from "react-router-dom";
+import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
+import { addDoc, collection, doc, setDoc } from "firebase/firestore";
+import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { PerformerDetailsForm } from "../components/PerformerDetailsForm";
 import { EventPlannerDetailsForm } from "../components/EventPlannerDetailsForm";
-import { doc, setDoc, collection, addDoc, getDoc } from "firebase/firestore";
+import { PerformerDetailsForm } from "../components/PerformerDetailsForm";
 import { db } from '../firebase-config/firebase';
 
 const StyledHeader = styled.h1`
@@ -63,9 +64,22 @@ const DisplayFormButton = styled.button`
 export default function DetailsPage() {
     //fetch email from session storage
     let email = sessionStorage.getItem("userEmail");
+    let usrData = useLocation().state.usrData;
+
+    let userData = {
+        email: email,
+        fullName: usrData.fullName,
+        location: usrData.location,
+        bio: usrData.bio,
+        profilePic: usrData.profilePic,
+        isPerformer: false,
+        isEventPlanner: false,
+        isInGroup: false
+    };
 
     //useState to store user data fetched from database that has already been added
-    const [user, setUser] = useState(null);
+    const [user, setUser] = useState(userData);
+    const [pwd, setPwd] = useState(usrData.password);
 
     //useState for performer details
     const [isPerformer, setIsPerformer] = useState(false);
@@ -81,29 +95,6 @@ export default function DetailsPage() {
     //useState to check that all of the details enterred are valid
     const [isAllValidDetails, setIsAllValidDetails] = useState(true);
     const [isTypeSelected, setIsTypeSelected] = useState(true);
-
-    //useEffect used to fetch user data
-    useEffect(() => {
-        const getUserData = async () => {
-            const docRef = doc(db, "users", email);
-            const docSnap = await getDoc(docRef);
-    
-            //set user data in useState to that which has been fetched from the firestore database
-            let userData = {
-                email : email,
-                fullName : docSnap.data().fullName,
-                location : docSnap.data().location,
-                bio : docSnap.data().bio,
-                profilePic : docSnap.data().profilePic,
-                eventPlannerInfo : docSnap.data().eventPlannerInfo,
-                isPerformer : docSnap.data().isPerformer,
-                isEventPlanner : docSnap.data().isEventPlanner,
-                isInGroup : docSnap.data().isInGroup
-            }
-            setUser(userData);
-        };
-        getUserData();
-    }, []);
 
     //callback functions called by the PerformerDetails and EventPlannerDetails forms to get their data
     const onSubmitPerformerDetails = (name, type, genres, equipment, hourlyRate, links, media) => {
@@ -180,6 +171,16 @@ export default function DetailsPage() {
 
         if (isAllValidDetails && (isEventPlanner || isPerformer))
         {
+            try
+            {
+                await createUserWithEmailAndPassword(getAuth(), email, pwd);
+            }
+            catch (err)
+            {
+                console.log(err);
+                return;
+            }
+            
             setIsTypeSelected(true);
 
             //update the user object with the eventPlanner data
@@ -187,7 +188,6 @@ export default function DetailsPage() {
             if (isEventPlanner)
             {
                 currUser.isEventPlanner = true;
-                currUser.eventPlannerInfo = eventPlannerDetails;
             }
             if (isPerformer)
             {
@@ -199,11 +199,13 @@ export default function DetailsPage() {
             {
                 //reference to document in database
                 const userDocRef = doc(db, "users", email);
-                
-                //updates the document in database to include event planning details
+                await setDoc(userDocRef, currUser);
+                console.log("ID: " + userDocRef.id);
+
                 if (isEventPlanner)
                 {
-                    await setDoc(userDocRef, currUser);
+                    const eventPlannerInfoCollection = collection(db, "users", userDocRef.id, "eventPlannerInfo");
+                    await addDoc(eventPlannerInfoCollection, eventPlannerDetails);
                 }
     
                 //add all of the different performance information to the database
@@ -262,11 +264,19 @@ export default function DetailsPage() {
                 </label>
             </StyledCheckboxContainer>
 
-            {displayAddPerformerButton &&
+            {displayAddPerformerButton && !displayPerformerForm &&
                 <DisplayOptionContainer onClick={() => setDisplayPerformerForm(true)}>
                     <DisplayFormButton>+</DisplayFormButton>
                     <label>
                         Add Performer Details
+                    </label>
+                </DisplayOptionContainer>
+            }
+            {displayAddPerformerButton && displayPerformerForm &&
+                <DisplayOptionContainer onClick={() => setDisplayPerformerForm(false)}>
+                    <DisplayFormButton>-</DisplayFormButton>
+                    <label>
+                        Hide Form
                     </label>
                 </DisplayOptionContainer>
             }
