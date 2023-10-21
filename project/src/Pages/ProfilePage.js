@@ -1,9 +1,10 @@
-import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, addDoc, setDoc, deleteDoc, query, where, getCountFromServer  } from "firebase/firestore";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { EventPlannerDetailsProfileOverview } from "../components/EventPlannerDetailsProfileOverview";
 import { PerformerDetailsProfileOverview } from "../components/PerformerDetailsProfileOverview";
+import {NavigationBar} from "../components/NavigationBar";
 import { db } from '../firebase-config/firebase';
 import dummy_profile_pic from "../profile-pics/dummy-profile-pic.jpg";
 import no_profile_pic from "../profile-pics/no-profile-pic-image.jpg";
@@ -81,7 +82,7 @@ const TabsButton = styled.button`
   margin-left: 12px;
 `;
 const VerticalPanel = styled.div`
-  background-color: #32a6a6;
+  background-color: #a9a9a9;
   padding: 20px;
 `;
 const CreationButtonsBox = styled.div`
@@ -118,16 +119,17 @@ const CreateButton = styled.button`
 */
 const ProfilePage = () => {
     //fetch email from session storage
-    let email = sessionStorage.getItem("userEmail");
+    let userEmail = sessionStorage.getItem("userEmail");
+    let profileEmail = useLocation().state;
+    let isUserProfile = (userEmail === profileEmail);
 
     //initializing object for user field
     const userInitializer = {
-      email : email,
+      email : profileEmail,
       fullName : "",
       location : "",
       bio : "",
       profilePic : null,
-      eventPlannerInfo : null,
       isPerformer : false,
       isEventPlanner : false,
       isInGroup : false
@@ -148,16 +150,15 @@ const ProfilePage = () => {
     //useEffect to fetch user data from database
     useEffect(() => {
       const getUserData = async () => {
-        const docRef = doc(db, "users", email);
+        const docRef = doc(db, "users", profileEmail);
         const docSnap = await getDoc(docRef);
 
         let userData = {
-          email : email,
+          email : profileEmail,
           fullName : docSnap.data().fullName,
           location : docSnap.data().location,
           bio : docSnap.data().bio,
           profilePic : docSnap.data().profilePic,
-          eventPlannerInfo : docSnap.data().eventPlannerInfo,
           isPerformer : docSnap.data().isPerformer,
           isEventPlanner : docSnap.data().isEventPlanner,
           isInGroup : docSnap.data().isInGroup
@@ -167,14 +168,36 @@ const ProfilePage = () => {
         //if user is an event planner
         if (userData.isEventPlanner)
         {
-          setEventPlannerDetails(userData.eventPlannerInfo);
+          //get event planner details
+          let eventPlannerDetails = null;
+          const querySnapshot = await getDocs(collection(db, "users", profileEmail, "eventPlannerInfo"));
+          let eventPlannerID;
+          querySnapshot.forEach((doc) => {
+            eventPlannerDetails = doc.data();
+            eventPlannerID = doc.id;
+          });
+          
+          //check which events have already happened and move them from upcoming events to past events
+          const today = new Date();
+          for (let i = 0; i < eventPlannerDetails.upcomingEvents.length; i++)
+          {
+            const currEventEndDate = new Date(eventPlannerDetails.upcomingEvents[i].endDate.toDate());
+            if (currEventEndDate < today)
+            {
+              eventPlannerDetails.pastEvents.push(eventPlannerDetails.upcomingEvents[i]);
+              eventPlannerDetails.upcomingEvents.splice(i, 1);
+              i--;
+            }
+          }
+          await setDoc(doc(db, "users", profileEmail, "eventPlannerInfo", eventPlannerID), eventPlannerDetails); //update database
+          setEventPlannerDetails(eventPlannerDetails);
         }
 
         //if user is a performer
         if (userData.isPerformer)
         {
           const currPerformerDetails = [];
-          const querySnapshot = await getDocs(collection(db, "users", email, "performerInfo"));
+          const querySnapshot = await getDocs(collection(db, "users", profileEmail, "performerInfo"));
           querySnapshot.forEach((doc) => {
             // doc.data() is never undefined for query doc snapshots
             console.log(doc.id, " => ", doc.data());
@@ -230,7 +253,7 @@ const ProfilePage = () => {
       {
         performerDetailsOverviewComponents.push(
           <PerformerDetailsProfileOverview
-            email={email}
+            email={profileEmail}
             name={performerDetails[i].name}
             type={performerDetails[i].type}
             genres={performerDetails[i].genres}
@@ -252,6 +275,19 @@ const ProfilePage = () => {
       navigate("/createGroupPage");
       window.location.reload(false);
     }
+    //THESE TWO METHODS ARE FOR TESTING NAVIGATING TO OTHER PROFILES AND DOING STUFF WHILE THERE
+    const testGoToOtherUserProfile8 = async (e) => {
+      e.preventDefault();
+      let email = "troydp8@gmail.com";
+      navigate("/profilePage", {state : email});
+      window.location.reload(false);
+    }
+    const testGoToOtherUserProfile7 = async (e) => {
+      e.preventDefault();
+      let email = "troydp7@gmail.com";
+      navigate("/profilePage", {state : email});
+      window.location.reload(false);
+    }
 
     //empty profile pic and dummy profile pic - to be replaced by profile pic imported from database
     let profilePic = [<img style={{ width : 135, height: 135, borderRadius: 135 }} src={no_profile_pic} alt="Profile" />];
@@ -260,61 +296,133 @@ const ProfilePage = () => {
       profilePic = [<img style={{ width : 135, height: 135, borderRadius: 135 }} src={dummy_profile_pic} alt="dummy profile pic" />];
     }
 
+    //method to send friend request if it is not user's profile
+    const sendFriendRequest = async () => {
+      if (userEmail !== profileEmail) //double-check profile is not user's profile
+      {
+      //check if user has received a friend request from profile user
+        const userRequestsDocRef = doc(db, "users", userEmail, "requests", profileEmail);
+        const userRequestsSnapshot = await getDoc(userRequestsDocRef);
+        let isFriendRequestFromProfileUser = userRequestsSnapshot.exists();
+
+        if (isFriendRequestFromProfileUser) //if there is already a friend request from profile user
+        {
+          //add each other as friends - using setDoc so that we can use email as doc ID
+          const userFriendsDocRef = doc(db, "users", userEmail, "friends", profileEmail);
+          await setDoc(userFriendsDocRef, {email : profileEmail});
+          const friendsDocRef = doc(db, "users", profileEmail, "friends", userEmail);
+          await setDoc(friendsDocRef, {email : userEmail});
+
+          //delete request sent from profile user - no need to delete for user because they haven't sent a request yet
+          await deleteDoc(userRequestsDocRef);
+          return;
+        }
+
+        //check if profile user already has a friend request from user
+        const requestsDocRef = doc(db, "users", profileEmail, "requests", userEmail);
+        const requestsSnapshot = await getDoc(requestsDocRef);
+        let isAlreadyRequest = requestsSnapshot.exists();
+
+        //check if profile user already has user as their friend
+        const friendsDocRef = doc(db, "users", profileEmail, "friends", userEmail);
+        const friendsSnapshot = await getDoc(friendsDocRef);
+        let isAlreadyFriend = friendsSnapshot.exists();
+        if (!isAlreadyRequest && !isAlreadyFriend) //if user hasn't sent a request and is not already friends with profile user
+        {
+          //send friend request
+          const request = {
+            requestingUserEmail : userEmail,
+            receivingUserEmail : profileEmail,
+            requestType : "friend"
+          }
+          //await addDoc(requestsRef, request);
+          await setDoc(requestsDocRef, request);
+        }
+        else if (isAlreadyRequest)
+        {
+          alert("Error: you have already sent a friend request to this user!");
+        }
+        else
+        {
+          alert("Error: you are already friends with this user!");
+        }
+      }
+    }
+
     return (
-      <Container>
-        <HorizontalPanel>
-          <TopPanel background-color = "#f2f2f2">
-            <CreationButtonsBox>
-              {user.isEventPlanner &&
-                <CreateButton onClick={goToCreateEventPage}>Create Event</CreateButton>
+      <>
+        <NavigationBar/>
+        <Container>
+          <HorizontalPanel>
+            <TopPanel background-color = "#f2f2f2">
+              {isUserProfile &&
+                <CreationButtonsBox>
+                  {user.isEventPlanner &&
+                    <CreateButton onClick={goToCreateEventPage}>Create Event</CreateButton>
+                  }
+                  {user.isPerformer &&
+                    <CreateButton onClick={goToCreateGroupPage}>Create Group</CreateButton>
+                  }
+                </CreationButtonsBox>
               }
-              {user.isPerformer &&
-                <CreateButton onClick={goToCreateGroupPage}>Create Group</CreateButton>
+              {!isUserProfile &&
+                <CreationButtonsBox>
+                  <CreateButton onClick={sendFriendRequest}>
+                    Add Friend
+                  </CreateButton>
+                </CreationButtonsBox>
               }
-            </CreationButtonsBox>
-            <StyledHeader>Profile Page</StyledHeader>
-            {profilePic}
-            <Name>{user.fullName}</Name>
-            <DetailsBox>
-              <Detail><b>Email:</b> {user.email}</Detail>
-              <Detail><b>Location:</b> {user.location}</Detail>
-              <Detail>{user.bio}</Detail>
-            </DetailsBox>
-          </TopPanel>
-          <BottomPanel>
-            <Tabs>
-              {tabButtons}
-            </Tabs>
-            {displayPerformerDetails &&
-              <UserDetailsContainer>
-                <StyledHeader>Performer Details:</StyledHeader>
-                <PerformerDetailsContainer>
-                  {performerDetailsOverviewComponents}
-                </PerformerDetailsContainer>
-              </UserDetailsContainer>
-            }
-            {displayEventPlannerDetails &&
-              <UserDetailsContainer>
-                <StyledHeader>Event Planner Details:</StyledHeader>
-                <EventPlannerDetailsProfileOverview
-                  email={email}
-                  types={user.eventPlannerInfo.types}
-                  pastEvents={user.eventPlannerInfo.pastEvents}
-                  upcomingEvents={user.eventPlannerInfo.upcomingEvents}
-                  links={user.eventPlannerInfo.links}
-                  media={user.eventPlannerInfo.media}
-                />
-              </UserDetailsContainer>
-            }
-            {displayGroupDetails &&
-              <p>DISPLAY HERE: GroupDetailsProfileOverview components</p>
-            }
-          </BottomPanel>
-        </HorizontalPanel>
-        <VerticalPanel>
-          <StyledHeader>Reviews:</StyledHeader>
-        </VerticalPanel>
-      </Container>
+              <StyledHeader>Profile Page</StyledHeader>
+              {profilePic}
+              <Name>{user.fullName}</Name>
+              <DetailsBox>
+                <Detail><b>Email:</b> {user.email}</Detail>
+                <Detail><b>Location:</b> {user.location}</Detail>
+                <Detail>{user.bio}</Detail>
+              </DetailsBox>
+              {/* These components were added just for testing navigation to other profiles as well as some other features like adding friends */}
+              {/* <TabsButton onClick={testGoToOtherUserProfile8}>
+                Test 8
+              </TabsButton>
+              <TabsButton onClick={testGoToOtherUserProfile7}>
+                Test 7
+              </TabsButton> */}
+            </TopPanel>
+            <BottomPanel>
+              <Tabs>
+                {tabButtons}
+              </Tabs>
+              {displayPerformerDetails &&
+                <UserDetailsContainer>
+                  <StyledHeader>Performer Details:</StyledHeader>
+                  <PerformerDetailsContainer>
+                    {performerDetailsOverviewComponents}
+                  </PerformerDetailsContainer>
+                </UserDetailsContainer>
+              }
+              {displayEventPlannerDetails &&
+                <UserDetailsContainer>
+                  <StyledHeader>Event Planner Details:</StyledHeader>
+                  <EventPlannerDetailsProfileOverview
+                    email={userEmail}
+                    types={eventPlannerDetails.types}
+                    pastEvents={eventPlannerDetails.pastEvents}
+                    upcomingEvents={eventPlannerDetails.upcomingEvents}
+                    links={eventPlannerDetails.links}
+                    media={eventPlannerDetails.media}
+                  />
+                </UserDetailsContainer>
+              }
+              {displayGroupDetails &&
+                <p>DISPLAY HERE: GroupDetailsProfileOverview components</p>
+              }
+            </BottomPanel>
+          </HorizontalPanel>
+          <VerticalPanel>
+            <StyledHeader>Reviews:</StyledHeader>
+          </VerticalPanel>
+        </Container>
+      </>
     );
 }
 

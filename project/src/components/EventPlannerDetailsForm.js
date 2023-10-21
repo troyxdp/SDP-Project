@@ -82,7 +82,6 @@ export function EventPlannerDetailsForm({parentCallback}) {
         {value : "rave", label : "Rave"},
         {value : "clubSlot", label : "Club Slot"},
         {value : "barSlot", label : "Bar Slot"},
-        {value : "residency", label : "Residency Opportunity"},
         {value : "houseParty", label : "House Party"},
         {value : "birthdayParty", label : "Birthday Party"},
         {value : "wedding", label : "Wedding"},

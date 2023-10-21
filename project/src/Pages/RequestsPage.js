@@ -13,16 +13,16 @@ const StyledHeader = styled.h1`
   margin-bottom: 8px;
 `;
 
-const CreateGroupPage = () => {
+const RequestsPage = () => {
     const userEmail = sessionStorage.getItem("userEmail");
-
+    
     return(
         <>
             <NavigationBar/>
             <Container>
-                <StyledHeader>Create a Group</StyledHeader>
+                <StyledHeader>Requests</StyledHeader>
             </Container>
         </>
     );
 }
-export default CreateGroupPage;
+export default RequestsPage;

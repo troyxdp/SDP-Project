@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { faCheck, faTimes, faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {getAuth,createUserWithEmailAndPassword} from "firebase/auth";
-import { doc, setDoc, collection, addDoc } from "firebase/firestore";
+import { doc, setDoc, collection, addDoc, getDoc } from "firebase/firestore";
 import { db } from '../firebase-config/firebase';
 
 import User from '../classes/User';
@@ -82,6 +82,7 @@ const StyledParagraph = styled.p`
 /*
     TO-DO:
     - Add error messages for when email address is already in use
+    - Make it so that authentication profile is only added on details page
 */
 
 const RegistrationPage = () => {
@@ -219,6 +220,7 @@ const RegistrationPage = () => {
 
         const usrData = {
             email : user,
+            password : pwd,
             fullName : fullName,
             location : location,
             bio : bio,
@@ -229,36 +231,22 @@ const RegistrationPage = () => {
             isInGroup : false
         };
 
-        //Create user in Firebase Authentication  
-        try
+        //check firestore database to see if document exists for user, which it would if someone signed up with that email address
+        const userDocRef = doc(db, "users", user);
+        const docSnap = await getDoc(userDocRef);
+        if (!docSnap.exists())
         {
-            await createUserWithEmailAndPassword(getAuth(),user,pwd);
+            //Declare the current user's email in the session storage
+            sessionStorage.setItem('userEmail', usrData.email);
+
+            //Navigate to the questions page
+            navigate("/detailsPage", {state : {usrData}});
+            window.location.reload(false); 
         }
-        catch (err)
+        else
         {
-            console.log(err);
-            return;
+            setErrMsg("Error: email address already in use.");
         }
-        
-        //try add the user to the firestore database
-        try
-        {
-            const userDocRef = doc(db, "users", usrData.email);
-            await setDoc(userDocRef, usrData);
-            //const docRef = await addDoc(collection(db, "users"), usrData);
-            console.log("ID: " + userDocRef.id);
-        }
-        catch (err)
-        {
-            console.log(err);
-            return;
-        }
-        
-        //Declare the current user's email in the session storage
-        sessionStorage.setItem('userEmail', usrData.email);
-        //Navigate to the questions page
-        navigate("/detailsPage", {state : {email : user}});
-        window.location.reload(false);
     }
     
     return (

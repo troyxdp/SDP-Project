@@ -9,7 +9,9 @@ import RegistrationPage from './Pages/RegistrationPage';
 import DetailsPage from './Pages/DetailsPage';
 import CreateEventPage from './Pages/CreateEventPage';
 import CreateGroupPage from './Pages/CreateGroupPage';
-
+import RequestsPage from './Pages/RequestsPage';
+import MessagesPage from './Pages/MessagesPage';
+import ConnectionsPage from './Pages/ConnectionsPage';
 
 //INITIALIZE FIREBASE
 const analytics = getAnalytics(app);
@@ -25,6 +27,9 @@ function App() {
           <Route path = "/detailsPage" element = {<DetailsPage/>} />
           <Route path = "/createEventPage" element = {<CreateEventPage/>} />
           <Route path = "/createGroupPage" element = {<CreateGroupPage/>} />
+          <Route path = "/requestsPage" element = {<RequestsPage/>} />
+          <Route path = "/messagesPage" element = {<MessagesPage/>} />
+          <Route path = "/connectionsPage" element = {<ConnectionsPage/>} />
           <Route path = "*" element = {<LoginPage/>} />
         </Routes>
       </Router>
