@@ -47,9 +47,6 @@ export function NavigationBar() {
 
     return(
         <Container>
-            <NavigationDisplay onClick={routeToProfilePage}>
-                Profile
-            </NavigationDisplay >
             <NavigationDisplay onClick={routeToConnectionsPage}>
                 Connections
             </NavigationDisplay>
@@ -59,6 +56,9 @@ export function NavigationBar() {
             <NavigationDisplay onClick={routeToRequestsPage}>
                 Requests
             </NavigationDisplay>
+            <NavigationDisplay onClick={routeToProfilePage}>
+                Profile
+            </NavigationDisplay >
         </Container>
     );
 }

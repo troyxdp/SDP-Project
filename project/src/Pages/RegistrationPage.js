@@ -91,42 +91,10 @@ const RegistrationPage = () => {
     
     let date = new Date();
 
-    const dummyEventData = {
-        creatingUserEmail : "troydp7@gmail.com",
-        eventName : "Afrobiza",
-        eventType : "Event",
-        date : [date],
-        venue : "Maracana",
-        eventDescription : "Afro Tech and Afro House event",
-        genres : ["Afro Tech", "Afro House", "Amapiano"]
-    };
-
     const dummyReview = {
         userEmail : "troydp7@gmail.com",
         rating : 10,
         comment : "Great DJ! Played very well and played some BANGING tunes!"
-    };
-
-    const dummyEventPlannerInfo = {
-        userEmail : "troydp8@gmail.com",
-        types : ["Events", "Rave"],
-        pastEvents : [],
-        upcomingEvents : [dummyEventData],
-        links : ["https://www.instagram.com/troyxdp_/"],
-        media : []
-    };
-
-    const dummyPerformerInfo = {
-        userEmail : "troydp8@gmail.com",
-        name : "Algorhythmic",
-        type : "DJ",
-        genres : ["House", "Techno", "Hip Hop"],
-        equipment : ["DDJ-400"],
-        hourlyRate : 350.0,
-        pastEvents : [],
-        upcomingEvents : [dummyEventData],
-        links : ["https://www.instagram.com/troyxdp_/"],
-        media : []
     };
 
     //Consts for Email
@@ -169,15 +137,11 @@ const RegistrationPage = () => {
     // useEffect Hook: Validate username via USER_REGEX.     -- DON'T NEED
     useEffect(() => {
         const result = USER_REGEX.test(user);
-        console.log(result);
-        console.log(user);
         setValidName(result);
     }, [user])
     // useEffect Hook: Validate password against PWD_REGEX.
     useEffect(() => {
         const result = PWD_REGEX.test(pwd);
-        console.log(result);
-        console.log(pwd);
         setValidPwd(result);
         // Compare the password to the matchPassword. IE: See if the password confirmation is correct.
         const match = pwd === matchPwd;
@@ -186,15 +150,11 @@ const RegistrationPage = () => {
     // useEffect Hook: Validate full name via TEXT_REGEX.
     useEffect(() => {
         const result =TEXT_REGEX.test(fullName);
-        console.log(result);
-        console.log(fullName);
         setValidFullName(result);
     }, [fullName])
     // useEffect Hook: Validate bio via BIO_REGEX.
     useEffect(() => {
         const result =BIO_REGEX.test(bio);
-        console.log(result);
-        console.log(bio);
         setValidBio(result);
     }, [bio])
     // Clear error message every time user, pwd, matchPwd, fullName, pronouns, qualifications or bio is changed (to account for the user fixing the error).
@@ -252,8 +212,6 @@ const RegistrationPage = () => {
     return (
         <Container>
             <p ref={errRef} style={errMsg ? {} : {display: "none"}} aria-live="assertive">{errMsg}</p>
-            {/* <img style = {{ width : 90, height: 90 }}src = {logo} alt = "logo" /> */}
-            {/* Render the Header */}
             <StyledHeader>Register</StyledHeader>
             <StyledForm onSubmit={HandleSubmit}>
             {/* <StyledForm> */}

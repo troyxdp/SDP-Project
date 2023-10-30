@@ -106,16 +106,8 @@ const CreateButton = styled.button`
   TO-DO:
   - Add profile picture functionality
   - Add display of media
-  - Add different rendering of profile page depending on if it is the user's profile page vs someone else's
-  - Add "Edit Profile" button that takes the user to a page that allows them to edit all of their details.
-    ~ This button only renders when the user is on their own profile page
-  - Add "Add Friend"/"Remove Friend" button
-    ~ This button only renders when the user is on someone else's profile page
-    ~ The button displays "Add Friend" when they aren't friends and "Remove Friend" when they are friends
-    ~ When button is pressed when it is displaying "Add Friend",  a pending friend request is sent to the profile page's user
-    ~ When button is pressed when it is display "Remove Friend", the profile page's user is removed from the user's friend list and vice versa
-  - Add header bar that redirects to different pages
-  - Add moving of events from upcoming to past for EventPlanner users
+  - Add the ability to add reviews. Display of input is conditional based on if it is the user's profile page or not
+  - Potentially add loading animation
 */
 const ProfilePage = () => {
     //fetch email from session storage
@@ -146,6 +138,7 @@ const ProfilePage = () => {
     const [displayPerformerDetails, setDisplayPerformerDetails] = useState(false);
     const [displayEventPlannerDetails, setDisplayEventPlannerDetails] = useState(false);
     const [displayGroupDetails, setDisplayGroupDetails] = useState(false);
+    const [isDataLoadedFromDatabase, setIsDataLoadedFromDatabase] = useState(false);
 
     //useEffect to fetch user data from database
     useEffect(() => {
@@ -208,7 +201,7 @@ const ProfilePage = () => {
 
         //add importing of group details
 
-        //add moving of events from upcoming to past based on current date and time
+        setIsDataLoadedFromDatabase(true);
       };
       getUserData();
     }, [])
@@ -275,6 +268,27 @@ const ProfilePage = () => {
       navigate("/createGroupPage");
       window.location.reload(false);
     }
+    const goToEditPersonalDetailsPage = async (e) => {
+      e.preventDefault();
+      const userInfo = [];
+      userInfo.push(user);
+      userInfo.push(eventPlannerDetails);
+      userInfo.push(performerDetails);
+      //navigate('/editPersonalDetailsPage', {state : userInfo});
+      navigate('/editPersonalDetailsPage');
+      window.location.reload(false);
+    }
+    const goToEditUpcomingEventsDetailsPage = async (e) => {
+      e.preventDefault();
+      navigate('/editUpcomingEventDetailsPage');
+      window.location.reload(false);
+    }
+    const goToEditGroupsDetailsPage = async (e) => {
+      e.preventDefault();
+      navigate('/editGroupsDetailsPage');
+      window.location.reload(false);
+    }
+
     //THESE TWO METHODS ARE FOR TESTING NAVIGATING TO OTHER PROFILES AND DOING STUFF WHILE THERE
     const testGoToOtherUserProfile8 = async (e) => {
       e.preventDefault();
@@ -352,76 +366,85 @@ const ProfilePage = () => {
     return (
       <>
         <NavigationBar/>
-        <Container>
-          <HorizontalPanel>
-            <TopPanel background-color = "#f2f2f2">
-              {isUserProfile &&
-                <CreationButtonsBox>
-                  {user.isEventPlanner &&
-                    <CreateButton onClick={goToCreateEventPage}>Create Event</CreateButton>
-                  }
-                  {user.isPerformer &&
-                    <CreateButton onClick={goToCreateGroupPage}>Create Group</CreateButton>
-                  }
-                </CreationButtonsBox>
-              }
-              {!isUserProfile &&
-                <CreationButtonsBox>
-                  <CreateButton onClick={sendFriendRequest}>
-                    Add Friend
-                  </CreateButton>
-                </CreationButtonsBox>
-              }
-              <StyledHeader>Profile Page</StyledHeader>
-              {profilePic}
-              <Name>{user.fullName}</Name>
-              <DetailsBox>
-                <Detail><b>Email:</b> {user.email}</Detail>
-                <Detail><b>Location:</b> {user.location}</Detail>
-                <Detail>{user.bio}</Detail>
-              </DetailsBox>
-              {/* These components were added just for testing navigation to other profiles as well as some other features like adding friends */}
-              {/* <TabsButton onClick={testGoToOtherUserProfile8}>
-                Test 8
-              </TabsButton>
-              <TabsButton onClick={testGoToOtherUserProfile7}>
-                Test 7
-              </TabsButton> */}
-            </TopPanel>
-            <BottomPanel>
-              <Tabs>
-                {tabButtons}
-              </Tabs>
-              {displayPerformerDetails &&
-                <UserDetailsContainer>
-                  <StyledHeader>Performer Details:</StyledHeader>
-                  <PerformerDetailsContainer>
-                    {performerDetailsOverviewComponents}
-                  </PerformerDetailsContainer>
-                </UserDetailsContainer>
-              }
-              {displayEventPlannerDetails &&
-                <UserDetailsContainer>
-                  <StyledHeader>Event Planner Details:</StyledHeader>
-                  <EventPlannerDetailsProfileOverview
-                    email={userEmail}
-                    types={eventPlannerDetails.types}
-                    pastEvents={eventPlannerDetails.pastEvents}
-                    upcomingEvents={eventPlannerDetails.upcomingEvents}
-                    links={eventPlannerDetails.links}
-                    media={eventPlannerDetails.media}
-                  />
-                </UserDetailsContainer>
-              }
-              {displayGroupDetails &&
-                <p>DISPLAY HERE: GroupDetailsProfileOverview components</p>
-              }
-            </BottomPanel>
-          </HorizontalPanel>
-          <VerticalPanel>
-            <StyledHeader>Reviews:</StyledHeader>
-          </VerticalPanel>
-        </Container>
+        {isDataLoadedFromDatabase &&
+          <Container>
+            <HorizontalPanel>
+              <TopPanel background-color = "#f2f2f2">
+                {isUserProfile &&
+                  <CreationButtonsBox>
+                    {user.isEventPlanner &&
+                      <CreateButton onClick={goToCreateEventPage}>Create Event</CreateButton>
+                    }
+                    {user.isPerformer &&
+                      <CreateButton onClick={goToCreateGroupPage}>Create Group</CreateButton>
+                    }
+                    <CreateButton onClick={goToEditPersonalDetailsPage}>Edit Profile Details</CreateButton>
+                    {user.isEventPlanner &&
+                      <CreateButton onClick={goToEditUpcomingEventsDetailsPage}>Edit Upcoming Events</CreateButton>
+                    }
+                    {user.isInGroup &&
+                      <CreateButton onClick={goToEditGroupsDetailsPage}>Edit Group Details</CreateButton>
+                    }
+                  </CreationButtonsBox>
+                }
+                {!isUserProfile &&
+                  <CreationButtonsBox>
+                    <CreateButton onClick={sendFriendRequest}>
+                      Add Friend
+                    </CreateButton>
+                  </CreationButtonsBox>
+                }
+                <StyledHeader>Profile Page</StyledHeader>
+                {profilePic}
+                <Name>{user.fullName}</Name>
+                <DetailsBox>
+                  <Detail><b>Email:</b> {user.email}</Detail>
+                  <Detail><b>Location:</b> {user.location}</Detail>
+                  <Detail>{user.bio}</Detail>
+                </DetailsBox>
+                {/* These components were added just for testing navigation to other profiles as well as some other features like adding friends */}
+                {/* <TabsButton onClick={testGoToOtherUserProfile8}>
+                  Test 8
+                </TabsButton>
+                <TabsButton onClick={testGoToOtherUserProfile7}>
+                  Test 7
+                </TabsButton> */}
+              </TopPanel>
+              <BottomPanel>
+                <Tabs>
+                  {tabButtons}
+                </Tabs>
+                {displayPerformerDetails &&
+                  <UserDetailsContainer>
+                    <StyledHeader>Performer Details:</StyledHeader>
+                    <PerformerDetailsContainer>
+                      {performerDetailsOverviewComponents}
+                    </PerformerDetailsContainer>
+                  </UserDetailsContainer>
+                }
+                {displayEventPlannerDetails &&
+                  <UserDetailsContainer>
+                    <StyledHeader>Event Planner Details:</StyledHeader>
+                    <EventPlannerDetailsProfileOverview
+                      email={userEmail}
+                      types={eventPlannerDetails.types}
+                      pastEvents={eventPlannerDetails.pastEvents}
+                      upcomingEvents={eventPlannerDetails.upcomingEvents}
+                      links={eventPlannerDetails.links}
+                      media={eventPlannerDetails.media}
+                    />
+                  </UserDetailsContainer>
+                }
+                {displayGroupDetails &&
+                  <p>DISPLAY HERE: GroupDetailsProfileOverview components</p>
+                }
+              </BottomPanel>
+            </HorizontalPanel>
+            <VerticalPanel>
+              <StyledHeader>Reviews:</StyledHeader>
+            </VerticalPanel>
+          </Container>
+        }
       </>
     );
 }
