@@ -59,6 +59,7 @@ const DisplayFormButton = styled.button`
     - Add the functionality of being able to have multiple forms and multiple submissions
     - See if there is a way to add multiple documents at the same time instead of adding each performer type details one at a time
     - Add submission of equipment item or link in AdderContainer on the pressing of the enter key
+    - Add list box display of performer details
 */
 
 export default function DetailsPage() {
@@ -97,7 +98,7 @@ export default function DetailsPage() {
     const [isTypeSelected, setIsTypeSelected] = useState(true);
 
     //callback functions called by the PerformerDetails and EventPlannerDetails forms to get their data
-    const onSubmitPerformerDetails = (name, type, genres, equipment, hourlyRate, links, media) => {
+    const onSubmitPerformerDetails = async (name, type, genres, equipment, hourlyRate, links, media) => {
         let currPerformerDetails = performerDetails;
 
         //checks if the user has already listed performance details of a certain type of performer - can't have two sets of details for one type
@@ -142,6 +143,8 @@ export default function DetailsPage() {
 
         console.log("New Performer Details:");
         console.log(performerDetails);
+
+        return true;
     }
     const onSubmitEventPlannerDetails = (types, links) => {
         let newEventPlannerDetails = {

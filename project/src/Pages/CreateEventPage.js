@@ -7,6 +7,7 @@ import { doc, updateDoc, addDoc, collection, getDoc, getDocs} from "firebase/fir
 import { db } from '../firebase-config/firebase';
 import { SlotDetailsForm } from "../components/SlotDetailsForm";
 import {NavigationBar} from "../components/NavigationBar";
+import x_solid from "../profile-pics/x-solid.svg";
 
 const StyledHeader = styled.h1`
     font-size: 2.1rem;
@@ -50,6 +51,7 @@ const DisplayOptionContainer = styled.div`
     flex-direction: row;
     justify-content: center;
     margin-top: 10px;
+    margin-bottom: 10px;
 `;
 const DisplayFormButton = styled.button`
     display: flex;
@@ -75,16 +77,18 @@ const StyledLabel = styled.label`
     margin-top: 5px;
     margin-bottom: 2px;
 `;
-const DescriptionInput = styled.input`
+const DescriptionInput = styled.textarea`
     display: flex;
     background: #e4e4e4;
     border-radius: 10px;
     border: 0;
     width: 500px;
+    max-width: 500px;
     height: 250px;
     box-sizing: border-box;
     padding: 15px 0 15px 10px;
     word-break: break-word;
+    font-family: "Roboto", Roboto, sans-serif;
 `;
 const AdderContainer = styled.div`
     display: flex;
@@ -111,15 +115,49 @@ const AdderButton = styled.button`
     padding: 15px 45px;
     color: white;
 `;
+const ListBox = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+    justify-content: center;
+    margin-bottom: 8px;
+`;
+const ListBoxElement = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #444; 
+    padding: 10px; 
+    width: 475px;
+    max-width: 475px;
+    height: 12px;
+    max-height: 12px;
+    border: 2px solid #808080;
+    border-radius: 8px;
+    margin-top: 2px;
+`;
+const TwoLineListBoxElement = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #444; 
+    padding: 10px; 
+    width: 475px;
+    max-width: 475px;
+    height: 28px;
+    max-height: 28px;
+    border: 2px solid #808080;
+    border-radius: 8px;
+    margin-top: 2px;
+`;
 
 /*
     TO-DO:
-    - Potentially add feature that sets minimum end date in component to the start date
     - Add validation of slot form data
         ~ Check a slot hasn't been listed twice
         ~ Implement date and time checking (if it hasn't already been done - it may have already been done)
-    - Add validation of event details
-    - Add the ability to request other users join as event planners via request by putting in and submitting their emails
+    - Fix the error message flashing when valid other host is entered
+    - Make it so that slot details form only displays once (valid) start and end dates have been entered
 */
 
 const CreateEventPage = () => {
@@ -185,6 +223,7 @@ const CreateEventPage = () => {
 
     //useStates for storing user data
     const [user, setUser] = useState(userInitializer);
+    const [upcomingEvents, setUpcomingEvents] = useState([]);
     const [eventPlannerDetails, setEventPlannerDetails] = useState(null);
     const [docId, setDocId] = useState("");
 
@@ -195,10 +234,14 @@ const CreateEventPage = () => {
     const [eventEndDate, setEventEndDate] = useState(endDateInitializer);
     const [venue, setVenue] = useState("");
     const [genresSelected, setGenresSelected] = useState(genresSelectedInitializer);
+    const [stages, setStages] = useState(["Main Stage"]);
     const [description, setDescription] = useState("");
     const [slots, setSlots] = useState([]);
     const [otherHostEmails, setOtherHostsEmails] = useState([]);
+
+    //useStates for adders
     const [eventPlannerToAdd, setEventPlannerToAdd] = useState("");
+    const [stageToAdd, setStageToAdd] = useState("");
 
     //useStates for conditional display of components
     const [displaySlotForm, setDisplaySlotForm] = useState(false);
@@ -208,10 +251,121 @@ const CreateEventPage = () => {
     const [isEndDateFocus, setIsEndDateFocus] = useState(false);
 
     //useStates for validation of data
+    const [isValidEventName, setIsValidEventName] = useState(false);
     const [isValidStartDate, setIsValidStartDate] = useState(false);
+    const [isValidStartTime, setIsValidStartTime] = useState(false);
     const [isValidEndDate, setIsValidEndDate] = useState(false);
+    const [isValidEndTime, setIsValidEndTime] = useState(false);
+    const [isStageAdded, setIsStageAdded] = useState(false);
     const [isValidEventPlannerToAdd, setIsValidEventPlannerToAdd] = useState(false);
     const [isEventPlannerAdded, setIsEventPlannerAdded] = useState(false);
+
+    //useStates for seeing if values an attempt has been made to set a value
+    const [isStartTimeSet, setIsStartTimeSet] = useState(false);
+    const [isEndTimeSet, setIsEndTimeSet] = useState(false);
+    const [isStageToAddSet, setIsStageToAddSet] = useState(false);
+
+    //useStates for error message display
+    const [isSubmitError, setIsSubmitError] = useState(false);
+    const [submitErrMsg, setSubmitErrMsg] = useState("");
+
+    //useState for storing stage name list box displays
+    const [stageListBoxDisplays, setStageListBoxDisplays] = useState([]);
+    const createStageListDisplay = async (stages) => {
+        const stageDisplays = [];
+        for (let i = 0; i < stages.length; i++)
+        {
+            stageDisplays.push(
+                <ListBoxElement>
+                    <p>{stages[i]}</p>
+                    <img style={{ width : 12, height: 12, borderRadius: 0 }} src={x_solid} alt="x_solid" onClick={() => handleRemoveStage(i)}/>
+                </ListBoxElement>
+            );
+        }
+        setStageListBoxDisplays(stageDisplays);
+    }
+
+    //useState for storing host emails list box displays
+    const [otherHostEmailsListBoxDisplays, setOtherHostsEmailsListBoxDisplays] = useState([]);
+    const createOtherHostEmailsListDisplay = async (otherHostEmails) => {
+        const otherHostEmailDisplays = [];
+        for (let i = 0; i < otherHostEmails.length; i++)
+        {
+            otherHostEmailDisplays.push(
+                <ListBoxElement>
+                    <p>
+                        {otherHostEmails[i]}
+                    </p>
+                    <img style={{ width : 12, height: 12, borderRadius: 0 }} src={x_solid} alt="x_solid" onClick={() => handleRemoveHost(i)}/>
+                </ListBoxElement>
+            )
+        }
+        setOtherHostsEmailsListBoxDisplays(otherHostEmailDisplays);
+    }
+
+    //useState for storing slot details list box displays
+    const [slotDetailsListBoxDisplays, setSlotDetailsListBoxDisplays] = useState([]);
+    const createSlotDetailsListDisplay = async (slots) => {
+        const slotDisplays = [];
+        for (let i = 0; i < slots.length; i++)
+        {
+            //get time of slot
+            let startTimeHrs = slots[i].startDate.getHours();
+            let startTimeMins = slots[i].startDate.getMinutes();
+            let endTimeHrs = slots[i].endDate.getHours();
+            let endTimeMins = slots[i].endDate.getMinutes();
+
+            //write start time as a string
+            let startTime = "";
+            if (startTimeHrs < 10)
+            {
+                startTime += "0" + startTimeHrs + ":";
+            }
+            else
+            {
+                startTime += startTimeHrs + ":";
+            }
+            if (startTimeMins < 10)
+            {
+                startTime += "0" + startTimeMins;
+            }
+            else
+            {
+                startTime += startTimeMins;
+            }
+
+            //write end time as a string
+            let endTime = "";
+            if (endTimeHrs < 10)
+            {
+                endTime += "0" + endTimeHrs + ":";
+            }
+            else
+            {
+                endTime += endTimeHrs + ":";
+            }
+            if (endTimeMins < 10)
+            {
+                endTime += "0" + endTimeMins;
+            }
+            else
+            {
+                endTime += endTimeMins;
+            }
+
+            //add display
+            slotDisplays.push(
+                <TwoLineListBoxElement>
+                    <p>
+                        {slots[i].stage} <br/>
+                        {startTime} - {endTime}
+                    </p>
+                    <img style={{ width : 12, height: 12, borderRadius: 0 }} src={x_solid} alt="x_solid" onClick={() => handleDeleteSlot(i)}/>
+                </TwoLineListBoxElement>
+            );
+        }
+        setSlotDetailsListBoxDisplays(slotDisplays);
+    }
 
     //useEffects for validating data
     //validate the start date enterred
@@ -226,6 +380,7 @@ const CreateEventPage = () => {
             setIsValidStartDate(true);
         }
     }, [eventStartDate])
+    //validate the end date enterred
     useEffect(() => {
         if (eventStartDate > eventEndDate)
         {
@@ -236,6 +391,31 @@ const CreateEventPage = () => {
             setIsValidEndDate(true);
         }
     }, [eventStartDate, eventEndDate])
+    //validate the event name
+    useEffect(() => {
+        const isEventNameUsed = async () => {
+            //check if event name is used
+            let isEventNameUsed = false;
+            for (let i = 0; i < upcomingEvents.length; i++)
+            {
+                if (upcomingEvents[i].eventName === eventName)
+                {
+                    isEventNameUsed = true;
+                }
+            }
+
+            //set validity of event name entered
+            if (isEventNameUsed)
+            {
+                setIsValidEventName(false);
+            }
+            else
+            {
+                setIsValidEventName(true);
+            }
+        };
+        isEventNameUsed();
+    }, [eventName, upcomingEvents, email]);
 
     //useEffect to fetch user data from database
     useEffect(() => {
@@ -259,21 +439,25 @@ const CreateEventPage = () => {
             querySnapshot.forEach((doc) => {
                 setEventPlannerDetails(doc.data());
                 setDocId(doc.id);
+                setUpcomingEvents(doc.data().upcomingEvents);
             });
         };
         getUserData();
     }, [])
 
-    //useEffect to validate end date
-
-    //methods to handle changing of inputted data
-    const handleGenreSelectedChange = async (index) => {
-        let currGenresSelected = genresSelected;
-        currGenresSelected[index] = !currGenresSelected[index];
-        setGenresSelected(currGenresSelected);
-    }
+    //methods for handling start date/time and end date/time entry
     const handleStartDateInput = async (e) => {
         let newStartDate = new Date(e.target.value);
+        if (!isStartTimeSet || !isValidStartTime)
+        {
+            newStartDate.setHours(0, 0, 0);
+        }
+        else
+        {
+            let startHours = eventStartDate.getHours();
+            let startMins = eventStartDate.getMinutes();
+            newStartDate.setHours(startHours, startMins);
+        }
         if (newStartDate < new Date())
         {
             setIsValidStartDate(false);
@@ -284,9 +468,38 @@ const CreateEventPage = () => {
             setEventStartDate(newStartDate);
         }
     }
+    const handleStartTimeInput = async (e) => {
+        setIsStartTimeSet(true);
+        let date = new Date(eventStartDate);
+        let time = e.target.value;
+        let hours = parseInt(time.substring(0, 2));
+        let minutes = parseInt(time.substring(3, 5));
+        date.setHours(hours, minutes);
+        if (date >= new Date())
+        {
+            setEventStartDate(date);
+            setIsValidStartTime(true);
+            setIsValidStartDate(true);
+        }
+        else
+        {
+            setIsValidStartTime(false);
+            setIsValidStartDate(false);
+        }
+    }
     const handleEndDateInput = async (e) => {
         let newEndDate = new Date(e.target.value);
-        if (newEndDate < eventStartDate)
+        if (!isEndTimeSet || !isValidEndTime)
+        {
+            newEndDate.setHours(0, 0, 0);
+        }
+        else
+        {
+            let endHrs = eventEndDate.getHours();
+            let endMins = eventEndDate.getMinutes();
+            newEndDate.setHours(endHrs, endMins, 0);
+        }
+        if (newEndDate <= eventStartDate)
         {
             setIsValidEndDate(false);
         }
@@ -295,6 +508,32 @@ const CreateEventPage = () => {
             setIsValidEndDate(true);
             setEventEndDate(newEndDate);
         }
+    }
+    const handleEndTimeInput = async (e) => {
+        setIsEndTimeSet(true);
+        let date = new Date(eventEndDate);
+        let time = e.target.value;
+        let hours = parseInt(time.substring(0, 2));
+        let minutes = parseInt(time.substring(3, 5));
+        date.setHours(hours, minutes, 0);
+        if (date > eventStartDate)
+        {   
+            setEventEndDate(date);
+            setIsValidEndTime(true);
+            setIsValidEndDate(true);
+        }
+        else
+        {
+            setIsValidEndTime(false);
+            setIsValidEndDate(false);
+        }
+    }
+
+    //methods for handling the input/deletion of other data
+    const handleGenreSelectedChange = async (index) => {
+        let currGenresSelected = genresSelected;
+        currGenresSelected[index] = !currGenresSelected[index];
+        setGenresSelected(currGenresSelected);
     }
     const handleEventNameInput = async (e) => {
         let newName = e.target.value;
@@ -320,15 +559,15 @@ const CreateEventPage = () => {
         }
         if (!isAlreadyAdded)
         {
-            setIsEventPlannerAdded(false);
             const user = eventPlannerToAdd;
             const userDocRef = doc(db, "users", user);
             const docSnap = await getDoc(userDocRef);
-            if (docSnap.exists()) //if user is found in the database
+            if (docSnap.exists() && docSnap.data().isEventPlanner) //if user is found in the database
             {
                 setIsValidEventPlannerToAdd(true);
                 hostEmails.push(user);
                 setOtherHostsEmails(hostEmails);
+                createOtherHostEmailsListDisplay(hostEmails);
             }
             else //user not found in database
             {
@@ -337,34 +576,81 @@ const CreateEventPage = () => {
         }
         else //is already added
         {
-            setIsEventPlannerAdded(true);
+            setIsValidEventPlannerToAdd(false);
             console.log("Already added user " + eventPlannerToAdd);
         }
+        setIsEventPlannerAdded(true);
         setEventPlannerToAdd("");
+    }
+    const handleRemoveHost = async (index) => {
+        const currHosts = otherHostEmails;
+        currHosts.splice(index, 1);
+        setOtherHostsEmails(currHosts);
+        createOtherHostEmailsListDisplay(currHosts);
+    }
+    const handleAddStage = async () => {
+        //check if stage is already added
+        const currStages = stages;
+        let isAlreadyAdded = false;
+        for (let i = 0; i < stages.length; i++)
+        {
+            if (stages[i] === stageToAdd)
+            {
+                isAlreadyAdded = true;
+            }
+        }
+
+        if (!isAlreadyAdded)
+        {
+            currStages.push(stageToAdd);
+            setIsStageAdded(false);
+            setIsStageToAddSet(false);
+            createStageListDisplay(currStages);
+            setStageToAdd("");
+        }
+        else
+        {
+            setIsStageAdded(true);
+            setIsStageAdded(true);
+        }
+    }
+    const handleRemoveStage = async (index) => {
+        const currStages = stages;
+        currStages.splice(index, 1);
+        setStages(currStages);
+        createStageListDisplay(currStages);
+    }
+    const handleDeleteSlot = async (index) => {
+        const currSlots = slots;
+        currSlots.splice(index, 1);
+        setSlots(currSlots);
+        createSlotDetailsListDisplay(currSlots);
     }
 
     //callback method for SlotDetailsForm
     const onSubmitOfSlotDetailsForm = (startDate, endDate, stageDetails, genres, description) => {
         if (startDate >= eventStartDate && (endDate.getDate() <= eventEndDate.getDate() || endDate.getMonth() < eventEndDate.getMonth()))
         {
+            const currSlots = slots;
             const slot = {
                 creatingUserEmail: email,
                 eventName: eventName,
                 startDate: startDate,
                 endDate: endDate,
-                stageDetails: stageDetails, 
+                stage: stageDetails, 
                 genres: genres,
-                description: description
+                description: description,
+                performerEmails: []
             };
-            slots.push(slot);
+            currSlots.push(slot);
+            setSlots(currSlots);
+            setDisplaySlotForm(false);
+            createSlotDetailsListDisplay(currSlots);
         }
         else
         {
             //display error message
         }
-    }
-    const onSlotStartDateSelection = (startDate) => {
-        return startDate >= eventStartDate;
     }
     const sendHostRequest = async (user) => {
         const request = {
@@ -384,42 +670,88 @@ const CreateEventPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const genres = [];
-        for (let i = 0; i < genresSelected.length; i++)
-        {
-            if (genresSelected[i] === true)
+        setIsSubmitError(false);
+        setSubmitErrMsg("");
+
+        const checkIsGenreSelected = () => {
+            for (let i = 0; i < genresSelected.length; i++)
             {
-                genres.push(genreOptions[i].label);
+                if (genresSelected[i] === true)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        let isGenreSelected = checkIsGenreSelected();
+
+        if (isValidStartDate && isValidEndDate && eventName.length > 0 && venue.length > 0 && description.length > 0 && isGenreSelected)
+        {
+            const genres = [];
+            for (let i = 0; i < genresSelected.length; i++)
+            {
+                if (genresSelected[i] === true)
+                {
+                    genres.push(genreOptions[i].label);
+                }
+            }
+
+            const upcomingEvent = {
+                creatingUserEmail: email, 
+                eventName: eventName, 
+                eventType: eventType,
+                performerEmails: [],
+                eventPlannerEmails: [email], 
+                startDate: eventStartDate,
+                endDate: eventEndDate, 
+                venue: venue, 
+                eventDescription: description, 
+                genres: genres,
+                slots: slots
+            };
+
+            const currUpcomingEvents = eventPlannerDetails.upcomingEvents;
+            currUpcomingEvents.push(upcomingEvent);
+            const eventPlannerDetailsRef = doc(db, "users", email, "eventPlannerInfo", docId);
+            await updateDoc(eventPlannerDetailsRef, {
+                upcomingEvents: currUpcomingEvents
+            });
+
+            for (let i = 0; i < otherHostEmails.length; i++)
+            {
+                sendHostRequest(otherHostEmails[i]);
+            }
+
+            navigate("/profilePage", {state : email});
+        }
+        else
+        {
+            setIsSubmitError(true);
+            if (!isValidStartDate)
+            {
+                setSubmitErrMsg("Error: invalid start date enterred.\nPlease enter a date from today onwards.")
+            }
+            else if (!isValidEndDate)
+            {
+                setSubmitErrMsg("Error: invalid end date enterred.\nPlease enter an end date that is later than your start date.");
+            }
+            else if (eventName.length === 0)
+            {
+                setSubmitErrMsg("Error: no event name enterred.\nPlease enter an event name.");
+            }
+            else if (venue.length === 0)
+            {
+                setSubmitErrMsg("Error: no venue enterred.\nPlease enter a venue.");
+            }
+            else if (description.length === 0)
+            {
+                setSubmitErrMsg("Error: no description enterred.\nPlease enter a description.");
+            }
+            else if (!isGenreSelected)
+            {
+                setSubmitErrMsg("Error: no genre selected. Please select at least one genre from the list.");
             }
         }
-
-        const upcomingEvent = {
-            creatingUserEmail: email, 
-            eventName: eventName, 
-            eventType: eventType,
-            performerEmails: [],
-            eventPlannerEmails: [email], 
-            startDate: eventStartDate,
-            endDate: eventEndDate, 
-            venue: venue, 
-            eventDescription: description, 
-            genres: genres,
-            slots: slots
-        };
-
-        const currUpcomingEvents = eventPlannerDetails.upcomingEvents;
-        currUpcomingEvents.push(upcomingEvent);
-        const eventPlannerDetailsRef = doc(db, "users", email, "eventPlannerInfo", docId);
-        await updateDoc(eventPlannerDetailsRef, {
-            upcomingEvents: currUpcomingEvents
-        });
-
-        for (let i = 0; i < otherHostEmails.length; i++)
-        {
-            sendHostRequest(otherHostEmails[i]);
-        }
-
-        navigate("/profilePage", {state : email});
     }
 
     //create genre checkbox components array for rendering
@@ -455,6 +787,11 @@ const CreateEventPage = () => {
                         onChange={handleEventNameInput}
                         required
                     />
+                    <p id="uidnote" style={!isValidEventName ? {} : {display: "none"}}>
+                        {/* <FontAwesomeIcon icon={faInfoCircle} /> */}
+                        Error: Invalid event name entered. <br/>
+                        Please enter an event name that isn't already in use in your upcoming events.
+                    </p>
 
                     <StyledLabel htmlFor="type">
                         Type of Performer:
@@ -484,6 +821,22 @@ const CreateEventPage = () => {
                         Please enter a start date from today onwards.
                     </p>
 
+                    <StyledLabel htmlFor="startTime">
+                        Start Time:
+                    </StyledLabel>
+                    <StyledInput
+                        type="time"
+                        id="startTime"
+                        autoComplete="off"
+                        defaultValue="12:00"
+                        onChange={handleStartTimeInput}
+                    />
+                    <p id="uidnote" style={isStartTimeSet && !isValidStartTime ? {} : {display: "none"}}>
+                        {/* <FontAwesomeIcon icon={faInfoCircle} /> */}
+                        Error: Invalid start time entered. <br/>
+                        Please enter a start date and time later than the present moment.
+                    </p>
+
                     <StyledLabel htmlFor="endDate">
                         End Date:
                     </StyledLabel>
@@ -500,6 +853,22 @@ const CreateEventPage = () => {
                         {/* <FontAwesomeIcon icon={faInfoCircle} /> */}
                         Error: Invalid end date entered. <br/>
                         Please enter an end date from your start date onwards.
+                    </p>
+
+                    <StyledLabel htmlFor="endTime">
+                        End Time:
+                    </StyledLabel>
+                    <StyledInput
+                        type="time"
+                        id="endTime"
+                        autoComplete="off"
+                        defaultValue="13:00"
+                        onChange={handleEndTimeInput}
+                    />
+                    <p id="uidnote" style={isEndTimeSet && !isValidEndTime ? {} : {display: "none"}}>
+                        {/* <FontAwesomeIcon icon={faInfoCircle} /> */}
+                        Error: Invalid end time entered. <br/>
+                        Please enter an end date and time after your start date and time.
                     </p>
 
                     <StyledLabel htmlFor="venue">
@@ -520,8 +889,32 @@ const CreateEventPage = () => {
                             {genreCheckboxes}
                     </StyledCheckboxContainer>
 
+                    <StyledLabel htmlFor="stages">
+                        Stages:
+                    </StyledLabel>
+                    <AdderContainer>
+                        <AdderInput 
+                            type="text"
+                            id="stageAdder"
+                            autoComplete="off"
+                            onChange={(e) => setStageToAdd(e.target.value)}
+                            value={stageToAdd}
+                        />
+                        <AdderButton onClick={() => handleAddStage()}>
+                            Add
+                        </AdderButton>
+                    </AdderContainer>
+                    <p id="uidnote" style={isStageToAddSet && isStageAdded ? {} : {display: "none"}}>
+                        {/* <FontAwesomeIcon icon={faInfoCircle} /> */}
+                        Error: Please enter a stage that hasn't already been added.
+                    </p>
+
+                    <ListBox>
+                        {stageListBoxDisplays}
+                    </ListBox>
+
                     <StyledLabel htmlFor="eventPlanners">
-                            Other Event Planners:
+                        Other Event Planners:
                     </StyledLabel>
                     <AdderContainer>
                         <AdderInput
@@ -530,20 +923,22 @@ const CreateEventPage = () => {
                             autoComplete="off"
                             onChange={(e) => setEventPlannerToAdd(e.target.value)}
                             value={eventPlannerToAdd}
-                            // onFocus={() => setIsEventPlannerToAddFocus(true)}
-                            // onBlur={() => setIsEventPlannerToAddFocus(false)}
                         />
                         <AdderButton onClick={handleAddHost}>
                             Send Request
                         </AdderButton>
                     </AdderContainer>
-                    <p id="uidnote" style={eventPlannerToAdd && !isValidEventPlannerToAdd ? {} : {display: "none"}}>
+                    <p id="uidnote" style={isEventPlannerAdded && !isValidEventPlannerToAdd ? {} : {display: "none"}}>
                         {/* <FontAwesomeIcon icon={faInfoCircle} /> */}
-                        Error: Please enter a user that is on this site.
+                        Error: Please enter a user that is on this site that is an event planner.
                     </p>
                     <p id="uidnote" style={eventPlannerToAdd && isEventPlannerAdded ? {} : {display: "none"}}>
                         Error: You have already added this user to send a request to.
                     </p>
+
+                    <ListBox>
+                        {otherHostEmailsListBoxDisplays}
+                    </ListBox>
 
                     <StyledLabel htmlFor="description">
                         Description of Event:
@@ -576,13 +971,22 @@ const CreateEventPage = () => {
                     {displaySlotForm &&
                         <SlotDetailsForm
                             onSubmitParentCallback={onSubmitOfSlotDetailsForm}
-                            startDateInputCallback={onSlotStartDateSelection}
+                            stages={stages}
+                            slots={slots}
                         />
                     }
+
+                    <ListBox>
+                        {slotDetailsListBoxDisplays}
+                    </ListBox>
 
                     <StyledButton onClick={handleSubmit}>
                         Create Event
                     </StyledButton>
+                    <p id="uidnote" style={isSubmitError ? {} : {display: "none"}}>
+                        {/* <FontAwesomeIcon icon={faInfoCircle} /> */}
+                        {submitErrMsg}
+                    </p>
                 </EventDetailsDiv>
             </Container>
         </>

@@ -49,7 +49,7 @@ const StyledLabel = styled.label`
     margin-top: 5px;
     margin-bottom: 2px;
 `;
-const DescriptionInput = styled.input`
+const DescriptionInput = styled.textarea`
     display: flex;
     background: #e4e4e4;
     border-radius: 10px;
@@ -59,16 +59,18 @@ const DescriptionInput = styled.input`
     box-sizing: border-box;
     padding: 15px 0 15px 10px;
     word-break: break-word;
+    font-family: "Roboto", Roboto, sans-serif;
 `;
 
 
 /*
     TO-DO:
-    - Add error checking for start date entry
-        ~ Check if start date enterred is before event start date
+    - Add listing of event planners to send invites to where you can remove by clicking an X icon
+    - Add error checking to ensure description IS entered and genre is selected
 */
 
-export function SlotDetailsForm({onSubmitParentCallback, startDateInputCallback}) {
+export function SlotDetailsForm({onSubmitParentCallback, stages, slots}) {
+    //set all of the options for type of event, genres played, and stages
     const typeOptions = [
         {value: "DJ", label: "DJ"},
         {value: "Vocalist", label: "Vocalist"},
@@ -100,6 +102,19 @@ export function SlotDetailsForm({onSubmitParentCallback, startDateInputCallback}
         {value: "Jazz", label: "Jazz"},
         {value: "Other", label: "Other"}
     ];
+    const stageOptions = [];
+    for (let i = 0; i < stages.length; i++)
+    {
+        stageOptions.push(
+            {value : stages[i], label : stages[i]}
+        );
+    }
+    if (stageOptions.length === 0)
+    {
+        stageOptions.push(
+            {value : "Main Stage", label : "Main Stage"}
+        );
+    }
 
     let callback = onSubmitParentCallback;
 
@@ -111,8 +126,8 @@ export function SlotDetailsForm({onSubmitParentCallback, startDateInputCallback}
 
     //useStates for inputted data
     const [startDate, setStartDate] = useState(new Date());
-    const [endTime, setEndTime] = useState(new Date());
-    const [stageDetails, setStageDetails] = useState("");
+    const [endDate, setEndDate] = useState(new Date());
+    const [stage, setStage] = useState(stages[0]);
     const [genresSelected, setGenresSelected] = useState(genresSelectedInitializer);
     const [description, setDescription] = useState("");
 
@@ -123,6 +138,10 @@ export function SlotDetailsForm({onSubmitParentCallback, startDateInputCallback}
     //useStates for validation
     const [isValidStartDate, setIsValidStartDate] = useState(false);
     const [isValidEndDate, setIsValidEndDate] = useState(false);
+    const [isConflictingTimes, setIsConflictingTimes] = useState(false);
+
+    //useStates for error messages
+    const [errMsg, setErrMsg] = useState("");
 
     //validate the start date enterred
     useEffect(() => {
@@ -137,7 +156,7 @@ export function SlotDetailsForm({onSubmitParentCallback, startDateInputCallback}
         }
     }, [startDate])
     useEffect(() => {
-        if (startDate > endTime)
+        if (startDate > endDate)
         {
             setIsValidEndDate(false);
         }
@@ -145,7 +164,7 @@ export function SlotDetailsForm({onSubmitParentCallback, startDateInputCallback}
         {
             setIsValidEndDate(true);
         }
-    }, [startDate, endTime])
+    }, [startDate, endDate])
 
     //methods to handle changing of inputted data
     const handleGenreSelectedChange = async (index) => {
@@ -156,25 +175,20 @@ export function SlotDetailsForm({onSubmitParentCallback, startDateInputCallback}
     const handleStartDateChange = async (e) => {
         let hours = parseInt(startDate.getHours());
         let minutes = parseInt(startDate.getMinutes());
-        let date = new Date(e.target.value);
-        if (startDateInputCallback(date) === true)
-        {
-            date.setHours(hours, minutes);
-            setIsValidStartDate(true)
-            setStartDate(date); 
-        }
-        else
-        {
-            setIsValidStartDate(false);
-        }     
+        const date = new Date(e.target.valueAsDate);
+        date.setHours(hours, minutes, 0);
+        setIsValidStartDate(true)
+        setStartDate(date); 
     }
     const handleStartTimeEntry = async (e) => {
-        let date = new Date(startDate);
+        const date = new Date();
+        date.setTime(startDate);
         let time = e.target.value;
         let hours = parseInt(time.substring(0, 2));
         let minutes = parseInt(time.substring(3, 5));
-        date.setHours(hours, minutes);
+        date.setHours(hours, minutes, 0);
         setStartDate(date);
+        setIsValidStartDate(true);
     }
     const handleEndTimeEntry = async (e) => {
         //get start time
@@ -182,21 +196,46 @@ export function SlotDetailsForm({onSubmitParentCallback, startDateInputCallback}
         let startMinutes = startDate.getMinutes();
         
         //check if end time is on the next day
-        let endDate = new Date(startDate);
+        let date = new Date();
+        date.setTime(startDate);
         let time = e.target.value;
         let hours = parseInt(time.substring(0, 2));
         let minutes = parseInt(time.substring(3, 5));
-        if (hours < startHours || (hours === startHours && minutes < startMinutes))
+        //this if statement ensures endDate is always after start date
+        if (hours < startHours || (hours === startHours && minutes <= startMinutes))
         {
-            endDate.setDate(startDate.getDate() + 1);
+            date.setDate(startDate.getDate() + 1);
         }
-        endDate.setHours(hours, minutes);
-        setEndTime(endDate);
+        date.setHours(hours, minutes, 0);
+        setEndDate(date);
     }
 
     //method to handle submission of form
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        //check for conflicting times between slots
+        for (let i = 0; i < slots.length; i++)
+        {
+            if (slots[i].stage === stage)
+            {
+                if (slots[i].startDate < startDate && slots[i].endDate > startDate)
+                {
+                    setIsConflictingTimes(true);
+                    setErrMsg("Error: this slot starts during another slot.")
+                    return;
+                }
+                if (slots[i].startDate > startDate && slots[i].startDate < endDate)
+                {
+                    setIsConflictingTimes(true);
+                    setErrMsg("Error: another slot starts during this slot's time.")
+                    return;
+                }
+            }
+        }
+
+        setIsConflictingTimes(false);
+        setErrMsg("");
 
         if (isValidStartDate)
         {
@@ -209,13 +248,17 @@ export function SlotDetailsForm({onSubmitParentCallback, startDateInputCallback}
                 }
             }
 
-            callback(startDate, endTime, stageDetails, genres, description);
+            callback(startDate, endDate, stage, genres, description);
 
             setStartDate(new Date());
-            setEndTime(new Date());
-            setStageDetails("");
+            setEndDate(new Date());
+            setStage("");
             setGenresSelected(genresSelectedInitializer);
             setDescription("");
+        }
+        else
+        {
+            setErrMsg("Error: invalid start date entered.")
         }
     }
 
@@ -238,7 +281,16 @@ export function SlotDetailsForm({onSubmitParentCallback, startDateInputCallback}
     return(
         <Container>
             <SlotDetailsFormDiv>
-            <StyledLabel htmlFor="startDate">
+                <StyledLabel htmlFor="stage">
+                    Stage:
+                </StyledLabel>
+                <select value={stage} onChange={(e) => setStage(e.target.value)} style={{width: "250px", marginBottom: "10px"}}>
+                    {stageOptions.map((option) => (
+                        <option value={option.value} style={{width: "250px"}}>{option.label}</option>
+                    ))}
+                </select>
+
+                <StyledLabel htmlFor="startDate">
                     Start Date:
                 </StyledLabel>
                 <StyledInput
@@ -279,17 +331,6 @@ export function SlotDetailsForm({onSubmitParentCallback, startDateInputCallback}
                     onChange={handleEndTimeEntry}
                 />
 
-                <StyledLabel htmlFor="stage">
-                    Stage Details: 
-                </StyledLabel>
-                <StyledInput 
-                    type="text"
-                    id="stageDetails"
-                    autoComplete="off"
-                    onChange={(e) => setStageDetails(e.target.value)}
-                    required
-                />
-
                 <StyledLabel htmlFor="genres">
                     Genres To Play:
                 </StyledLabel>
@@ -311,6 +352,9 @@ export function SlotDetailsForm({onSubmitParentCallback, startDateInputCallback}
                 <StyledButton onClick={handleSubmit}>
                     Add Slot
                 </StyledButton>
+                <p id="uidnote" style={isConflictingTimes || !isValidStartDate ? {} : {display: "none"}}>
+                    {errMsg}
+                </p>
             </SlotDetailsFormDiv>
         </Container>
     )
