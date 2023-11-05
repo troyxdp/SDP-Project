@@ -207,6 +207,7 @@ const RegistrationPage = () => {
         {
             setErrMsg("Error: email address already in use.");
         }
+        
     }
     
     return (

@@ -1,112 +1,130 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-
+import { collection, query, where, getDocs } from "firebase/firestore"; // Import necessary Firebase Firestore functions
+import { getFirestore } from "firebase/firestore";
+const db = getFirestore(); 
 const Container = styled.div`
   background: #a13333;
   display: flex;
   flex-direction: row;
   justify-content: center;
-  align-content: center;
+  align-items: center; /* Change from 'align-content' to 'align-items' */
   height: 60px;
   max-height: 60px;
 `;
+
 const NavigationDisplay = styled.button`
   color: white;
   background-color: transparent;
-  border: 0px solid #a13333;
+  border: none; /* Change 'border: 0px solid #a13333;' to 'border: none;' */
   width: 150px;
-  flex-wrap: wrap;
-  display: flex;
-  text-align: center;
+  display: flex; /* Remove 'flex-wrap' */
   justify-content: center;
-  align-content: center;
+  align-items: center; /* Change from 'align-content' to 'align-items' */
   font-weight: bold;
 `;
+
 const SearchInput = styled.input`
   padding: 5px;
   border: 1px solid white;
   background: transparent;
   color: white;
 `;
+
 const FilterDropdown = styled.select`
   padding: 5px;
   border: 1px solid white;
   background: transparent;
   color: white;
 `;
+
 const smallerButtonStyle = {
   width: '100px',
   height: '30px',
   margin: 'auto',
-//   marginTop: '15px',
-//   marginBottom: '10px',
-    
 };
 
 const SearchContainer = styled.div`
   display: flex;
-  align-items: center;
+  align-items: center; /* Change from 'align-content' to 'align-items' */
 `;
 
 export function NavigationBar() {
-    const [userEmail] = useState(sessionStorage.getItem("userEmail"));
-    const [filter, setFilter] = useState("Event Planner"); // Default to Event Planner
-    const [searchInput, setSearchInput] = useState("");
-    const [searchResults, setSearchResults] = useState([]);
-  
-    const navigate = useNavigate();
-  
-    const routeToProfilePage = async (e) => {
-      e.preventDefault();
-      navigate("/profilePage", { state: userEmail });
-    };
-  
-    const routeToConnectionsPage = async (e) => {
-      e.preventDefault();
-      navigate("/connectionsPage");
-    };
-  
-    const routeToMessagesPage = async (e) => {
-      e.preventDefault();
-      navigate("/messagesPage");
-    };
-  
-    const routeToRequestsPage = async (e) => {
-      e.preventDefault();
-      navigate("/requestsPage");
-    };
-  
-    const handleFilterChange = (e) => {
-      setFilter(e.target.value);
-    };
-  
-    const handleSearchInputChange = (e) => {
-      setSearchInput(e.target.value);
-    };
-  
-    const search = async () => {
-      // Implement Firebase query here based on filter and searchInput
-      // Update the searchResults state with the results
-      // Example: Firebase query goes here and updates searchResults
-      <Container>
-            <select value={filter} onChange={handleFilterChange}>
-            <option value="Event Planner">Event Planner</option>
-            <option value="Performer">Performer</option>
-          </select>
-      </Container>
-    };
-  
-    return (
-        <Container>
-          <NavigationDisplay onClick={routeToConnectionsPage}>Connections</NavigationDisplay>
-          <NavigationDisplay onClick={routeToMessagesPage}>Messages</NavigationDisplay>
-          <NavigationDisplay onClick={routeToRequestsPage}>Requests</NavigationDisplay>
-          <NavigationDisplay onClick={routeToProfilePage}>Profile</NavigationDisplay>
-          <SearchContainer>
-            <SearchInput type="text" placeholder="Search" value={searchInput} onChange={handleSearchInputChange} />
-            <button onClick={search} style={smallerButtonStyle}>Search</button>
-          </SearchContainer>
-        </Container>
-      );
-  }
+  const [userEmail] = useState(sessionStorage.getItem("userEmail"));
+  const [filter, setFilter] = useState("Event Planner");
+  const [searchInput, setSearchInput] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [err, setErr] = useState(false); // Add state for error handling
+  const [user, setUser] = useState(null); // Add state for user data
+  const [username, setUsername] = useState(""); // State to store the search username
+
+  const navigate = useNavigate();
+
+  const routeToProfilePage = (e) => {
+    e.preventDefault();
+    navigate("/profilePage", { state: userEmail });
+  };
+
+  const routeToConnectionsPage = (e) => {
+    e.preventDefault();
+    navigate("/connectionsPage");
+  };
+
+  const routeToMessagesPage = (e) => {
+    e.preventDefault();
+    navigate("/messagesPage");
+  };
+
+  const routeToRequestsPage = (e) => {
+    e.preventDefault();
+    navigate("/requestsPage");
+  };
+
+
+  const handleSearchInputChange = (e) => {
+    setSearchInput(e.target.value);
+  };
+
+  const search = async () => {
+    const q = query(
+      collection(db, "users"),
+      where("displayName", "==", username)
+    );
+
+    try {
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach((doc) => {
+        setUser(doc.data());
+      });
+    } catch (err) {
+      setErr(true);
+    }
+  };
+
+  const handleKey = (e) => {
+    if (e.code === "Enter") {
+      search();
+    }
+  };
+
+  return (
+    <Container>
+      <NavigationDisplay onClick={routeToConnectionsPage}>Connections</NavigationDisplay>
+      <NavigationDisplay onClick={routeToMessagesPage}>Messages</NavigationDisplay>
+      <NavigationDisplay onClick={routeToRequestsPage}>Requests</NavigationDisplay>
+      <NavigationDisplay onClick={routeToProfilePage}>Profile</NavigationDisplay>
+      <SearchContainer>
+        <SearchInput
+          type="text"
+          placeholder="Search"
+          value={searchInput}
+          onChange={handleSearchInputChange}
+          onKeyDown={handleKey} // Add onKeyDown event to trigger search on Enter key
+        />
+        <button onClick={search} style={smallerButtonStyle}>Search</button>
+        
+      </SearchContainer>
+    </Container>
+  );
+}
