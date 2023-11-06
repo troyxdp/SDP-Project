@@ -19,12 +19,15 @@ const MessagesPage = () => {
     const userEmail = sessionStorage.getItem("userEmail");
     
     return (
+      <>
+      <NavigationBar/>
       <div className='home'>
         <div className="container">
           <Sidebar/>
           <Chat/>
         </div>
       </div>
+      </>
     )
 }
 
