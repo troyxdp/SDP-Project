@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 
 const Message = ({ message }) => {
-  // Replace currentUser and data with static data
+  // For Firebase, replace the following static data with Firebase data
   const staticCurrentUser = {
     uid: "staticUserId",
     photoURL: "staticUserPhoto.jpg",
@@ -27,6 +27,11 @@ const Message = ({ message }) => {
       <div className="messageInfo">
         <img
           src={
+            // If using Firebase, replace staticCurrentUser and staticData with Firebase data
+            // Example with Firebase data:
+            // message.senderId === currentUser.uid
+            //   ? currentUser.photoURL
+            //   : data.user.photoURL
             message.senderId === staticCurrentUser.uid
               ? staticCurrentUser.photoURL
               : staticData.user.photoURL
