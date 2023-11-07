@@ -1,8 +1,6 @@
-import { useState, useRef, useEffect } from "react";
-import { useNavigate, useLocation} from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate} from "react-router-dom";
 import styled from "styled-components";
-import { PerformerDetailsForm } from "../components/PerformerDetailsForm";
-import { EventPlannerDetailsForm } from "../components/EventPlannerDetailsForm";
 import { doc, updateDoc, addDoc, collection, getDoc, getDocs} from "firebase/firestore";
 import { db } from '../firebase-config/firebase';
 import { SlotDetailsForm } from "../components/SlotDetailsForm";
@@ -450,7 +448,7 @@ const CreateEventPage = () => {
         let newStartDate = new Date(e.target.value);
         if (!isStartTimeSet || !isValidStartTime)
         {
-            newStartDate.setHours(0, 0, 0);
+            newStartDate.setHours(12, 0, 0);
         }
         else
         {
@@ -491,7 +489,7 @@ const CreateEventPage = () => {
         let newEndDate = new Date(e.target.value);
         if (!isEndTimeSet || !isValidEndTime)
         {
-            newEndDate.setHours(0, 0, 0);
+            newEndDate.setHours(13, 0, 0);
         }
         else
         {
@@ -499,19 +497,23 @@ const CreateEventPage = () => {
             let endMins = eventEndDate.getMinutes();
             newEndDate.setHours(endHrs, endMins, 0);
         }
-        if (newEndDate <= eventStartDate)
+        if (newEndDate <= eventStartDate && isEndTimeSet)
         {
             setIsValidEndDate(false);
         }
         else
         {
-            setIsValidEndDate(true);
+            if (newEndDate > eventStartDate)
+            {
+                setIsValidEndDate(true);
+            }
             setEventEndDate(newEndDate);
         }
     }
     const handleEndTimeInput = async (e) => {
         setIsEndTimeSet(true);
-        let date = new Date(eventEndDate);
+        let date = new Date();
+        date = eventEndDate;
         let time = e.target.value;
         let hours = parseInt(time.substring(0, 2));
         let minutes = parseInt(time.substring(3, 5));
@@ -700,7 +702,7 @@ const CreateEventPage = () => {
                 creatingUserEmail: email, 
                 eventName: eventName, 
                 eventType: eventType,
-                performerEmails: [],
+                performerDetails: [],
                 eventPlannerEmails: [email], 
                 startDate: eventStartDate,
                 endDate: eventEndDate, 
@@ -710,12 +712,15 @@ const CreateEventPage = () => {
                 slots: slots
             };
 
-            const currUpcomingEvents = eventPlannerDetails.upcomingEvents;
-            currUpcomingEvents.push(upcomingEvent);
-            const eventPlannerDetailsRef = doc(db, "users", email, "eventPlannerInfo", docId);
-            await updateDoc(eventPlannerDetailsRef, {
-                upcomingEvents: currUpcomingEvents
-            });
+            // const currUpcomingEvents = eventPlannerDetails.upcomingEvents;
+            // currUpcomingEvents.push(upcomingEvent);
+            // const eventPlannerDetailsRef = doc(db, "users", email, "eventPlannerInfo", docId);
+            // await updateDoc(eventPlannerDetailsRef, {
+            //     upcomingEvents: currUpcomingEvents
+            // });
+
+            const upcomingEventsRef = collection(db, "upcomingEvents");
+            await addDoc(upcomingEventsRef, upcomingEvent);
 
             for (let i = 0; i < otherHostEmails.length; i++)
             {
@@ -849,7 +854,7 @@ const CreateEventPage = () => {
                         onBlur={(e) => setIsEndDateFocus(false)}
                         required
                     />
-                    <p id="uidnote" style={isEndDateFocus && eventEndDate && !isValidEndDate ? {} : {display: "none"}}>
+                    <p id="uidnote" style={isEndDateFocus && eventEndDate && isEndTimeSet && !isValidEndDate ? {} : {display: "none"}}>
                         {/* <FontAwesomeIcon icon={faInfoCircle} /> */}
                         Error: Invalid end date entered. <br/>
                         Please enter an end date from your start date onwards.
@@ -973,6 +978,7 @@ const CreateEventPage = () => {
                             onSubmitParentCallback={onSubmitOfSlotDetailsForm}
                             stages={stages}
                             slots={slots}
+                            eventStartDate={eventStartDate}
                         />
                     }
 

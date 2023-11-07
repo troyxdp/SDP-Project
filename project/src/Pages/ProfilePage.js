@@ -133,6 +133,8 @@ const ProfilePage = () => {
     const [eventPlannerDetails, setEventPlannerDetails] = useState(null);
     const [groupDetails, setGroupDetails] = useState([]); //for later - add details of groups that user is member of
     const [isProfilePic, setIsProfilePic] = useState(false);
+    const [eventPlannerUpcomingEvents, setEventPlannerUpcomingEvents] = useState([]);
+    const [eventPlannerPastEvents, setEventPlannerPastEvents] = useState([]);
 
     //useStates for dictating the conditional rendering of details
     const [displayPerformerDetails, setDisplayPerformerDetails] = useState(false);
@@ -162,28 +164,66 @@ const ProfilePage = () => {
         if (userData.isEventPlanner)
         {
           //get event planner details
-          let eventPlannerDetails = null;
-          const querySnapshot = await getDocs(collection(db, "users", profileEmail, "eventPlannerInfo"));
+          let currEventPlannerDetails = null;
+          const eventPlannerSnapshot = await getDocs(collection(db, "users", profileEmail, "eventPlannerInfo"));
           let eventPlannerID;
-          querySnapshot.forEach((doc) => {
-            eventPlannerDetails = doc.data();
+          eventPlannerSnapshot.forEach((doc) => {
+            currEventPlannerDetails = doc.data();
             eventPlannerID = doc.id;
           });
+          setEventPlannerDetails(currEventPlannerDetails);
           
-          //check which events have already happened and move them from upcoming events to past events
+          //GET UPCOMING AND PAST EVENTS
+          //collection references
+          const upcomingEventsRef = collection(db, "upcomingEvents");
+          const pastEventsRef = collection(db, "pastEvents");
+
+          //get upcoming events
+          const upcomingEventsQuery = query(upcomingEventsRef, where("creatingUserEmail", "==", profileEmail));
+          const upcomingEventsQuerySnapshot = await getDocs(upcomingEventsQuery);
+          const currUpcomingEvents = [];
+          const currUpcomingEventsIDs = [];
+          upcomingEventsQuerySnapshot.forEach((doc) => {
+            currUpcomingEvents.push(doc.data());
+            currUpcomingEventsIDs.push(doc.id);
+          });
+
+          //get past events
+          const pastEventsQuery = query(pastEventsRef, where("creatingUserEmail", "==", profileEmail));
+          const pastEventsQuerySnapshot = await getDocs(pastEventsQuery);
+          const currPastEvents = [];
+          pastEventsQuerySnapshot.forEach((doc) => {
+            currPastEvents.push(doc.data());
+          });
+
+          //move upcoming events that have already happened to past events
           const today = new Date();
-          for (let i = 0; i < eventPlannerDetails.upcomingEvents.length; i++)
+          const newPastEvents = [];
+          const eventIDsToRemove = [];
+          for (let i = 0; i < currUpcomingEvents.length; i++)
           {
-            const currEventEndDate = new Date(eventPlannerDetails.upcomingEvents[i].endDate.toDate());
+            const currEventEndDate = new Date(currUpcomingEvents[i].endDate.toDate());
             if (currEventEndDate < today)
             {
-              eventPlannerDetails.pastEvents.push(eventPlannerDetails.upcomingEvents[i]);
-              eventPlannerDetails.upcomingEvents.splice(i, 1);
+              newPastEvents.push(currUpcomingEvents[i]);
+              currPastEvents.push(currUpcomingEvents[i]);
+              eventIDsToRemove.push(currUpcomingEventsIDs[i]);
+              currUpcomingEvents.splice(i, 1);
+              currUpcomingEventsIDs.splice(i, 1);
               i--;
             }
           }
-          await setDoc(doc(db, "users", profileEmail, "eventPlannerInfo", eventPlannerID), eventPlannerDetails); //update database
-          setEventPlannerDetails(eventPlannerDetails);
+
+          //set useStates to values of currPastEvents and currUpcomingEvents arrays
+          setEventPlannerPastEvents(currPastEvents);
+          setEventPlannerUpcomingEvents(currUpcomingEvents);
+
+          //make move of events reflect on database
+          for (let i = 0; i < newPastEvents.length; i++)
+          {
+            await addDoc(pastEventsRef, newPastEvents[i]); //add event to pastEvents collection
+            await deleteDoc(doc(db, "upcomingEvents", eventIDsToRemove[i])); //remove event from upcomingEvents collection
+          }
         }
 
         //if user is a performer
@@ -192,7 +232,6 @@ const ProfilePage = () => {
           const currPerformerDetails = [];
           const querySnapshot = await getDocs(collection(db, "users", profileEmail, "performerInfo"));
           querySnapshot.forEach((doc) => {
-            // doc.data() is never undefined for query doc snapshots
             console.log(doc.id, " => ", doc.data());
             currPerformerDetails.push(doc.data());
           });
@@ -204,7 +243,7 @@ const ProfilePage = () => {
         setIsDataLoadedFromDatabase(true);
       };
       getUserData();
-    }, [])
+    }, [profileEmail])
 
     //methods executed on the click of tab buttons in bottom panel
     const onClickPerformerDetailsButton = () => {
@@ -402,6 +441,7 @@ const ProfilePage = () => {
                   <Detail><b>Location:</b> {user.location}</Detail>
                   <Detail>{user.bio}</Detail>
                 </DetailsBox>
+
                 {/* These components were added just for testing navigation to other profiles as well as some other features like adding friends */}
                 {/* <TabsButton onClick={testGoToOtherUserProfile8}>
                   Test 8
@@ -409,7 +449,9 @@ const ProfilePage = () => {
                 <TabsButton onClick={testGoToOtherUserProfile7}>
                   Test 7
                 </TabsButton> */}
+
               </TopPanel>
+
               <BottomPanel>
                 <Tabs>
                   {tabButtons}
@@ -426,10 +468,9 @@ const ProfilePage = () => {
                   <UserDetailsContainer>
                     <StyledHeader>Event Planner Details:</StyledHeader>
                     <EventPlannerDetailsProfileOverview
-                      email={userEmail}
                       types={eventPlannerDetails.types}
-                      pastEvents={eventPlannerDetails.pastEvents}
-                      upcomingEvents={eventPlannerDetails.upcomingEvents}
+                      pastEvents={eventPlannerPastEvents}
+                      upcomingEvents={eventPlannerUpcomingEvents}
                       links={eventPlannerDetails.links}
                       media={eventPlannerDetails.media}
                     />
@@ -439,7 +480,9 @@ const ProfilePage = () => {
                   <p>DISPLAY HERE: GroupDetailsProfileOverview components</p>
                 }
               </BottomPanel>
+
             </HorizontalPanel>
+
             <VerticalPanel>
               <StyledHeader>Reviews:</StyledHeader>
             </VerticalPanel>
