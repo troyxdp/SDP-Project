@@ -7,12 +7,6 @@ import { EventPlannerDetailsForm } from "../components/EventPlannerDetailsForm";
 import { PerformerDetailsForm } from "../components/PerformerDetailsForm";
 import { db } from '../firebase-config/firebase';
 
-const StyledHeader = styled.h1`
-    font-size: 2.1rem;
-    font-weight: bold;
-    margin-top: 5px;
-    margin-bottom: 5px;
-`;
 const Container = styled.div`
     padding: 15px 0;
     display: flex;
@@ -24,6 +18,12 @@ const StyledCheckboxContainer = styled.div`
     display: flex;
     flex-direction: column;
     align-items: left;
+`;
+const StyledHeader = styled.h1`
+    font-size: 2.1rem;
+    font-weight: bold;
+    margin-top: 5px;
+    margin-bottom: 5px;
 `;
 const StyledButton = styled.button`
     display: inline-block;
@@ -60,6 +60,7 @@ const DisplayFormButton = styled.button`
     - See if there is a way to add multiple documents at the same time instead of adding each performer type details one at a time
     - Add submission of equipment item or link in AdderContainer on the pressing of the enter key
     - Add list box display of performer details
+    - Test creation of performer details after recent changes
 */
 
 export default function DetailsPage() {
@@ -119,8 +120,6 @@ export default function DetailsPage() {
             genres : genres,
             equipment : equipment,
             hourlyRate : hourlyRate,
-            pastEvents : [],
-            upcomingEvents : [],
             links : links,
             media : media
         };
@@ -150,8 +149,6 @@ export default function DetailsPage() {
         let newEventPlannerDetails = {
             userEmail : email,
             types : types,
-            pastEvents : [],
-            upcomingEvents : [],
             links : links,
             media : []
         }

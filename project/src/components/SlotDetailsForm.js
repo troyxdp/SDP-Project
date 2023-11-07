@@ -69,7 +69,7 @@ const DescriptionInput = styled.textarea`
     - Add error checking to ensure description IS entered and genre is selected
 */
 
-export function SlotDetailsForm({onSubmitParentCallback, stages, slots}) {
+export function SlotDetailsForm({onSubmitParentCallback, stages, slots, eventStartDate}) {
     //set all of the options for type of event, genres played, and stages
     const typeOptions = [
         {value: "DJ", label: "DJ"},
@@ -124,9 +124,16 @@ export function SlotDetailsForm({onSubmitParentCallback, stages, slots}) {
         genresSelectedInitializer.push(false);
     }
 
+    let initialStartDate = new Date();
+    initialStartDate = eventStartDate;
+    let initialEndDate = new Date(initialStartDate.getFullYear(), 
+                                  initialStartDate.getMonth(),
+                                  initialStartDate.getDate(),
+                                  (initialStartDate.getHours() + 1) % 24);
+
     //useStates for inputted data
-    const [startDate, setStartDate] = useState(new Date());
-    const [endDate, setEndDate] = useState(new Date());
+    const [startDate, setStartDate] = useState(initialStartDate);
+    const [endDate, setEndDate] = useState(initialEndDate);
     const [stage, setStage] = useState(stages[0]);
     const [genresSelected, setGenresSelected] = useState(genresSelectedInitializer);
     const [description, setDescription] = useState("");
