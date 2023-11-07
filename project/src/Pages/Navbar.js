@@ -17,9 +17,6 @@ const Navbar = () => {
 
   // Simulate a delay to demonstrate useEffect
   useEffect(() => {
-
-
-
     const fetchData = async () => {
       
       const docRef = doc(db, 'users', email);
