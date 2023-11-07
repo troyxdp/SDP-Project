@@ -173,7 +173,8 @@ export default function DetailsPage() {
         {
             try
             {
-                await createUserWithEmailAndPassword(getAuth(), email, pwd);
+                await createUserWithEmailAndPassword(getAuth(), email, pwd)
+               
             }
             catch (err)
             {

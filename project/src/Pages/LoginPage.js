@@ -93,12 +93,16 @@ const LoginPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         console.log(email, pass);
+
         try 
         {
             await signInWithEmailAndPassword(getAuth(),email,pass);
             if(getAuth().currentUser != null)
             {
                 sessionStorage.setItem('userEmail', email);
+                
+                // sessionStorage.setItem('fullName', usrData.fullName)
+
                 setIsIncorrectDetails(false);
                 navigate("/profilePage", {state : email});
                 window.location.reload(false);
