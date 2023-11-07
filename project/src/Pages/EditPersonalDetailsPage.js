@@ -366,9 +366,7 @@ export default function EditPersonalDetailsPage() {
         const eventPlanner = {
             links : eventPlannerLinks,
             media : [],
-            pastEvents : eventPlannerDetails.pastEvents,
             types : eventTypes,
-            upcomingEvents : eventPlannerDetails.upcomingEvents,
             userEmail : userEmail
         };
         console.log(eventPlannerID);
