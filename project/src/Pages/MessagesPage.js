@@ -1,18 +1,18 @@
 import {NavigationBar} from "../components/NavigationBar";
 import styled from "styled-components";
-import Sidebar from '../MesssageComponents/Sidebar'
-import Chat from '../MesssageComponents/Chat'
+import Sidebar from '../MessageComponents/Sidebar'
+import Chat from '../MessageComponents/Chat'
 
 const Container = styled.div`
   display: grid;
   grid-template-columns: 1fr 0.5fr; /* Three columns: two flexible and one 200px wide */
-  height: 100vh;
+  height: 98vh;
 `;
 
 const Container1 = styled.div`
   display: grid;
   grid-template-columns: 1fr 0.5fr; /* Three columns: two flexible and one 200px wide */
-  height: 100vh;
+  height: 90vh;
   margin-top: 10px;
 `;
 const StyledHeader = styled.h1`
