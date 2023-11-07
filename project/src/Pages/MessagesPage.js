@@ -30,10 +30,10 @@ const MessagesPage = () => {
       <NavigationBar/>
       <div> </div>
       <div className='home'>
-        <Container1 className="container">
+        <div className="container">
           <Sidebar/>
           <Chat/>
-        </Container1>
+        </div>
       </div>
       </>
     )
