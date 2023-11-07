@@ -4,6 +4,16 @@ import Attach from "../assets/attach.png";
 import './styles.css';
 import { AuthContext } from "../context/AuthContext";
 import { ChatContext } from "../context/ChatContext";
+import styled from "styled-components";
+
+const Sendbutton = styled.button`
+  // margin-bottom: 30px;
+  padding: 10px 30px;
+  font-size: 12px;
+  vertical-align: middle; /* Adjust the vertical alignment as needed */
+`;
+
+
 
 const Input = () => {
   const [text, setText] = useState("");
@@ -34,22 +44,37 @@ const Input = () => {
     <div className="input">
       <input
         type="text"
-        placeholder="Type something..."
+        placeholder="Messages..."
         onChange={(e) => setText(e.target.value)}
         value={text}
+        style={{
+          width: '250px',
+          height: '40px',
+          fontSize: '18px',
+        }}
       />
       <div className="send">
-        <img src={Attach} alt="" />
         <input
           type="file"
           style={{ display: "none" }}
           id="file"
           onChange={(e) => setImg(e.target.files[0])}
         />
-        <label htmlFor="file">
-          <img src={Img} alt="" />
-        </label>
-        <button onClick={handleSend}>Send</button>
+        <div className="send-container">
+          <label htmlFor="file">
+            <img
+              src={Img}
+              alt=""
+              style={{
+                width: '40px',
+                height: '40px',
+                justifyContent: "space-between",
+                verticalAlign: 'middle',
+              }}
+            />
+          </label>
+          <Sendbutton onClick={handleSend}>Send</Sendbutton>
+        </div>
       </div>
     </div>
   );

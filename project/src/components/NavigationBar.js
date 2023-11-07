@@ -40,8 +40,8 @@ const FilterDropdown = styled.select`
 `;
 
 const smallerButtonStyle = {
-  width: '100px',
-  height: '30px',
+  width: '98px',
+  height: '28px',
   margin: 'auto',
 };
 
@@ -80,7 +80,6 @@ export function NavigationBar() {
     e.preventDefault();
     navigate("/requestsPage");
   };
-
 
   const handleSearchInputChange = (e) => {
     setSearchInput(e.target.value);

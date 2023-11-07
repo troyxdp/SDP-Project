@@ -19,29 +19,20 @@ const Message = ({ message }) => {
     ref.current?.scrollIntoView({ behavior: "smooth" });
   }, [message]);
 
+  const isUserMessage = message.senderId === staticCurrentUser.uid;
+  const messageClass = `message ${isUserMessage ? "owner" : ""}`;
+
   return (
-    <div
-      ref={ref}
-      className={`message ${message.senderId === staticCurrentUser.uid && "owner"}`}
-    >
+    <div ref={ref} className={messageClass}>
       <div className="messageInfo">
         <img
-          src={
-            // If using Firebase, replace staticCurrentUser and staticData with Firebase data
-            // Example with Firebase data:
-            // message.senderId === currentUser.uid
-            //   ? currentUser.photoURL
-            //   : data.user.photoURL
-            message.senderId === staticCurrentUser.uid
-              ? staticCurrentUser.photoURL
-              : staticData.user.photoURL
-          }
+          src={isUserMessage ? staticCurrentUser.photoURL : staticData.user.photoURL}
           alt=""
         />
-        <span>just now</span>
       </div>
       <div className="messageContent">
         <p>{message.text}</p>
+        <span>just now</span>
         {message.img && <img src={message.img} alt="" />}
       </div>
     </div>

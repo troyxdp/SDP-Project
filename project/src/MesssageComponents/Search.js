@@ -46,8 +46,8 @@ const Search = () => {
         <div className="searchBar">
             <div className="searchForm">
                 <TextField
-                    InputLabelProps={{style: {color: 'white', fontSize: 17} }}
-                    inputProps={{style: {fontSize: 17}}}
+                    InputLabelProps={{style: {color: 'black', fontSize: 20, fontFamily: 'cursive', fontStyle:'oblique'} }}
+                    inputProps={{style: {color:"black", fontSize: 17}}}
                     fullWidth
                     type="text"
                     label="Search users..." 

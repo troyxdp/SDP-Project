@@ -1,6 +1,6 @@
 .formContainer {
   background-color: #ffa7a7;
-  height: 100vh;
+  height: 80%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -10,6 +10,7 @@
     padding: 20px 60px;
     border-radius: 10px;
     display: flex;
+    height: 90%;
     flex-direction: column;
     gap: 10px;
     align-items: center;
@@ -73,33 +74,37 @@
 
 .home {
   background-color: #030405;
-  height: 100vh;
+  height: fit-content;
+  /*width: fit-content;*/
   display: flex;
   align-items: center;
   justify-content: center;
 
   .container {
     border: 1px solid white;
-    border-radius: 10px;
+    border-radius: 13px;
     width: 98%;
-    height: 88%;
+    height: 90vh;
     display: flex;
     overflow: hidden;
   }
 
     .sidebar {
       flex: 1;
-      background-color: #ee4f4f;
-      position: relative;
+      background-color: white;
+      color: black;
+      border: 3px solid black;
+      /*height: 100vh;*/
 
       .navbar {
-        display: flex;
+        /* display: flex; */
         align-items: center;
-        background-color: #df1d0b;
+        background-color: #b21818;  /*#a13333;*/
+        border: 1px solid black;
         height: 50px;
         padding: 10px;
         justify-content: space-between;
-        color: #ddddf7;
+        color: white;
 
         .logo {
           font-weight: bold;
@@ -111,6 +116,7 @@
         .user {
           display: flex;
           gap: 10px;
+          font-size: 20px;
 
           img {
             background-color: #ddddf7;
@@ -132,14 +138,15 @@
       }
       .search {
         border-bottom: 1px solid white;
+        color: black;
         .searchForm {
           padding: 10px;
-          color: white;
+          color: black;
 
           input {
             background-color: transparent;
             border: none;
-            color: white;
+            color: black;
             outline: none;
 
             &::placeholder {
@@ -154,7 +161,7 @@
         display: flex;
         align-items: center;
         gap: 10px;
-        color: white;
+        color: rgb(246, 242, 242);
         cursor: pointer;
 
         &:hover {
@@ -175,22 +182,26 @@
           }
           p {
             font-size: 14px;
-            color: lightgray;
+            color: white;
           }
         }
       }
     }
     .chat {
       flex: 2;
+      border: 3px solid black;
 
       .chatInfo {
         height: 50px;
-        background-color: #df1d0b;
+        background-color: #b21818;
+        border:1px solid #030405;
         display: flex;
         align-items: center;
         justify-content: space-between;
         padding: 10px;
-        color: lightgray;
+        font-size: 25px;
+        font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+        color: white;
       }
 
       .chatIcons {
@@ -198,13 +209,13 @@
         gap: 10px;
 
         img {
-          height: 660px;/*Changed*/
+          height: 650px;/*Changed*/
           cursor: pointer;
         }
       }
 
       .messages {
-        background-color: #e78585;
+        background-color: white;
         padding: 10px;
         height: calc(100% - 160px);
         overflow: scroll;
@@ -261,20 +272,23 @@
       }
 
       .input {
-        height: 60px;
+        height: 45px;
+        width: 96.5%;
+        border-radius: 5%;
         background-color: white;
         padding: 10px;
+        border: 3px solid black;
         display: flex;
         align-items: center;
         justify-content: space-between;
 
         input {
-          height: 80%;
-          width: 100%;
-          border: none;
-          outline: none;
+          height: 100vh;
+          width: 300vh;
+          border: 3px solid black;
+          outline: black;
           color: #2f2d52;
-          font-size: 20px;
+          font-size: 10px;
 
           &::placeholder {
             height: 30%;
@@ -285,21 +299,22 @@
         .send {
           display: flex;
           align-items: right;
-          gap: 30%;
-
-          img {
-            height: 24px;
-            cursor: pointer;
-          }
-
-          button {
-            border: none;
-            padding: 10px 15px;
-            color: white;
-            background-color: #8da4f1;
-            cursor: pointer;
-          }
         }
+        
+        .img {
+          margin-right: 100px;
+          margin-bottom: 30px;
+          padding: 10px 30px; 
+        }
+        
+        .send input[type="file"] {
+          display: none; /* Hide the file input */
+        }
+        
+        .send label {
+          cursor: pointer;
+        }
+        
       }
     }
   }
