@@ -1,25 +1,36 @@
-import React, { useEffect, useState } from 'react';
+import React, { Children, useContext, useEffect, useState } from 'react';
+import { db } from '../firebase-config/firebase';
+import { getDoc, doc } from 'firebase/firestore';
 import './styles.css';
+import { AuthContext } from '../context/AuthContext';
 
 const Navbar = () => {
   // Use state to store user data
+
+  const email = sessionStorage.getItem('userEmail')
+
   const [user, setUser] = useState({
-    email: 'demo@example.com',
-    fullName: 'John Doe', // Initialize with static data
+    email: email,
+    fullName: '', // Initialize with static data
+    profilePic: ''
   });
 
   // Simulate a delay to demonstrate useEffect
   useEffect(() => {
+
+
+
     const fetchData = async () => {
-      // Simulate an API call
-      setTimeout(() => {
-        const userData = {
-          email: 'user@example.com', // Replace with actual user data
-          fullName: 'Alice Johnson', // Replace with actual user data
-        };
-        setUser(userData);
-      }, 2000); // Simulate a 2-second delay
-    };
+      
+      const docRef = doc(db, 'users', email);
+      const docSnap = await getDoc(docRef);
+
+      setUser({
+        email: email,
+        fullName: docSnap.data().fullName,
+        profilePic: docSnap.data().profilePic
+      });
+    }
     fetchData();
   }, []);
 
