@@ -1,12 +1,19 @@
 import React, { useContext, useEffect, useState } from "react";
 import { ChatContext } from "../context/ChatContext";
 import Message from "./Message";
+import styled from "styled-components";
 import './styles.css';
+
+const Right = styled.text`
+text-align: right;
+gap: 100px;
+
+`;
 
 const Messages = () => {
   // State to store messages
   const [messages, setMessages] = useState([]);
-  
+
   // Get chat data from the context
   const { data } = useContext(ChatContext);
 
@@ -26,9 +33,13 @@ const Messages = () => {
 
   return (
     <div className="messages">
-      {messages.map((m) => (
-        <Message message={m} key={m.id} />
-      ))}
+      {messages.map((m, index) => (
+        <><Message
+          message={m}
+          key={m.id} /><Right
+            right={m.sender === "user2"} /></>
+        )
+      )}
     </div>
   );
 };
