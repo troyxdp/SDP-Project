@@ -21,7 +21,8 @@ const Search = () => {
 
         const q = query(
             collection(db, "users"), 
-            where("fullName", "==", userName)
+            where("fullName", ">=", userName),
+            where("fullName", "<=", userName + "/uf8ff")
         );
 
         try{   
