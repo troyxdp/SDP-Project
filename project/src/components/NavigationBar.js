@@ -1,38 +1,54 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-import { collection, query, where, getDocs } from "firebase/firestore"; // Import necessary Firebase Firestore functions
+import { collection, query, where, getDocs } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
-const db = getFirestore(); 
+const db = getFirestore();
+
 const Container = styled.div`
   background: #a13333;
   display: flex;
   flex-direction: row;
-  justify-content: center;
-  align-items: center; /* Change from 'align-content' to 'align-items' */
-  height: 60px;
-  max-height: 60px;
+  align-items: center;
+  padding: 10px;
+`;
+
+const ResultsContainer = styled.div`
+  background: white;
+  width: 300px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-top: 10px;
+`;
+const ResultRow = styled.div`
+  margin: 5px 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+`;
+
+const NameSpan = styled.span`
+  margin-bottom: 5px; /* Add margin to create space between name and email */
+`;
+
+const EmailSpan = styled.span`
+  font-size: 12px; /* Adjust the font size for email */
+  color: #777; /* Change the color of the email text */
 `;
 
 const NavigationDisplay = styled.button`
   color: white;
   background-color: transparent;
-  border: none; /* Change 'border: 0px solid #a13333;' to 'border: none;' */
+  border: none;
   width: 150px;
-  display: flex; /* Remove 'flex-wrap' */
+  display: flex;
   justify-content: center;
-  align-items: center; /* Change from 'align-content' to 'align-items' */
+  align-items: center;
   font-weight: bold;
 `;
 
 const SearchInput = styled.input`
-  padding: 5px;
-  border: 1px solid white;
-  background: transparent;
-  color: white;
-`;
-
-const FilterDropdown = styled.select`
   padding: 5px;
   border: 1px solid white;
   background: transparent;
@@ -47,23 +63,19 @@ const smallerButtonStyle = {
 
 const SearchContainer = styled.div`
   display: flex;
-  align-items: center; /* Change from 'align-content' to 'align-items' */
+  align-items: center;
 `;
 
 export function NavigationBar() {
+  const [userName, setUserName] = useState("");
+  const [users, setUsers] = useState([]);
+  const [error, setError] = useState(false);
   const [userEmail] = useState(sessionStorage.getItem("userEmail"));
-  const [filter, setFilter] = useState("Event Planner");
   const [searchInput, setSearchInput] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
-  const [err, setErr] = useState(false); // Add state for error handling
-  const [user, setUser] = useState(null); // Add state for user data
-  const [username, setUsername] = useState(""); // State to store the search username
-
   const navigate = useNavigate();
 
-  const routeToProfilePage = (e) => {
-    e.preventDefault();
-    navigate("/profilePage", { state: userEmail });
+  const routeToProfilePage = (userId) => {
+    navigate(`/profilePage/${userId}`); // Pass the user's ID as a parameter
   };
 
   const routeToConnectionsPage = (e) => {
@@ -81,27 +93,36 @@ export function NavigationBar() {
     navigate("/requestsPage");
   };
 
+  const logout = (e) => {
+    e.preventDefault();
+    navigate("/loginPage");
+    sessionStorage.setItem('userEmail', "");
+  }
+
   const handleSearchInputChange = (e) => {
-    setSearchInput(e.target.value);
+    setUserName(e.target.value);
   };
 
   const search = async () => {
     const q = query(
       collection(db, "users"),
-      where("displayName", "==", username)
+      where("fullName", ">=", userName),
+      where("fullName", "<=", userName + "/uf8ff")
     );
 
     try {
       const querySnapshot = await getDocs(q);
+      const usersData = [];
       querySnapshot.forEach((doc) => {
-        setUser(doc.data());
+        usersData.push(doc.data());
       });
+      setUsers(usersData);
     } catch (err) {
-      setErr(true);
+      setError(true);
     }
   };
 
-  const handleKey = (e) => {
+  const handleKeyDown = (e) => {
     if (e.code === "Enter") {
       search();
     }
@@ -112,18 +133,32 @@ export function NavigationBar() {
       <NavigationDisplay onClick={routeToConnectionsPage}>Connections</NavigationDisplay>
       <NavigationDisplay onClick={routeToMessagesPage}>Messages</NavigationDisplay>
       <NavigationDisplay onClick={routeToRequestsPage}>Requests</NavigationDisplay>
-      <NavigationDisplay onClick={routeToProfilePage}>Profile</NavigationDisplay>
+      <NavigationDisplay onClick={() => routeToProfilePage(userEmail)}>Profile</NavigationDisplay>
       <SearchContainer>
         <SearchInput
           type="text"
           placeholder="Search"
-          value={searchInput}
+          onKeyDown={handleKeyDown}
+          value={userName}
           onChange={handleSearchInputChange}
-          onKeyDown={handleKey} // Add onKeyDown event to trigger search on Enter key
         />
         <button onClick={search} style={smallerButtonStyle}>Search</button>
-        
+        <NavigationDisplay onClick={logout}>Sign Out</NavigationDisplay>
       </SearchContainer>
+
+      {users.length > 0 && (
+        <ResultsContainer>
+          <h3>Search Results:</h3>
+          {users.map((user, index) => (
+            <ResultRow key={index} onClick={() => routeToProfilePage(user.userId)}>
+              <NameSpan>{user.fullName}</NameSpan>
+              {user.email && <span className="email">{user.email}</span>}
+            </ResultRow>
+          ))}
+        </ResultsContainer>
+      )}
+
+      {error && <p>Error occurred while searching.</p>}
     </Container>
   );
 }
