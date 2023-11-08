@@ -7,7 +7,6 @@ import './styles.css';
 const Right = styled.text`
 text-align: right;
 gap: 100px;
-
 `;
 
 const Messages = () => {

@@ -6,7 +6,6 @@ import './styles.css';
 const Chats = () => {
   const [chats, setChats] = useState({});
   const [selectedChat, setSelectedChat] = useState(null);
-
   const { dispatch } = useContext(ChatContext);
   const { currentUser } = useContext(AuthContext);
 

@@ -134,7 +134,6 @@
         justify-content: space-between;
         color: white;
 
-        
         .logo {
           font-weight: bold;
           height: 20px;
@@ -294,6 +293,7 @@
         padding: 10px;
         height: calc(100% - 160px);
         overflow: scroll;
+
         .message {
           display: flex;
           gap: 20px;
@@ -344,6 +344,7 @@
           }
         }
       }
+
       .input {
         height: 45px;
         width: 96.5%;
