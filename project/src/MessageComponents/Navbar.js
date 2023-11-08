@@ -33,7 +33,6 @@ const Navbar = () => {
 
   return (
     <div className='navbar'>
-      <span className='logo'>Messenger</span>
       <div className='user'>
         {/* <img src={currentUser.photoURL} alt="" /> */}
         <span>{user.fullName}</span> {/* Display the user's full name */}

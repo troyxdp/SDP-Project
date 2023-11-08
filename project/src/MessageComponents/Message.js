@@ -20,10 +20,9 @@ const Message = ({ message }) => {
   }, [message]);
 
   const isUserMessage = message.senderId === staticCurrentUser.uid;
-  const messageClass = `message ${isUserMessage ? "owner" : ""}`;
 
   return (
-    <div ref={ref} className={messageClass}>
+    <div ref={ref} className={`message ${isUserMessage ? "owner" : ""}`}>
       <div className="messageInfo">
         <img
           src={isUserMessage ? staticCurrentUser.photoURL : staticData.user.photoURL}
@@ -32,8 +31,8 @@ const Message = ({ message }) => {
       </div>
       <div className="messageContent">
         <p>{message.text}</p>
-        <span>just now</span>
         {message.img && <img src={message.img} alt="" />}
+        <span>just now</span>
       </div>
     </div>
   );
