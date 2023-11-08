@@ -81,6 +81,12 @@ export function NavigationBar() {
     navigate("/requestsPage");
   };
 
+  const logout = (e) => {
+    e.preventDefault();
+    navigate("/loginPage");
+    sessionStorage.setItem('userEmail', "");
+  }
+
   const handleSearchInputChange = (e) => {
     setSearchInput(e.target.value);
   };
@@ -122,7 +128,7 @@ export function NavigationBar() {
           onKeyDown={handleKey} // Add onKeyDown event to trigger search on Enter key
         />
         <button onClick={search} style={smallerButtonStyle}>Search</button>
-        
+        <NavigationDisplay onClick={logout}>Sign Out</NavigationDisplay>
       </SearchContainer>
     </Container>
   );

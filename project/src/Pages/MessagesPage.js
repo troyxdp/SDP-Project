@@ -1,7 +1,7 @@
-import {NavigationBar} from "../components/NavigationBar";
 import styled from "styled-components";
-import Sidebar from '../MesssageComponents/Sidebar'
-import Chat from '../MesssageComponents/Chat'
+import Chat from '../MessageComponents/Chat';
+import Sidebar from '../MessageComponents/Sidebar';
+import { NavigationBar } from "../components/NavigationBar";
 
 const Container = styled.div`
   display: grid;
