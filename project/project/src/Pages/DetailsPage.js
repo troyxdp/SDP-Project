@@ -69,7 +69,8 @@ export default function DetailsPage() {
 
     let userData = {
         email: email,
-        fullName: usrData.fullName,
+        displayName: usrData.displayName,
+        searchName: usrData.displayName,
         location: usrData.location,
         bio: usrData.bio,
         profilePic: usrData.profilePic,

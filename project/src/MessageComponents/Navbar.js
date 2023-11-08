@@ -11,7 +11,7 @@ const Navbar = () => {
 
   const [user, setUser] = useState({
     email: email,
-    fullName: '', // Initialize with static data
+    displayName: '', // Initialize with static data
     profilePic: ''
   });
 
@@ -24,7 +24,7 @@ const Navbar = () => {
 
       setUser({
         email: email,
-        fullName: docSnap.data().fullName,
+        displayName: docSnap.data().displayName,
         profilePic: docSnap.data().profilePic
       });
     }
@@ -35,7 +35,7 @@ const Navbar = () => {
     <div className='navbar'>
       <div className='user'>
         {/* <img src={currentUser.photoURL} alt="" /> */}
-        <span>{user.fullName}</span> {/* Display the user's full name */}
+        <span>{user.displayName}</span> {/* Display the user's full name */}
       </div>
     </div>
   );

@@ -21,8 +21,8 @@ const Search = () => {
 
         const q = query(
             collection(db, "users"), 
-            where("fullName", ">=", searchTag),
-            where("fullName", "<=", searchTag + "/uf8ff")
+            where("searchName", ">=", searchTag.toLowerCase()),
+            where("searchName", "<=", searchTag.toLowerCase() + "/uf8ff")
         );
 
         try{   
@@ -77,7 +77,7 @@ const Search = () => {
                         alt="" 
                     />
                     <div className="userChatItem">
-                        <span>{user.fullName}</span>
+                        <span>{user.displayName}</span>
                     </div>
                 </div>
             }

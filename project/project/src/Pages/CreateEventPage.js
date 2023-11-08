@@ -201,7 +201,7 @@ const CreateEventPage = () => {
     //initializing object for user field
     const userInitializer = {
         email : email,
-        fullName : "",
+        displayName : "",
         location : "",
         bio : "",
         profilePic : null,
@@ -425,7 +425,7 @@ const CreateEventPage = () => {
     
             let userData = {
                 email : email,
-                fullName : docSnap.data().fullName,
+                displayName : docSnap.data().displayName,
                 location : docSnap.data().location,
                 bio : docSnap.data().bio,
                 profilePic : docSnap.data().profilePic,

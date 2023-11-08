@@ -1,8 +1,8 @@
 class User {
-    constructor(email, fullName, location, bio, profilePic)
+    constructor(email, displayName, location, bio, profilePic)
     {
         this.email = email; //string
-        this.fullName = fullName; //string
+        this.displayName = displayName; //string
 
         this.location = location; //string
         this.bio = bio; //string
