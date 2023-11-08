@@ -9,7 +9,7 @@ import './styles.css';
 
 const Search = () => {
     // State variables
-    const [userName, setUserName] = useState("");  // To store the search query
+    const [searchTerm, setUserName] = useState("");  // To store the search query
     const [user, setUser] = useState(null);  // To store the user data from the search
     const [error, setError] = useState(false);  // To handle errors
 
@@ -19,11 +19,15 @@ const Search = () => {
         // For demonstration, we'll use static data here.
         // Replace the static data with your actual data source.
 
-        const q = query(
-            collection(db, "users"), 
-            where("fullName", ">=", userName),
-            where("fullName", "<=", userName + "/uf8ff")
-        );
+        const q = collection(db, "users") 
+            .orderBy("fullName")
+            .startAt(searchTerm)  
+            .endAt(searchTerm + "\uf8ff");    
+        //query(
+            // collection(db, "users"), 
+            // where("fullName", ">=", searchTag),
+            // where("fullName", "<=", searchTag + "/uf8ff")
+        // );
 
         try{   
             const querySnapshot = await getDocs(q);
@@ -65,7 +69,7 @@ const Search = () => {
                     label="Search users..." 
                     variant="standard" 
                     onKeyDown={handleKeyDown}
-                    value={userName}
+                    value={searchTerm}
                     onChange={(e) => setUserName(e.target.value)}
                 />
             </div>
