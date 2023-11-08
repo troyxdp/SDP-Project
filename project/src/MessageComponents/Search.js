@@ -15,6 +15,7 @@ const ResultsContainer = styled.div`
   top: 0;
   right: 0;
   z-index: 1;
+  overflow-y: auto;
   display: ${props => props.visible ? "block" : "none"};
 `;
 
@@ -37,7 +38,8 @@ const EmailSpan = styled.span`
 
 const UserChatContainer = styled.div`
   position: relative;
-  margin-top: 40px; /* Space for the search results */
+  margin-top: 40px;
+  overflow: hidden;
 `;
 
 const UserChat = styled.div`
@@ -94,7 +96,7 @@ const Search = () => {
   return (
     <div className="searchBar">
       <div className="searchForm">
-        <TextField
+      <TextField
           InputLabelProps={{ style: { color: 'black', fontSize: 20, fontWeight: 'bolder' } }}
           inputProps={{ style: { color: "black", fontSize: 17 } }}
           fullWidth
