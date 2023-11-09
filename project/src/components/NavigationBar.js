@@ -95,6 +95,12 @@ export function NavigationBar() {
     navigate("/requestsPage");
   };
 
+  const logout = (e) => {
+    e.preventDefault();
+    navigate("/loginPage");
+    sessionStorage.setItem('userEmail', "");
+  }
+
   const handleSearchInputChange = (e) => {
     setUserName(e.target.value);
   };
@@ -145,9 +151,8 @@ export function NavigationBar() {
           value={userName}
           onChange={handleSearchInputChange}
         />
-        <button onClick={search} style={smallerButtonStyle}>
-          Search
-        </button>
+        <button onClick={search} style={smallerButtonStyle}>Search</button>
+        <NavigationDisplay onClick={logout}>Sign Out</NavigationDisplay>
       </SearchContainer>
 
       {users.length > 0 && (

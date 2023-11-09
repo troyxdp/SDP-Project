@@ -138,10 +138,11 @@ const Search = () => {
       <UserChatContainer>
         {chatOpen && (
           <UserChat>
-            {addUserToChats(selectedUser.displayName)}
+            {/* User chat content goes here */}
+            {/* <button onClick={closeChat}>Close Chat</button> */}
             <p>Chat with {selectedUser.displayName}</p>
-          </UserChat>
-        )}
+          </UserChat>)
+        }
       </UserChatContainer>
     </div>
   );

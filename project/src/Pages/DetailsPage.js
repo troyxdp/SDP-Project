@@ -55,8 +55,6 @@ const DisplayFormButton = styled.button`
 
 /*
     TO-DO:
-    - Add error messages for invalid details enterred
-    - Add the functionality of being able to have multiple forms and multiple submissions
     - See if there is a way to add multiple documents at the same time instead of adding each performer type details one at a time
     - Add submission of equipment item or link in AdderContainer on the pressing of the enter key
     - Add list box display of performer details
@@ -70,7 +68,8 @@ export default function DetailsPage() {
 
     let userData = {
         email: email,
-        fullName: usrData.fullName,
+        displayName: usrData.displayName,
+        searchName: usrData.displayName.toLowerCase(),
         location: usrData.location,
         bio: usrData.bio,
         profilePic: usrData.profilePic,

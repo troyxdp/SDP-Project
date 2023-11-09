@@ -113,9 +113,9 @@ const RegistrationPage = () => {
     const [matchFocus, setMatchFocus] = useState(false);
 
     //Consts for Full Name
-    const [fullName,setFullName] = useState('');
-    const [validFullName, setValidFullName] = useState(false);
-    const [fullNameFocus, setFullNameFocus] = useState(false);
+    const [displayName,setDisplayName] = useState('');
+    const [validDisplayName, setValidDisplayName] = useState(false);
+    const [displayNameFocus, setDisplayNameFocus] = useState(false);
 
     //Consts for Pronouns
     const [location,setLocation] = useState('');
@@ -149,9 +149,9 @@ const RegistrationPage = () => {
     }, [pwd, matchPwd])
     // useEffect Hook: Validate full name via TEXT_REGEX.
     useEffect(() => {
-        const result =TEXT_REGEX.test(fullName);
-        setValidFullName(result);
-    }, [fullName])
+        const result =TEXT_REGEX.test(displayName);
+        setValidDisplayName(result);
+    }, [displayName])
     // useEffect Hook: Validate bio via BIO_REGEX.
     useEffect(() => {
         const result =BIO_REGEX.test(bio);
@@ -160,7 +160,7 @@ const RegistrationPage = () => {
     // Clear error message every time user, pwd, matchPwd, fullName, pronouns, qualifications or bio is changed (to account for the user fixing the error).
     useEffect(() => {
         setErrMsg('');
-    }, [user, pwd, matchPwd, fullName, location, bio])
+    }, [user, pwd, matchPwd, displayName, location, bio])
 
     const navigate = useNavigate();
     const HandleSubmit = async (e) => {
@@ -169,7 +169,7 @@ const RegistrationPage = () => {
         // Checks in case user enables the submit button via JS hack:
         const v1 = USER_REGEX.test(user);
         const v2 = PWD_REGEX.test(pwd);
-        const v3 = TEXT_REGEX.test(fullName);
+        const v3 = TEXT_REGEX.test(displayName);
         const v6 = BIO_REGEX.test(bio);
         
         //Display error if any validation criteria not met
@@ -181,7 +181,8 @@ const RegistrationPage = () => {
         const usrData = {
             email : user,
             password : pwd,
-            fullName : fullName,
+            displayName : displayName,
+            searchName : displayName.toLowerCase(),
             location : location,
             bio : bio,
             profilePic : null,
@@ -244,26 +245,26 @@ const RegistrationPage = () => {
                 </p>
 
                 {/* Input for the Full Name field */}
-                <label htmlFor="fullname">
+                <label htmlFor="displayName">
                     Full Name: 
                     {/* Display tick based on validation criteria */}
-                    <span style={validFullName ? {} : {display: "none"}}>
+                    <span style={validDisplayName ? {} : {display: "none"}}>
                         <FontAwesomeIcon icon={faCheck} />
                     </span>
                 </label>
                 <StyledInput 
                     type="text"
-                    id="fullname"
+                    id="displayName"
                     //ref={userRef}
                     autoComplete="off"
-                    onChange={(e) => setFullName(e.target.value)}
+                    onChange={(e) => setDisplayName(e.target.value)}
                     required
-                    aria-invalid={validFullName ? "false" : "true"}
+                    aria-invalid={validDisplayName ? "false" : "true"}
                     aria-describedby="uidnote"
-                    onFocus={() => setFullNameFocus(true)}
-                    onBlur={() => setFullNameFocus(false)}
+                    onFocus={() => setDisplayNameFocus(true)}
+                    onBlur={() => setDisplayNameFocus(false)}
                 />
-                <p id="uidnote" style={fullNameFocus && fullName && !validFullName ? {} : {display: "none"}}>
+                <p id="uidnote" style={displayNameFocus && displayName && !validDisplayName ? {} : {display: "none"}}>
                     <FontAwesomeIcon icon={faInfoCircle} />
                     Please enter your full name. <br />
                 </p>
