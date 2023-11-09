@@ -58,8 +58,8 @@ const Search = () => {
   const handleSearch = async () => {
     const q = query(
       collection(db, "users"),
-      where("fullName", ">=", userName),
-      where("fullName", "<=", userName + "/uf8ff")
+      where("searchName", ">=", userName.toLocaleLowerCase()),
+      where("searchName", "<=", userName.toLocaleLowerCase() + "/uf8ff")
     );
 
     try {
@@ -120,7 +120,7 @@ const Search = () => {
                 alt=""
               />
               <div className="userDetails">
-                <NameSpan>{user.fullName}</NameSpan>
+                <NameSpan>{user.displayName}</NameSpan>
                 {user.email && <EmailSpan>{user.email}</EmailSpan>}
               </div>
             </ResultRow>
@@ -132,7 +132,7 @@ const Search = () => {
           <UserChat>
             {/* User chat content goes here */}
             {/* <button onClick={closeChat}>Close Chat</button> */}
-            <p>Chat with {selectedUser.fullName}</p>
+            <p>Chat with {selectedUser.displayName}</p>
           </UserChat>)
         }
       </UserChatContainer>

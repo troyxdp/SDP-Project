@@ -68,8 +68,8 @@ export default function DetailsPage() {
 
     let userData = {
         email: email,
-        fullName: usrData.fullName,
-        searchName: usrData.fullName.toUpperCase(),
+        displayName: usrData.displayName,
+        searchName: usrData.displayName.toLowerCase(),
         location: usrData.location,
         bio: usrData.bio,
         profilePic: usrData.profilePic,
