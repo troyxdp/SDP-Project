@@ -97,6 +97,21 @@ const Chats = () => {
     setSelectedUser(user);
     addUserToChats(user);
     setUsers([]); // Clear the search results
+
+
+    let searchTerm;
+
+    if (currentUser.email < user.email){
+      searchTerm = currentUser.email + user.email;
+    }
+    else{
+      searchTerm = user.email + currentUser.email;
+    }
+
+    const q = query(
+      collection(db, "messages"),
+      where("messages", "==", searchTerm)
+    )
   };
   
   const closeChat = () => {
