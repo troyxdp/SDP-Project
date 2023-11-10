@@ -104,7 +104,7 @@ export function NavigationBar() {
   };
 
   const routeToProfilePageUser = (userId) => {
-    navigate(`/profilePage/${userId}`);
+    navigate(`/profilePage`, {state : userEmail});
   };
   
   const search = async () => {
