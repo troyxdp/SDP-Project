@@ -9,7 +9,16 @@ import { db } from '../firebase-config/firebase';
 import dummy_profile_pic from "../profile-pics/dummy-profile-pic.jpg";
 import no_profile_pic from "../profile-pics/no-profile-pic-image.jpg";
 
-//components of the page's css
+const PageContainer = styled.div`
+    position: fixed;
+    top: 40px;
+    left: 40px;
+    right: 40px;
+    bottom: 40px;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 10px;
+`;
 const Container = styled.div`
   display: grid;
   grid-template-columns: 1fr 0.5fr; /* Three columns: two flexible and one 200px wide */
@@ -403,7 +412,7 @@ const ProfilePage = () => {
     }
 
     return (
-      <>
+      <PageContainer>
         <NavigationBar/>
         {isDataLoadedFromDatabase &&
           <Container>
@@ -417,12 +426,12 @@ const ProfilePage = () => {
                     {user.isPerformer &&
                       <CreateButton onClick={goToCreateGroupPage}>Create Group</CreateButton>
                     }
-                    <CreateButton onClick={goToEditPersonalDetailsPage}>Edit Profile Details</CreateButton>
+                    <CreateButton onClick={goToEditPersonalDetailsPage}>Edit Profile</CreateButton>
                     {user.isEventPlanner &&
-                      <CreateButton onClick={goToEditUpcomingEventsDetailsPage}>Edit Upcoming Events</CreateButton>
+                      <CreateButton onClick={goToEditUpcomingEventsDetailsPage}>Edit Events</CreateButton>
                     }
                     {user.isInGroup &&
-                      <CreateButton onClick={goToEditGroupsDetailsPage}>Edit Group Details</CreateButton>
+                      <CreateButton onClick={goToEditGroupsDetailsPage}>Edit Groups</CreateButton>
                     }
                   </CreationButtonsBox>
                 }
@@ -488,7 +497,7 @@ const ProfilePage = () => {
             </VerticalPanel>
           </Container>
         }
-      </>
+      </PageContainer>
     );
 }
 

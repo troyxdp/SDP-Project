@@ -1,12 +1,22 @@
 import { useState, useEffect } from "react";
 import { useNavigate} from "react-router-dom";
 import styled from "styled-components";
-import { doc, updateDoc, addDoc, collection, getDoc, getDocs} from "firebase/firestore";
+import { doc, updateDoc, addDoc, collection, getDoc, getDocs, query, where, or} from "firebase/firestore";
 import { db } from '../firebase-config/firebase';
 import { SlotDetailsForm } from "../components/SlotDetailsForm";
 import {NavigationBar} from "../components/NavigationBar";
 import x_solid from "../profile-pics/x-solid.svg";
 
+const PageContainer = styled.div`
+    position: fixed;
+    top: 40px;
+    left: 40px;
+    right: 40px;
+    bottom: 40px;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 10px;
+`;
 const StyledHeader = styled.h1`
     font-size: 2.1rem;
     font-weight: bold;
@@ -151,16 +161,13 @@ const TwoLineListBoxElement = styled.div`
 
 /*
     TO-DO:
-    - Add validation of slot form data
-        ~ Check a slot hasn't been listed twice
-        ~ Implement date and time checking (if it hasn't already been done - it may have already been done)
     - Fix the error message flashing when valid other host is entered
-    - Make it so that slot details form only displays once (valid) start and end dates have been entered
+    - Add checking the event name is unique in upcomingEvents collection docs created by user
 */
 
 const CreateEventPage = () => {
     //fetch user email from session storage
-    let email = sessionStorage.getItem("userEmail");
+    const email = sessionStorage.getItem("userEmail");
 
     //list of genres
     const genreOptions = [
@@ -208,6 +215,7 @@ const CreateEventPage = () => {
         isEventPlanner : false,
         isInGroup : false
     };
+
     //initializing genres selected
     const genresSelectedInitializer = [];
     for (let i = 0; i < genreOptions.length; i++)
@@ -262,6 +270,7 @@ const CreateEventPage = () => {
     const [isStartTimeSet, setIsStartTimeSet] = useState(false);
     const [isEndTimeSet, setIsEndTimeSet] = useState(false);
     const [isStageToAddSet, setIsStageToAddSet] = useState(false);
+    const [isUpcomingEventsFetched, setIsUpcomingEventsFetched] = useState(false);
 
     //useStates for error message display
     const [isSubmitError, setIsSubmitError] = useState(false);
@@ -392,28 +401,31 @@ const CreateEventPage = () => {
     //validate the event name
     useEffect(() => {
         const isEventNameUsed = async () => {
-            //check if event name is used
-            let isEventNameUsed = false;
-            for (let i = 0; i < upcomingEvents.length; i++)
+            if (isUpcomingEventsFetched)
             {
-                if (upcomingEvents[i].eventName === eventName)
+                //check if event name is used
+                let isEventNameUsed = false;
+                for (let i = 0; i < upcomingEvents.length; i++)
                 {
-                    isEventNameUsed = true;
+                    if (upcomingEvents[i].eventName === eventName)
+                    {
+                        isEventNameUsed = true;
+                    }
                 }
-            }
 
-            //set validity of event name entered
-            if (isEventNameUsed)
-            {
-                setIsValidEventName(false);
-            }
-            else
-            {
-                setIsValidEventName(true);
+                //set validity of event name entered
+                if (isEventNameUsed)
+                {
+                    setIsValidEventName(false);
+                }
+                else
+                {
+                    setIsValidEventName(true);
+                }
             }
         };
         isEventNameUsed();
-    }, [eventName, upcomingEvents, email]);
+    }, [eventName, upcomingEvents, email, isUpcomingEventsFetched]);
 
     //useEffect to fetch user data from database
     useEffect(() => {
@@ -433,15 +445,25 @@ const CreateEventPage = () => {
             }
             setUser(userData);
 
-            const querySnapshot = await getDocs(collection(db, "users", email, "eventPlannerInfo"));
-            querySnapshot.forEach((doc) => {
+            const userQuerySnapshot = await getDocs(collection(db, "users", email, "eventPlannerInfo"));
+            userQuerySnapshot.forEach((doc) => {
                 setEventPlannerDetails(doc.data());
                 setDocId(doc.id);
-                setUpcomingEvents(doc.data().upcomingEvents);
             });
+
+            const upcomingEventsRef = collection(db, "upcomingEvents");
+            const q = query(upcomingEventsRef, or(where("creatingUserEmail", "==", email), 
+                                                  where("eventPlannerEmails", "array-contains-any", [email])));
+            const eventsQuerySnapshot = await getDocs(q);
+            const currUpcomingEvents = [];
+            eventsQuerySnapshot.forEach((doc) => {
+                currUpcomingEvents.push(doc.data());
+            });
+            setUpcomingEvents(currUpcomingEvents);
+            setIsUpcomingEventsFetched(true);
         };
         getUserData();
-    }, [])
+    }, [email])
 
     //methods for handling start date/time and end date/time entry
     const handleStartDateInput = async (e) => {
@@ -712,13 +734,6 @@ const CreateEventPage = () => {
                 slots: slots
             };
 
-            // const currUpcomingEvents = eventPlannerDetails.upcomingEvents;
-            // currUpcomingEvents.push(upcomingEvent);
-            // const eventPlannerDetailsRef = doc(db, "users", email, "eventPlannerInfo", docId);
-            // await updateDoc(eventPlannerDetailsRef, {
-            //     upcomingEvents: currUpcomingEvents
-            // });
-
             const upcomingEventsRef = collection(db, "upcomingEvents");
             await addDoc(upcomingEventsRef, upcomingEvent);
 
@@ -776,7 +791,7 @@ const CreateEventPage = () => {
     }
 
     return(
-        <>
+        <PageContainer>
             <NavigationBar/>
             <Container>
                 <EventDetailsDiv>
@@ -973,7 +988,7 @@ const CreateEventPage = () => {
                         </DisplayOptionContainer>
                     }
 
-                    {displaySlotForm &&
+                    {displaySlotForm && isValidStartDate && isValidEndDate &&
                         <SlotDetailsForm
                             onSubmitParentCallback={onSubmitOfSlotDetailsForm}
                             stages={stages}
@@ -995,7 +1010,7 @@ const CreateEventPage = () => {
                     </p>
                 </EventDetailsDiv>
             </Container>
-        </>
+        </PageContainer>
     );
 }
 
