@@ -70,8 +70,8 @@ const Chats = () => {
   const handleSearch = async () => {
     const q = query(
       collection(db, "users"),
-      where("displayName", ">=", userName),
-      where("displayName", "<=", userName + "\uf8ff")
+      where("searchName", ">", userName.toLowerCase()),
+      where("searchName", "<=", userName.toLowerCase() + "\uf8ff")
     );
 
     try {
