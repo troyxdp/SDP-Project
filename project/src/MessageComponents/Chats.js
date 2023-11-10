@@ -54,17 +54,19 @@ const UserChat = styled.div`
   font-weight: bold;
   color: white;
 `;
+
 const Chats = () => {
   const [chats, setChats] = useState({});
   const [selectedChat, setSelectedChat] = useState(null);
-  // State variables
   const [userName, setUserName] = useState("");
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState([]); // Changed this to 'users'
   const [error, setError] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
-  // Handle search button click
+  const { dispatch } = useContext(ChatContext);
+  const { currentUser } = useContext(AuthContext);
+
   const handleSearch = async () => {
     const q = query(
       collection(db, "users"),
@@ -78,36 +80,29 @@ const Chats = () => {
       querySnapshot.forEach((doc) => {
         usersData.push(doc.data());
       });
-      setUsers(usersData);
-      setError(false); // Clear any previous error
+      setUsers(usersData); // Updated to 'users'
+      setError(false);
     } catch (err) {
       setError(true);
     }
   };
 
-  // Handle Enter key press to trigger search
   const handleKeyDown = (e) => {
     if (e.code === "Enter") {
       handleSearch();
     }
   };
 
-  // Handle selecting a user and starting a chat
   const handleSelectChat = (user) => {
     setSelectedUser(user);
-    setChatOpen(true);
-
-    // You can safely call the function now
-    addUserToChats(user.displayName);
+    addUserToChats(user);
+    setUsers([]); // Clear the search results
   };
-
-  // Close the chat window
+  
   const closeChat = () => {
     setChatOpen(false);
     setSelectedUser(null);
   };
-  const { dispatch } = useContext(ChatContext);
-  const { currentUser } = useContext(AuthContext);
 
   useEffect(() => {
     const getChats = () => {
@@ -137,7 +132,7 @@ const Chats = () => {
               photoURL: "user2.jpg",
             },
             lastMessage: {
-              text: "Hi",
+              text: "...",
             },
           },
         };
@@ -154,7 +149,7 @@ const Chats = () => {
   const handleChatSelection = (userInfo) => {
     setSelectedChat(userInfo);
     dispatch({ type: "CHANGE_USER", payload: userInfo });
-  }
+  };
 
   const addUserToChats = (userInfo) => {
     const newUserChat = {
@@ -165,64 +160,65 @@ const Chats = () => {
     };
 
     setChats((prevChats) => {
-      const updatedChats = {
-        [userInfo.uid]: newUserChat,
+      return {
         ...prevChats,
+        [userInfo.uid]: newUserChat,
       };
-      return updatedChats;
     });
   };
 
   return (
     <div>
-       <div className="searchBar">
-      <div className="searchForm">
-        <TextField
-          InputLabelProps={{ style: { color: 'black', fontSize: 20, fontWeight: 'bolder' }}}
-          inputProps={{ style: { color: "black", fontSize: 17 } }}
-          fullWidth
-          type="text"
-          label="Search users..."
-          variant="standard"
-          onKeyDown={handleKeyDown}
-          value={userName}
-          onChange={(e) => setUserName(e.target.value)}
-        />
-      </div>
-      {error && <span className="error">User not found</span>}
-      
-      {users.length > 0 && (
-        <ResultsContainer visible={!chatOpen}>
-          <h3>Search Results:</h3>
-          {users.map((user, index) => (
-            <ResultRow key={index} onClick={() => handleSelectChat(user)}>
-              <img src={user.photoURL} alt="" />
-              <div className="userDetails">
-                <NameSpan>{user.displayName}</NameSpan>
-                {user.email && <EmailSpan>{user.email}</EmailSpan>}
+      <div className="searchBar">
+        <div className="searchForm">
+          <TextField
+            InputLabelProps={{ style: { color: 'black', fontSize: 20, fontWeight: 'bolder' }}}
+            inputProps={{ style: { color: "black", fontSize: 17 } }}
+            fullWidth
+            type="text"
+            label="Search users..."
+            variant="standard"
+            onKeyDown={handleKeyDown}
+            value={userName}
+            onChange={(e) => setUserName(e.target.value)}
+          />
+        </div>
+        {error && <span className="error">User not found</span>}
+        {users.length > 0 && ( // Updated to 'users'
+          <ResultsContainer visible={!chatOpen}>
+            <h3>Search Results:</h3>
+            {users.map((user, index) => (
+              <ResultRow key={index} onClick={() => handleSelectChat(user)}>
+                <img src={user.photoURL} alt="" />
+                <div className="userDetails">
+                  <NameSpan>{user.displayName}</NameSpan>
+                  {user.email && <EmailSpan>{user.email}</EmailSpan>}
                 </div>
-            </ResultRow>
-          ))}
-        </ResultsContainer>
-      )}
+              </ResultRow>
+            ))}
+          </ResultsContainer>
+        )}
       </div>
-     
-      {chats && Object.entries(chats).map((chat) => (
-        <div
-          key={chat[0]}
-          onClick={() => handleChatSelection(chat[1].userInfo)}
-          className={selectedChat === chat[1].userInfo ? "selected" : "userChatList"}
-        >
-          <img src={chat[1].userInfo.photoURL} alt="" />
-          <div>
-            <span>{chat[1].userInfo.displayName}</span>
-            <p>{chat[1].lastMessage?.text}</p>
-          </div>
-        </div>)
-      )}
-
+      <div className="chatContainer">
+        {Object.values(chats).map((chat, index) => (
+          <div
+            key={index}
+            onClick={() => handleChatSelection(chat.userInfo)}
+            className={selectedChat === chat.userInfo ? "selected" : "userChatList"}
+          >
+            <img src={chat.userInfo.photoURL} alt="" />
+            <div>
+              <span>{chat.userInfo.displayName}</span>
+              <p>{chat.lastMessage?.text}</p>
+            </div>
+          </div>)
+        )}
+      </div>
     </div>
   );
-}
+};
 
 export default Chats;
+
+
+

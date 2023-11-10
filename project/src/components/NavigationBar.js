@@ -7,13 +7,17 @@ import { getFirestore } from "firebase/firestore";
 const db = getFirestore();
 
 const Container = styled.div`
+  display: flex;
+  justify-content: space-between;
+  background: #a13333;
+`;
+const ItemsContainer = styled.div`
   background: #a13333;
   display: flex;
   flex-direction: row;
   align-items: center;
   padding: 10px;
 `;
-
 const ResultsContainer = styled.div`
   background: white;
   width: 300px;
@@ -29,16 +33,13 @@ const ResultRow = styled.div`
   display: flex;
   flex-direction: column;
 `;
-
 const NameSpan = styled.span`
   margin-bottom: 5px; /* Add margin to create space between name and email */
 `;
-
 const EmailSpan = styled.span`
   font-size: 12px; /* Adjust the font size for email */
   color: #777; /* Change the color of the email text */
 `;
-
 const NavigationDisplay = styled.button`
   color: white;
   background-color: transparent;
@@ -49,20 +50,17 @@ const NavigationDisplay = styled.button`
   align-items: center;
   font-weight: bold;
 `;
-
 const SearchInput = styled.input`
   padding: 5px;
   border: 1px solid white;
   background: transparent;
   color: white;
 `;
-
 const smallerButtonStyle = {
   width: '98px',
   height: '28px',
   margin: 'auto',
 };
-
 const SearchContainer = styled.div`
   display: flex;
   align-items: center;
@@ -77,7 +75,7 @@ export function NavigationBar() {
   const navigate = useNavigate();
 
   const routeToProfilePage = (userId) => {
-    navigate(`/profilePage/${userId}`); // Pass the user's ID as a parameter
+    navigate(`/profilePage`, {state : userId}); // Pass the user's ID as a parameter
   };
 
   const routeToConnectionsPage = (e) => {
@@ -106,7 +104,7 @@ export function NavigationBar() {
   };
 
   const routeToProfilePageUser = (userId) => {
-    navigate(`/profilePage/${userId}`);
+    navigate(`/profilePage`, {state : userId});
   };
   
   const search = async () => {
@@ -139,35 +137,37 @@ export function NavigationBar() {
 
   return (
     <Container>
-      <NavigationDisplay onClick={routeToConnectionsPage}>Connections</NavigationDisplay>
-      <NavigationDisplay onClick={routeToMessagesPage}>Messages</NavigationDisplay>
-      <NavigationDisplay onClick={routeToRequestsPage}>Requests</NavigationDisplay>
-      <NavigationDisplay onClick={() => routeToProfilePage(userEmail)}>Profile</NavigationDisplay>
-      <SearchContainer>
-        <SearchInput
-          type="text"
-          placeholder="Search"
-          onKeyDown={handleKeyDown}
-          value={userName}
-          onChange={handleSearchInputChange}
-        />
-        <button onClick={search} style={smallerButtonStyle}>Search</button>
+      <ItemsContainer>
+        <NavigationDisplay onClick={routeToConnectionsPage}>Connections</NavigationDisplay>
+        <NavigationDisplay onClick={routeToMessagesPage}>Messages</NavigationDisplay>
+        <NavigationDisplay onClick={routeToRequestsPage}>Requests</NavigationDisplay>
+        <NavigationDisplay onClick={() => routeToProfilePage(userEmail)}>Profile</NavigationDisplay>
+      </ItemsContainer>
+      <ItemsContainer>
+        <SearchContainer>
+          <SearchInput
+            type="text"
+            placeholder="Search"
+            onKeyDown={handleKeyDown}
+            value={userName}
+            onChange={handleSearchInputChange}
+          />
+          <button onClick={search} style={smallerButtonStyle}>Search</button>
+        </SearchContainer>
+        {users.length > 0 && (
+          <ResultsContainer visible={users.length > 0}>
+            <h3>Search Results:</h3>
+            {users.map((user, index) => (
+              <ResultRow key={index} onClick={() => routeToProfilePageUser(user.userId)}>
+                <NameSpan>{user.displayName}</NameSpan>
+                {user.email && <EmailSpan>{user.email}</EmailSpan>}
+              </ResultRow>
+            ))}
+          </ResultsContainer>
+        )}
+        {error && <p>Error occurred while searching.</p>}
         <NavigationDisplay onClick={logout}>Sign Out</NavigationDisplay>
-      </SearchContainer>
-
-      {users.length > 0 && (
-        <ResultsContainer visible={users.length > 0}>
-          <h3>Search Results:</h3>
-          {users.map((user, index) => (
-            <ResultRow key={index} onClick={() => routeToProfilePageUser(user.userId)}>
-              <NameSpan>{user.displayName}</NameSpan>
-              {user.email && <EmailSpan>{user.email}</EmailSpan>}
-            </ResultRow>
-          ))}
-        </ResultsContainer>
-      )}
-
-      {error && <p>Error occurred while searching.</p>}
+      </ItemsContainer>
     </Container>
   );
 }

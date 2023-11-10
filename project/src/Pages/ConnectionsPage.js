@@ -6,7 +6,18 @@ import styled from "styled-components";
 import { EventPlannerDetailsProfileOverview } from "../components/EventPlannerDetailsProfileOverview";
 import { PerformerDetailsProfileOverview } from "../components/PerformerDetailsProfileOverview";
 import { db } from '../firebase-config/firebase';
+import { EventConnectionsDisplay } from "../components/EventConnectionsDisplay";
 
+const PageContainer = styled.div`
+    position: fixed;
+    top: 40px;
+    left: 40px;
+    right: 40px;
+    bottom: 40px;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 10px;
+`;
 const Container = styled.div`
   display: flex;
   grid-template-columns: 1fr 0.5fr; /* Three columns: two flexible and one 200px wide */
@@ -88,6 +99,21 @@ const ConnectionsPage = () => {
     const [upcomingEvents, setUpcomingEvents] = useState([]);
     const [performers, setPerformers] = useState([]);
 
+    //useState for variable length rendering
+    const [upcomingEventsDisplays, setUpcomingEventsDisplays] = useState([]);
+    const createUpcomingEventsDisplays = (events) => {
+      const currDisplay = [];
+      for (let i = 0; i < events.length; i++)
+      {
+        currDisplay.push(
+          <EventConnectionsDisplay 
+            event={events[i]}
+          />
+        );
+      }
+      setUpcomingEventsDisplays(currDisplay);
+    }
+
     //useEffect for fetching database data
     useEffect(() => {
       const getUserData = async () => {
@@ -119,10 +145,9 @@ const ConnectionsPage = () => {
           });
           setEventPlannerDetails(currEventPlannerDetails);
           
-          //GET UPCOMING AND PAST EVENTS
+          //GET UPCOMING 
           //collection references
           const upcomingEventsRef = collection(db, "upcomingEvents");
-          const pastEventsRef = collection(db, "pastEvents");
 
           //get upcoming events
           const upcomingEventsQuery = query(upcomingEventsRef, where("creatingUserEmail", "==", userEmail));
@@ -148,6 +173,19 @@ const ConnectionsPage = () => {
           setPerformerTypes(currPerformerTypes);
           setPerformerTypeSelected(currPerformerTypes[0]);
           setGenres(currPerformerDetails[0].genres);
+
+          //GET UPCOMING AND PAST EVENTS
+          //collection references
+          const upcomingEventsRef = collection(db, "upcomingEvents");
+
+          //get upcoming events
+          const upcomingEventsQuerySnapshot = await getDocs(upcomingEventsRef);
+          const currUpcomingEvents = [];
+          upcomingEventsQuerySnapshot.forEach((doc) => {
+            currUpcomingEvents.push(doc.data());
+          });
+          setUpcomingEvents(currUpcomingEvents);
+          createUpcomingEventsDisplays(currUpcomingEvents);
         }
       };
       getUserData();
@@ -207,7 +245,7 @@ const ConnectionsPage = () => {
     }
     
     return(
-        <>
+        <PageContainer>
             <NavigationBar/>
             <Container>
                 <StyledHeader>Connections Page</StyledHeader>
@@ -229,13 +267,14 @@ const ConnectionsPage = () => {
                                 <option value={type}>{type}</option>
                             ))}
                         </select>
+                        {upcomingEventsDisplays}
                       </>
                     }
                   </>
                 } 
 
             </Container>
-        </>
+        </PageContainer>
     );
 }
 
