@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import {Link} from "react-router-dom";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { collection, query, where, getDocs } from "firebase/firestore";
@@ -21,9 +22,10 @@ const ResultsContainer = styled.div`
   background: white;
   width: 300px;
   padding: 10px;
-  border: 1px solid #ccc;
+  border: 1px solid #aaaaaa;
   border-radius: 5px;
   margin-top: 10px;
+  display: ${props => props.visible ? "block" : "none"};
 `;
 const ResultRow = styled.div`
   margin: 5px 0;
@@ -101,25 +103,32 @@ export function NavigationBar() {
     setUserName(e.target.value);
   };
 
+  const routeToProfilePageUser = (userId) => {
+    navigate(`/profilePage/${userId}`);
+  };
+  
   const search = async () => {
     const q = query(
       collection(db, "users"),
-      where("fullName", ">=", userName),
-      where("fullName", "<=", userName + "/uf8ff")
+      where("displayName", ">=", userName),
+      where("displayName", "<=", userName + "\uf8ff")
     );
-
+  
     try {
       const querySnapshot = await getDocs(q);
       const usersData = [];
       querySnapshot.forEach((doc) => {
         usersData.push(doc.data());
       });
+      console.log("Query results:", usersData); // Add this line for debugging
       setUsers(usersData);
     } catch (err) {
+      console.error("Error occurred while searching:", err); // Add this line for debugging
       setError(true);
     }
   };
-
+  
+  
   const handleKeyDown = (e) => {
     if (e.code === "Enter") {
       search();
@@ -146,18 +155,17 @@ export function NavigationBar() {
           <button onClick={search} style={smallerButtonStyle}>Search</button>
         </SearchContainer>
         {users.length > 0 && (
-          <ResultsContainer>
+          <ResultsContainer visible={users.length > 0}>
             <h3>Search Results:</h3>
             {users.map((user, index) => (
-              <ResultRow key={index} onClick={() => routeToProfilePage(user.userId)}>
-                <NameSpan>{user.fullName}</NameSpan>
-                {user.email && <span className="email">{user.email}</span>}
+              <ResultRow key={index} onClick={() => routeToProfilePageUser(user.userId)}>
+                <NameSpan>{user.displayName}</NameSpan>
+                {user.email && <EmailSpan>{user.email}</EmailSpan>}
               </ResultRow>
             ))}
           </ResultsContainer>
         )}
         {error && <p>Error occurred while searching.</p>}
-        <NavigationDisplay onClick={logout}>Sign Out</NavigationDisplay>
       </ItemsContainer>
     </Container>
   );

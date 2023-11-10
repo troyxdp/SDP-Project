@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../firebase-config/firebase";
-import { TextField } from "@mui/material";
+import TextField from "@mui/material/TextField";
 import './styles.css';
+import addUserToChats from './Chats'; // You need to call this function, not just add it as a string
 import styled from "styled-components";
 
 const ResultsContainer = styled.div`
@@ -43,23 +44,29 @@ const UserChatContainer = styled.div`
 `;
 
 const UserChat = styled.div`
-  /* Your user chat styles here */
+  background-color: #1041d4;
+  border: 2px solid black;
+  align-content: center;
+  height: 60px;
+  padding: 10px;
+  font-weight: bold;
+  color: white;
 `;
 
 const Search = () => {
   // State variables
-  const [userName, setUserName] = useState(""); // To store the search query
-  const [users, setUsers] = useState([]); // To store the user data from the search
-  const [error, setError] = useState(false); // To handle errors
-  const [chatOpen, setChatOpen] = useState(false); // To manage chat window visibility
-  const [selectedUser, setSelectedUser] = useState(null); // To store the selected user
+  const [userName, setUserName] = useState("");
+  const [users, setUsers] = useState([]);
+  const [error, setError] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   // Handle search button click
   const handleSearch = async () => {
     const q = query(
       collection(db, "users"),
-      where("fullName", ">=", userName),
-      where("fullName", "<=", userName + "/uf8ff")
+      where("displayName", ">=", userName),
+      where("displayName", "<=", userName + "\uf8ff")
     );
 
     try {
@@ -69,6 +76,7 @@ const Search = () => {
         usersData.push(doc.data());
       });
       setUsers(usersData);
+      setError(false); // Clear any previous error
     } catch (err) {
       setError(true);
     }
@@ -85,6 +93,9 @@ const Search = () => {
   const handleSelectChat = (user) => {
     setSelectedUser(user);
     setChatOpen(true);
+
+    // You can safely call the function now
+    addUserToChats(user.displayName);
   };
 
   // Close the chat window
@@ -96,8 +107,8 @@ const Search = () => {
   return (
     <div className="searchBar">
       <div className="searchForm">
-      <TextField
-          InputLabelProps={{ style: { color: 'black', fontSize: 20, fontWeight: 'bolder' } }}
+        <TextField
+          InputLabelProps={{ style: { color: 'black', fontSize: 20, fontWeight: 'bolder' }}}
           inputProps={{ style: { color: "black", fontSize: 17 } }}
           fullWidth
           type="text"
@@ -115,14 +126,11 @@ const Search = () => {
           <h3>Search Results:</h3>
           {users.map((user, index) => (
             <ResultRow key={index} onClick={() => handleSelectChat(user)}>
-              <img
-                src={user.photoURL}
-                alt=""
-              />
+              <img src={user.photoURL} alt="" />
               <div className="userDetails">
-                <NameSpan>{user.fullName}</NameSpan>
+                <NameSpan>{user.displayName}</NameSpan>
                 {user.email && <EmailSpan>{user.email}</EmailSpan>}
-              </div>
+                </div>
             </ResultRow>
           ))}
         </ResultsContainer>
@@ -132,7 +140,7 @@ const Search = () => {
           <UserChat>
             {/* User chat content goes here */}
             {/* <button onClick={closeChat}>Close Chat</button> */}
-            <p>Chat with {selectedUser.fullName}</p>
+            <p>Chat with {selectedUser.displayName}</p>
           </UserChat>)
         }
       </UserChatContainer>

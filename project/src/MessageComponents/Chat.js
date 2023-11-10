@@ -21,7 +21,6 @@ const Chat = () => {
         {/* Display user's name (static data for testing) */}
         <span>{staticUserData.displayName}</span>
         <div className="chatIcons">
-          <img src={Add} alt="Add" />
           <img src={More} alt="More" />
         </div>
       </div>

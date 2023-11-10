@@ -127,7 +127,8 @@ const ProfilePage = () => {
     //initializing object for user field
     const userInitializer = {
       email : profileEmail,
-      fullName : "",
+      displayName : "",
+      searchName : "",
       location : "",
       bio : "",
       profilePic : null,
@@ -159,7 +160,8 @@ const ProfilePage = () => {
 
         let userData = {
           email : profileEmail,
-          fullName : docSnap.data().fullName,
+          displayName : docSnap.data().displayName,
+          searchName : docSnap.data().searchName,
           location : docSnap.data().location,
           bio : docSnap.data().bio,
           profilePic : docSnap.data().profilePic,
@@ -444,7 +446,7 @@ const ProfilePage = () => {
                 }
                 <StyledHeader>Profile Page</StyledHeader>
                 {profilePic}
-                <Name>{user.fullName}</Name>
+                <Name>{user.displayName}</Name>
                 <DetailsBox>
                   <Detail><b>Email:</b> {user.email}</Detail>
                   <Detail><b>Location:</b> {user.location}</Detail>
