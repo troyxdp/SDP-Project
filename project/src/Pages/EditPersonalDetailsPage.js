@@ -8,6 +8,16 @@ import x_solid from "../profile-pics/x-solid.svg";
 import { EventPlannerDetailsForm } from "../components/EventPlannerDetailsForm";
 import { PerformerDetailsForm } from "../components/PerformerDetailsForm";
 
+const PageContainer = styled.div`
+    position: fixed;
+    top: 40px;
+    left: 40px;
+    right: 40px;
+    bottom: 40px;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 10px;
+`;
 const StyledHeader = styled.h1`
     font-size: 2.1rem;
     font-weight: bold;
@@ -872,7 +882,7 @@ export default function EditPersonalDetailsPage() {
         window.location.reload(false);
     }
     return(
-        <>
+        <PageContainer>
             <NavigationBar />
             <Container>
                 <StyledHeader>Edit Personal Details:</StyledHeader>
@@ -1192,6 +1202,6 @@ export default function EditPersonalDetailsPage() {
                     Return to Profile Page
                 </StyledButton>
             </Container>
-        </>
+        </PageContainer>
     );
 }
