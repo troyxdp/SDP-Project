@@ -75,7 +75,7 @@ export function NavigationBar() {
   const navigate = useNavigate();
 
   const routeToProfilePage = (userId) => {
-    navigate(`/profilePage`, {state : userEmail}); // Pass the user's ID as a parameter
+    navigate(`/profilePage`, {state : userId}); // Pass the user's ID as a parameter
   };
 
   const routeToConnectionsPage = (e) => {
@@ -104,7 +104,7 @@ export function NavigationBar() {
   };
 
   const routeToProfilePageUser = (userId) => {
-    navigate(`/profilePage`, {state : userEmail});
+    navigate(`/profilePage`, {state : userId});
   };
   
   const search = async () => {
@@ -166,6 +166,7 @@ export function NavigationBar() {
           </ResultsContainer>
         )}
         {error && <p>Error occurred while searching.</p>}
+        <NavigationDisplay onClick={logout}>Sign Out</NavigationDisplay>
       </ItemsContainer>
     </Container>
   );
