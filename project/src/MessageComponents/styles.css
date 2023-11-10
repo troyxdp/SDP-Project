@@ -138,7 +138,6 @@
           font-weight: bold;
           height: 20px;
           font-size: 30px;
-          
         }
 
         .user {
@@ -260,6 +259,7 @@
 
       .chatInfo {
         height: 50px;
+        width: 950px;
         background-color: #b21818;
         border:2px solid #030405;
         display: flex;
@@ -292,8 +292,26 @@
         background-color: rgb(255, 255, 255);
         padding: 10px;
         align-items: right;
-        height: calc(100% - 160px);
+        height: 520px;
+        width:950px;
         overflow: scroll;
+
+        .left {
+          background-color: #999393;
+          border-radius: 5px;
+          padding: 10px;
+          margin: 5px;
+          text-align: left;
+        }
+
+        .right {
+          background-color: rgb(31, 22, 204);
+          color: #dfd7d7;
+          border-radius: 5px;
+          padding: 10px;
+          margin: 5px;
+        }
+
 
         .message {
           display: flex;
@@ -348,7 +366,7 @@
 
       .input {
         height: 45px;
-        width: 98%;
+        width: 946px;
         border-radius: 5%;
         background-color: white;
         padding: 10px;

@@ -2,7 +2,6 @@ import React, { useContext } from "react";
 import Add from "../img/add.png";
 import More from "../img/more.png";
 import Messages from "./Messages";
-import Input from "./Input";
 import { ChatContext } from "../context/ChatContext";
 import './styles.css';
 
@@ -21,11 +20,9 @@ const Chat = () => {
         {/* Display user's name (static data for testing) */}
         <span>{staticUserData.displayName}</span>
         <div className="chatIcons">
-          <img src={More} alt="More" />
         </div>
       </div>
       <Messages />
-      <Input />
     </div>
   );
 };
