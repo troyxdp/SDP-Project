@@ -50,6 +50,16 @@ const DisplayFormButton = styled.button`
     font-size: 20px;
     margin-right: 2px;
 `;
+const DisplayFormMediaButton = styled.button`
+    display: flex;
+    background: #fff;
+    border: 0px solid #fff;
+    color: black;
+    height: 20px;
+    width: 20px;
+    font-size: 20px;
+    margin-right: 2px;
+`;
 
 
 
