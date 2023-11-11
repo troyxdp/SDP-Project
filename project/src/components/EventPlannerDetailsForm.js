@@ -100,16 +100,17 @@ const ListBoxElement = styled.div`
 
 export function EventPlannerDetailsForm({parentCallback}) {
     const eventTypeOptions = [
-        {value : "eventParty", label : "Event Party"},
-        {value : "festival", label : "Festival"},
-        {value : "rave", label : "Rave"},
-        {value : "clubSlot", label : "Club Slot"},
-        {value : "barSlot", label : "Bar Slot"},
-        {value : "houseParty", label : "House Party"},
-        {value : "birthdayParty", label : "Birthday Party"},
-        {value : "wedding", label : "Wedding"},
-        {value : "ball", label : "Ball"},
-        {value : "other", label : "Other"}
+        {value : "Event Party", label : "Event Party"},
+        {value : "Festival", label : "Festival"},
+        {value : "Rave", label : "Rave"},
+        {value : "Club Slot", label : "Club Slot"},
+        {value : "Bar Slot", label : "Bar Slot"},
+        {value : "Residency Opportunity", label : "Residency Opportunity"},
+        {value : "House Party", label : "House Party"},
+        {value : "Birthday Party", label : "Birthday Party"},
+        {value : "Wedding", label : "Wedding"},
+        {value : "Ball", label : "Ball"},
+        {value : "Other", label : "Other"}
     ];
 
     let callback = parentCallback;
