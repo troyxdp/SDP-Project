@@ -8,6 +8,16 @@ import x_solid from "../profile-pics/x-solid.svg";
 import { EventPlannerDetailsForm } from "../components/EventPlannerDetailsForm";
 import { PerformerDetailsForm } from "../components/PerformerDetailsForm";
 
+const PageContainer = styled.div`
+    position: fixed;
+    top: 40px;
+    left: 40px;
+    right: 40px;
+    bottom: 40px;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 10px;
+`;
 const StyledHeader = styled.h1`
     font-size: 2.1rem;
     font-weight: bold;
@@ -190,7 +200,8 @@ export default function EditPersonalDetailsPage() {
     //initializing object for user field
     const userInitializer = {
         email : userEmail,
-        fullName : "",
+        displayName : "",
+        searchName : "",
         location : "",
         bio : "",
         profilePic : null,
@@ -201,17 +212,17 @@ export default function EditPersonalDetailsPage() {
   
     //useStates for storing information
     const [user, setUser] = useState(userInitializer);
-    const [fullName,setFullName] = useState('');
+    const [displayName,setDisplayName] = useState('');
     const [location,setLocation] = useState('');
     const [bio,setBio] = useState('');
 
     //useStates for validation of data
-    const [isValidFullName, setIsValidFullName] = useState(false);
+    const [isValidDisplayName, setIsValidDisplayName] = useState(false);
     const [isValidLocation, setIsValidLocation] = useState(false);
     const [isValidBio, setIsValidBio] = useState(false);
 
     //useStates for checking component focus
-    const [isFullNameFocus, setIsFullNameFocus] = useState(false);
+    const [isDiplayNameFocus, setIsDisplayNameFocus] = useState(false);
     const [isLocationFocus, setIsLocationFocus] = useState(false);
     const [isBioFocus, setIsBioFocus] = useState(false);
 
@@ -224,9 +235,9 @@ export default function EditPersonalDetailsPage() {
 
     //useEffect to validate full name via TEXT_REGEX.
     useEffect(() => {
-        const result =TEXT_REGEX.test(fullName);
-        setIsValidFullName(result);
-    }, [fullName]);
+        const result =TEXT_REGEX.test(displayName);
+        setIsValidDisplayName(result);
+    }, [displayName]);
     //useEffect to validate location
     useEffect(() => {
         const result =TEXT_REGEX.test(location);
@@ -239,15 +250,16 @@ export default function EditPersonalDetailsPage() {
     }, [bio]);
 
     const handleUserDetailsFormSubmission = async () => {
-        if (isValidFullName && isValidLocation && isValidBio)
+        if (isValidDisplayName && isValidLocation && isValidBio)
         {
             const userDocRef = doc(db, "users", userEmail);
             await updateDoc(userDocRef, {
-                fullName : fullName,
+                displayName : displayName,
+                searchName : displayName.toLowerCase(),
                 location : location,
                 bio : bio
             });
-            setFullName("");
+            setDisplayName("");
             setLocation("");
             setBio("");
             setDisplayEditUserDetails(false);
@@ -779,7 +791,8 @@ export default function EditPersonalDetailsPage() {
         
                 let userData = {
                     email : userEmail,
-                    fullName : docSnap.data().fullName,
+                    displayName : docSnap.data().displayName,
+                    searchName : docSnap.data().searchName,
                     location : docSnap.data().location,
                     bio : docSnap.data().bio,
                     profilePic : docSnap.data().profilePic,
@@ -788,7 +801,7 @@ export default function EditPersonalDetailsPage() {
                     isInGroup : docSnap.data().isInGroup
                 }
                 setUser(userData);
-                setFullName(userData.fullName);
+                setDisplayName(userData.displayName);
                 setLocation(userData.location);
                 setBio(userData.bio);
         
@@ -869,7 +882,7 @@ export default function EditPersonalDetailsPage() {
         window.location.reload(false);
     }
     return(
-        <>
+        <PageContainer>
             <NavigationBar />
             <Container>
                 <StyledHeader>Edit Personal Details:</StyledHeader>
@@ -897,19 +910,19 @@ export default function EditPersonalDetailsPage() {
                         </StyledLabel>
                         <StyledInput 
                             type="text"
-                            id="fullname"
+                            id="displayName"
                             //ref={userRef}
                             autoComplete="off"
-                            onChange={(e) => setFullName(e.target.value)}
+                            onChange={(e) => setDisplayName(e.target.value)}
                             required
-                            aria-invalid={isValidFullName ? "false" : "true"}
+                            aria-invalid={isValidDisplayName ? "false" : "true"}
                             aria-describedby="uidnote"
-                            onFocus={() => setIsFullNameFocus(true)}
-                            onBlur={() => setIsFullNameFocus(false)}
+                            onFocus={() => setIsDisplayNameFocus(true)}
+                            onBlur={() => setIsDisplayNameFocus(false)}
                             // ref={fullNameRef}
-                            value={fullName}
+                            value={displayName}
                         />
-                        <p id="uidnote" style={isFullNameFocus && fullName && !isValidFullName ? {} : {display: "none"}}>
+                        <p id="uidnote" style={isDiplayNameFocus && displayName && !isValidDisplayName ? {} : {display: "none"}}>
                             Please enter your full name. <br />
                         </p>
 
@@ -1189,6 +1202,6 @@ export default function EditPersonalDetailsPage() {
                     Return to Profile Page
                 </StyledButton>
             </Container>
-        </>
+        </PageContainer>
     );
 }

@@ -146,6 +146,7 @@ export function SlotDetailsForm({onSubmitParentCallback, stages, slots, eventSta
     const [isValidStartDate, setIsValidStartDate] = useState(false);
     const [isValidEndDate, setIsValidEndDate] = useState(false);
     const [isConflictingTimes, setIsConflictingTimes] = useState(false);
+    const [isValidDescription, setIsValidDescription] = useState(false);
 
     //useStates for error messages
     const [errMsg, setErrMsg] = useState("");
@@ -172,6 +173,18 @@ export function SlotDetailsForm({onSubmitParentCallback, stages, slots, eventSta
             setIsValidEndDate(true);
         }
     }, [startDate, endDate])
+
+    //validate description
+    useEffect(() => {
+        if (description.length > 50)
+        {
+            setIsValidDescription(false);
+        }
+        else
+        {
+            setIsValidDescription(true);
+        }
+    }, [description])
 
     //methods to handle changing of inputted data
     const handleGenreSelectedChange = async (index) => {
@@ -244,7 +257,7 @@ export function SlotDetailsForm({onSubmitParentCallback, stages, slots, eventSta
         setIsConflictingTimes(false);
         setErrMsg("");
 
-        if (isValidStartDate)
+        if (isValidStartDate && isValidDescription)
         {
             const genres = [];
             for (let i = 0; i < genresSelected.length; i++)
@@ -265,7 +278,10 @@ export function SlotDetailsForm({onSubmitParentCallback, stages, slots, eventSta
         }
         else
         {
-            setErrMsg("Error: invalid start date entered.")
+            if (!isValidStartDate)
+                setErrMsg("Error: invalid start date entered.");
+            else
+                setErrMsg("Error: invalid description entered.")
         }
     }
 
@@ -355,6 +371,9 @@ export function SlotDetailsForm({onSubmitParentCallback, stages, slots, eventSta
                     onChange={(e) => setDescription(e.target.value)}
                     required
                 />
+                <p id="uidnote" style={!isValidDescription && description ? {} : {display: "none"}}>
+                    Error: please enter a description of 50 characters or less.
+                </p>
 
                 <StyledButton onClick={handleSubmit}>
                     Add Slot

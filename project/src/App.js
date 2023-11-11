@@ -3,6 +3,10 @@ import './App.css';
 import {getAnalytics} from "firebase/analytics";
 import { app } from "./firebase-config/firebase";
 import { BrowserRouter as Router, Routes, Route} from "react-router-dom"; 
+import { Global, css } from '@emotion/react';
+
+import Music_Festival_At_Night_Red_Lights from "./Backgrounds/Music-Festival-At-Night-Red-Lights.jpg";
+
 import ProfilePage from "./Pages/ProfilePage";
 import LoginPage from "./Pages/LoginPage";
 import RegistrationPage from './Pages/RegistrationPage';
@@ -19,9 +23,26 @@ import EditUpcomingEventsDetailsPage from './Pages/EditUpcomingEventsDetailsPage
 //INITIALIZE FIREBASE
 const analytics = getAnalytics(app);
 
+const GlobalStyles = () => ( 
+  <Global 
+      styles={css` 
+    body { 
+      margin: 0; 
+      padding: 0; 
+      background-color: #ffffff; 
+      font-family: 'Roboto', sans-serif; 
+      color: #333; 
+      background: #000;
+      background-image: url("https://siam2nite.media/xrLsvq1ucq7-cZNSHObsnU5VQQA=/1280x853/smart/pictures/17048/meta_b57099aea9e272b9bfd1fdd34c55944f.jpg");
+    } 
+  `} 
+  /> 
+);
+
 function App() {
   return (
     <>
+      <GlobalStyles />
       <Router>
         <Routes>
           <Route path = "/profilePage" element = {<ProfilePage/>} />

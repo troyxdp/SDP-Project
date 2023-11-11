@@ -7,6 +7,16 @@ import { EventPlannerDetailsForm } from "../components/EventPlannerDetailsForm";
 import { PerformerDetailsForm } from "../components/PerformerDetailsForm";
 import { db } from '../firebase-config/firebase';
 
+const PageContainer = styled.div`
+    position: fixed;
+    top: 40px;
+    left: 40px;
+    right: 40px;
+    bottom: 40px;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 10px;
+`;
 const Container = styled.div`
     padding: 15px 0;
     display: flex;
@@ -55,12 +65,6 @@ const DisplayFormButton = styled.button`
 
 /*
     TO-DO:
-    - Add error messages for invalid details enterred
-    - Add the functionality of being able to have multiple forms and multiple submissions
-    - See if there is a way to add multiple documents at the same time instead of adding each performer type details one at a time
-    - Add submission of equipment item or link in AdderContainer on the pressing of the enter key
-    - Add list box display of performer details
-    - Test creation of performer details after recent changes
 */
 
 export default function DetailsPage() {
@@ -70,7 +74,8 @@ export default function DetailsPage() {
 
     let userData = {
         email: email,
-        fullName: usrData.fullName,
+        displayName: usrData.displayName,
+        searchName: usrData.displayName.toLowerCase(),
         location: usrData.location,
         bio: usrData.bio,
         profilePic: usrData.profilePic,
@@ -218,10 +223,6 @@ export default function DetailsPage() {
                         await addDoc(performerInfoCollection, performerDetails[i]);
                     }
                 }
-                
-                //commenting out the reviewCollection because when they first create their page there will be no reviews
-                //const reviewCollection = collection(db, "users", userDocRef.id, "reviews");
-                //await addDoc(reviewCollection, dummyReview);
             }
             catch (err)
             {
@@ -239,67 +240,69 @@ export default function DetailsPage() {
     }
 
     return(
-        <Container>
-            <StyledHeader>
-                User Details
-            </StyledHeader>
-            <p>
-                What type/s of user are you?
-            </p>
-            <StyledCheckboxContainer>
-                <label>
-                    <input 
-                        type="checkbox"
-                        value={displayAddPerformerButton}
-                        onChange={handleDisplayPerformerDetailsChange}
-                    />
-                    I am a performer
-                </label>
-                <label>
-                    <input 
-                        type="checkbox"
-                        value={displayEventPlannerForm}
-                        onChange={(e) => setDisplayEventPlannerForm(!displayEventPlannerForm)}
-                    />
-                    I am an event planner
-                </label>
-            </StyledCheckboxContainer>
-
-            {displayAddPerformerButton && !displayPerformerForm &&
-                <DisplayOptionContainer onClick={() => setDisplayPerformerForm(true)}>
-                    <DisplayFormButton>+</DisplayFormButton>
+        <PageContainer>
+            <Container>
+                <StyledHeader>
+                    User Details
+                </StyledHeader>
+                <p>
+                    What type/s of user are you?
+                </p>
+                <StyledCheckboxContainer>
                     <label>
-                        Add Performer Details
+                        <input 
+                            type="checkbox"
+                            value={displayAddPerformerButton}
+                            onChange={handleDisplayPerformerDetailsChange}
+                        />
+                        I am a performer
                     </label>
-                </DisplayOptionContainer>
-            }
-            {displayAddPerformerButton && displayPerformerForm &&
-                <DisplayOptionContainer onClick={() => setDisplayPerformerForm(false)}>
-                    <DisplayFormButton>-</DisplayFormButton>
                     <label>
-                        Hide Form
+                        <input 
+                            type="checkbox"
+                            value={displayEventPlannerForm}
+                            onChange={(e) => setDisplayEventPlannerForm(!displayEventPlannerForm)}
+                        />
+                        I am an event planner
                     </label>
-                </DisplayOptionContainer>
-            }
+                </StyledCheckboxContainer>
 
-            {/* Form for inputting performer details */}
-            {displayPerformerForm &&
-                <PerformerDetailsForm parentCallback={onSubmitPerformerDetails}/>
-            }
+                {displayAddPerformerButton && !displayPerformerForm &&
+                    <DisplayOptionContainer onClick={() => setDisplayPerformerForm(true)}>
+                        <DisplayFormButton>+</DisplayFormButton>
+                        <label>
+                            Add Performer Details
+                        </label>
+                    </DisplayOptionContainer>
+                }
+                {displayAddPerformerButton && displayPerformerForm &&
+                    <DisplayOptionContainer onClick={() => setDisplayPerformerForm(false)}>
+                        <DisplayFormButton>-</DisplayFormButton>
+                        <label>
+                            Hide Form
+                        </label>
+                    </DisplayOptionContainer>
+                }
 
-            {/* Form for inputting event planner details */}
-            {displayEventPlannerForm &&
-                <EventPlannerDetailsForm parentCallback={onSubmitEventPlannerDetails}/>
-            }
+                {/* Form for inputting performer details */}
+                {displayPerformerForm &&
+                    <PerformerDetailsForm parentCallback={onSubmitPerformerDetails}/>
+                }
 
-            <StyledButton onClick={handleSubmit}>
-                Submit All Details
-            </StyledButton>
+                {/* Form for inputting event planner details */}
+                {displayEventPlannerForm &&
+                    <EventPlannerDetailsForm parentCallback={onSubmitEventPlannerDetails}/>
+                }
 
-            <p id="uidnote" style={!isTypeSelected ? {} : {display: "none"}}>
-                    {/* <FontAwesomeIcon icon={faInfoCircle} /> */}
-                    Error: Please select a type and input details for it.<br/>
-            </p>
-    </Container>
+                <StyledButton onClick={handleSubmit}>
+                    Submit All Details
+                </StyledButton>
+
+                <p id="uidnote" style={!isTypeSelected ? {} : {display: "none"}}>
+                        {/* <FontAwesomeIcon icon={faInfoCircle} /> */}
+                        Error: Please select a type and input details for it.<br/>
+                </p>
+            </Container>
+        </PageContainer>
     )
 }

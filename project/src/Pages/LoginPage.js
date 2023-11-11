@@ -3,6 +3,16 @@ import { useNavigate} from "react-router-dom";
 import styled from "styled-components";
 import { getAuth,signInWithEmailAndPassword } from "firebase/auth";
 
+const PageContainer = styled.div`
+    position: fixed;
+    top: 40px;
+    left: 40px;
+    right: 40px;
+    bottom: 40px;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 10px;
+`;
 const Container = styled.div`
     padding: 200px 0;
     display: flex;
@@ -10,7 +20,6 @@ const Container = styled.div`
     justify-content: center;
     flex-direction: column;
 `;
-
 const StyledInput = styled.input`
     display: flex;
     background: #e4e4e4;
@@ -22,7 +31,6 @@ const StyledInput = styled.input`
     margin-bottom: 10px;
     margin-top: 10px;
 `;
-
 const StyledHeader = styled.h1`
     padding: 10px;
     font-size: 1.5rem;
@@ -30,7 +38,6 @@ const StyledHeader = styled.h1`
     margin-top: 0px;
     margin-bottom: 0px;
 `;
-
 const StyledLink = styled.a`
     display: flex;
     align-items: center;
@@ -38,7 +45,6 @@ const StyledLink = styled.a`
     text-decoration: none;
     color: #a13333;
 `;
-
 const StyledErrorMessage = styled.a`
     display: flex;
     align-items: center;
@@ -48,7 +54,6 @@ const StyledErrorMessage = styled.a`
     margin-right: 7px;
     color: #FF3333;
 `;
-
 const StyledForm = styled.form`
 
     display: flex;
@@ -56,7 +61,6 @@ const StyledForm = styled.form`
     justify-content: center;
     flex-direction: column;
 `;
-
 const StyledButton = styled.button`
     display: inline-block;
     border: 0px solid #fff;
@@ -66,17 +70,10 @@ const StyledButton = styled.button`
     color: white;
     margin-top: 10px;
 `;
-
 const StyledParagraph = styled.p`
     display: block;
     margin-top: 10px;
 `;
-
-// const StyledRegistrationMessage = styled.a`
-//     display: flex;
-//     align-items: center;
-//     justify-content: center;
-// `;
 
 const LoginPage = () => {
     const emailRef = useRef();
@@ -124,48 +121,52 @@ const LoginPage = () => {
         setErrMsg('');
     }, [email, pass])
 
-        return <Container>
-            <p ref={errRef} style={errMsg ? {} : {display: "none"}} aria-live="assertive">{errMsg}</p> 
+        return (
+            <PageContainer>
+                <Container>
+                    <p ref={errRef} style={errMsg ? {} : {display: "none"}} aria-live="assertive">{errMsg}</p> 
 
-            {/* <img style = {{ width : 90, height: 90 }}src = {logo} alt = "logo" />     <--- THIS IS WHERE WE PUT OUR LOGO */}
+                    {/* <img style = {{ width : 90, height: 90 }}src = {logo} alt = "logo" />     <--- THIS IS WHERE WE PUT OUR LOGO */}
 
-            <StyledHeader>Login</StyledHeader>
+                    <StyledHeader>Login</StyledHeader>
 
-            <StyledForm onSubmit={handleSubmit}>
-                <StyledInput
-                    value = { email }
-                    placeholder="email"
-                    type='email'
-                    id="email"
-                    ref={emailRef}
-                    autoComplete="off"
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    textAlign = 'center'
-                    />
-                <StyledInput
-                    value = { pass }
-                    placeholder="password"
-                    type='password'
-                    id="pass"
-                    onChange={(e) => setPass(e.target.value)}
-                    required
-                    />
-                <StyledErrorMessage id="uidnote" style={isIncorrectDetails ? {} : {display: "none"}}>
-                    Incorrect email or password. <br />
-                    Please enter your correct credentials.
-                </StyledErrorMessage>
-                <StyledButton type = 'submit'>Log In</StyledButton>
-            </StyledForm>
+                    <StyledForm onSubmit={handleSubmit}>
+                        <StyledInput
+                            value = { email }
+                            placeholder="email"
+                            type='email'
+                            id="email"
+                            ref={emailRef}
+                            autoComplete="off"
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            textAlign = 'center'
+                            />
+                        <StyledInput
+                            value = { pass }
+                            placeholder="password"
+                            type='password'
+                            id="pass"
+                            onChange={(e) => setPass(e.target.value)}
+                            required
+                            />
+                        <StyledErrorMessage id="uidnote" style={isIncorrectDetails ? {} : {display: "none"}}>
+                            Incorrect email or password. <br />
+                            Please enter your correct credentials.
+                        </StyledErrorMessage>
+                        <StyledButton type = 'submit'>Log In</StyledButton>
+                    </StyledForm>
 
-            <StyledParagraph>
-                Don't have an account?<br/>
-                <span className="line">
-                    <StyledLink href="/registrationPage"><b>Sign Up</b></StyledLink>
-                </span>
-            </StyledParagraph>
+                    <StyledParagraph>
+                        Don't have an account?<br/>
+                        <span className="line">
+                            <StyledLink href="/registrationPage"><b>Sign Up</b></StyledLink>
+                        </span>
+                    </StyledParagraph>
 
-        </Container>;
+                </Container>
+            </PageContainer>
+        );
 }
 
 export default LoginPage;

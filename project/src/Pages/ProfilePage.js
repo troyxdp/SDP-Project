@@ -9,7 +9,16 @@ import { db } from '../firebase-config/firebase';
 import dummy_profile_pic from "../profile-pics/dummy-profile-pic.jpg";
 import no_profile_pic from "../profile-pics/no-profile-pic-image.jpg";
 
-//components of the page's css
+const PageContainer = styled.div`
+    position: fixed;
+    top: 40px;
+    left: 40px;
+    right: 40px;
+    bottom: 40px;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 10px;
+`;
 const Container = styled.div`
   display: grid;
   grid-template-columns: 1fr 0.5fr; /* Three columns: two flexible and one 200px wide */
@@ -118,7 +127,8 @@ const ProfilePage = () => {
     //initializing object for user field
     const userInitializer = {
       email : profileEmail,
-      fullName : "",
+      displayName : "",
+      searchName : "",
       location : "",
       bio : "",
       profilePic : null,
@@ -150,7 +160,8 @@ const ProfilePage = () => {
 
         let userData = {
           email : profileEmail,
-          fullName : docSnap.data().fullName,
+          displayName : docSnap.data().displayName,
+          searchName : docSnap.data().searchName,
           location : docSnap.data().location,
           bio : docSnap.data().bio,
           profilePic : docSnap.data().profilePic,
@@ -403,7 +414,7 @@ const ProfilePage = () => {
     }
 
     return (
-      <>
+      <PageContainer>
         <NavigationBar/>
         {isDataLoadedFromDatabase &&
           <Container>
@@ -417,12 +428,12 @@ const ProfilePage = () => {
                     {user.isPerformer &&
                       <CreateButton onClick={goToCreateGroupPage}>Create Group</CreateButton>
                     }
-                    <CreateButton onClick={goToEditPersonalDetailsPage}>Edit Profile Details</CreateButton>
+                    <CreateButton onClick={goToEditPersonalDetailsPage}>Edit Profile</CreateButton>
                     {user.isEventPlanner &&
-                      <CreateButton onClick={goToEditUpcomingEventsDetailsPage}>Edit Upcoming Events</CreateButton>
+                      <CreateButton onClick={goToEditUpcomingEventsDetailsPage}>Edit Events</CreateButton>
                     }
                     {user.isInGroup &&
-                      <CreateButton onClick={goToEditGroupsDetailsPage}>Edit Group Details</CreateButton>
+                      <CreateButton onClick={goToEditGroupsDetailsPage}>Edit Groups</CreateButton>
                     }
                   </CreationButtonsBox>
                 }
@@ -435,7 +446,7 @@ const ProfilePage = () => {
                 }
                 <StyledHeader>Profile Page</StyledHeader>
                 {profilePic}
-                <Name>{user.fullName}</Name>
+                <Name>{user.displayName}</Name>
                 <DetailsBox>
                   <Detail><b>Email:</b> {user.email}</Detail>
                   <Detail><b>Location:</b> {user.location}</Detail>
@@ -488,7 +499,7 @@ const ProfilePage = () => {
             </VerticalPanel>
           </Container>
         }
-      </>
+      </PageContainer>
     );
 }
 
