@@ -1,4 +1,7 @@
 import styled from "styled-components";
+import { db } from '../firebase-config/firebase';
+import { collection, doc, getDoc, getDocs, addDoc, setDoc, deleteDoc, query, where, and  } from "firebase/firestore";
+import { useEffect, useState } from "react";
 
 const DetailsContainer = styled.div`
     padding: 10px;
@@ -57,7 +60,7 @@ const LeftContent = styled.div`
     display: flex;
     flex-direction: column;
 `;
-const StyledButton = styled.button`
+const SlotApplyButton = styled.button`
     display: inline-block;
     border: 0px solid #fff;
     border-radius: 5px;
@@ -66,8 +69,19 @@ const StyledButton = styled.button`
     color: white;
     margin-top: 10px;
 `;
+const EventApplyButton = styled.button`
+    display: inline-block;
+    border: 0px solid #fff;
+    border-radius: 5px;
+    background: #a13333;
+    padding: 7.5px 20px;
+    color: white;
+    margin-top: 10px;
+    width: 80px;
+    max-width: 80px;
+`;
 
-export function EventConnectionsDisplay({event}) {
+export function EventConnectionsDisplay({event, errorCallback}) {
     const isSlots = event.slots.length > 0;
     const email = event.creatingUserEmail;
     const eventName = event.eventName;
@@ -166,18 +180,80 @@ export function EventConnectionsDisplay({event}) {
                         {slotStartTimeString} - {slotEndTimeString} <br/>
                         {slotDescription}</p>
                     </LeftContent>
-                    <StyledButton onClick={() => applyForSlot(i)}>Apply</StyledButton>
+                    <SlotApplyButton onClick={() => applyForSlot(i)}>Apply</SlotApplyButton>
                 </TwoLineListBoxElement>
             </ListBox>
         );
     }
 
     const applyForSlot = async (index) => {
-        //add sending of request
+        const userEmail = sessionStorage.getItem("userEmail");
+        const slotRequest = {
+            requestType : "slot",
+            requestingUserEmail : userEmail,
+            receivingUserEmail : email,
+            eventName : eventName,
+            stage : slots[index].stage,
+            startDate : slots[index].startDate
+        };
+
+        //check if a slot request has already been sent to prevent spamming
+        const requestsRef = collection(db, "users", email, "requests");
+        const q = query(requestsRef, and(where("requestType", "==", "slot"),
+                                         where("requestingUserEmail", "==", userEmail),
+                                         where("receivingUserEmail", "==", email),
+                                         where("eventName", "==", eventName),
+                                         where("stage", "==", slots[index].stage),
+                                         where("startDate", "==", slots[index].startDate)
+                                        ));
+        const requestsQuerySnapshot = await getDocs(q);
+        let isRequestForSlotSent = false;
+        requestsQuerySnapshot.forEach((doc) => {
+            isRequestForSlotSent = true;
+        }); 
+
+        //if slot request has not already been sent
+        if (!isRequestForSlotSent)
+        {
+            await addDoc(requestsRef, slotRequest); //send slot request
+            errorCallback(false);
+        }
+        else
+        {
+            errorCallback(true);
+        }
     }
 
     const applyForEvent = async () => {
-        //add sending of request
+        const userEmail = sessionStorage.getItem("userEmail");
+        const toPerformRequest = {
+            requestType : "toPerform",
+            requestingUserEmail : userEmail,
+            receivingUserEmail : email,
+            eventName : eventName
+        };
+
+        const requestsRef = collection(db, "users", email, "requests");
+        const q = query(requestsRef, and(where("requestType", "==", "toPerform"),
+                                         where("eventName", "==", eventName),
+                                         where("requestingUserEmail", "==", userEmail),
+                                         where("receivingUserEmail", "==", email)
+                                        ));
+        const requestsQuerySnapshot = await getDocs(q);
+        let isRequestSent = false;
+        requestsQuerySnapshot.forEach((doc) => {
+            isRequestSent = true;
+        }); 
+
+        if (!isRequestSent)
+        {
+            await addDoc(requestsRef, toPerformRequest);
+            errorCallback(false);
+        }
+        else
+        {
+            errorCallback(true);
+        }
     }
 
     return(
@@ -193,9 +269,9 @@ export function EventConnectionsDisplay({event}) {
                     <Detail>{eventDescription}</Detail>
                 </DetailsBox>
                 {!isSlots &&
-                    <StyledButton onClick={() => applyForEvent()}>
+                    <EventApplyButton onClick={() => applyForEvent()}>
                         Apply
-                    </StyledButton>
+                    </EventApplyButton>
                 }
                 {isSlots &&
                     <>

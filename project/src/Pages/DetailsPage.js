@@ -223,10 +223,6 @@ export default function DetailsPage() {
                         await addDoc(performerInfoCollection, performerDetails[i]);
                     }
                 }
-                
-                //commenting out the reviewCollection because when they first create their page there will be no reviews
-                //const reviewCollection = collection(db, "users", userDocRef.id, "reviews");
-                //await addDoc(reviewCollection, dummyReview);
             }
             catch (err)
             {
