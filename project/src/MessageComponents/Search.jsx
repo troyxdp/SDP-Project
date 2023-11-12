@@ -48,9 +48,9 @@ const Search = () => {
 
     //check whether the group(chats in firestore) exists, if not create
     const combinedId =
-      currentUser.email > user.email
+      (currentUser.email > user.email
         ? currentUser.email + user.email
-        : user.email + currentUser.email;
+        : user.email + currentUser.email).replace(/\./g, '');
 
     try {
       // console.log(combinedId);
@@ -61,38 +61,28 @@ const Search = () => {
         await setDoc(doc(db, "chats", combinedId), { messages: [] });
 
         //create user chats
-
-        const userUserChatsDocRef = doc(db, "userChats", currentUser.email);
-        const userUserChatsDocSnapshot = await getDoc(userUserChatsDocRef);
-        const userUserChatsData = userUserChatsDocSnapshot.data();
-        userUserChatsData[combinedId + ".userInfo"] = {email: user.email, displayName: user.displayName, photoURL: user.photoURL};
-        userUserChatsData[combinedId + ".date"] = serverTimestamp();
         
         await updateDoc(doc(db, "userChats", currentUser.email), {
-          [combinedId + ".userInfo"]: {
-            email: user.email,
-            displayName: user.displayName,
-            photoURL: user.photoURL,
-          },
-          [combinedId + ".date"]: serverTimestamp(),
+            [combinedId + ".userInfo"] : { 
+                email: user.email, 
+                displayName: user.displayName, 
+                photoURL: user.profilePic, 
+                date: serverTimestamp(), 
+                lastMessage: ""
+            },
         });
 
         await updateDoc(doc(db, "userChats", user.email), {
-          [combinedId + ".userInfo"]: {
-            email: currentUser.email,
-            displayName: currentUser.displayName,
-            photoURL: currentUser.photoURL,
-          },
-          [combinedId + ".date"]: serverTimestamp(),
+            [combinedId + ".userInfo"] : { 
+                email: user.email, 
+                displayName: user.displayName, 
+                photoURL: user.profilePic, 
+                date: serverTimestamp(), 
+                lastMessage: ""
+            },
         });
-      }
-
-
-      const currentUserRef = doc(db, "userChats", currentUser.email);
-
-      await updateDoc(doc(db, "userChats", currentUser.email), {
-          test: `${user.email},${user.displayName}`
-        });
+    }
+        
     } catch (err) {}
 
     setUser(null);

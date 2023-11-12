@@ -60,14 +60,14 @@ const Input = () => {
       [data.chatId + ".lastMessage"]: {
         text,
       },
-      [data.chatId + ".date"]: serverTimestamp(),
+      [data.chatId + ".userInfo.date"]: serverTimestamp(),
     });
 
     await updateDoc(doc(db, "userChats", data.user.email), {
       [data.chatId + ".lastMessage"]: {
         text,
       },
-      [data.chatId + ".date"]: serverTimestamp(),
+      [data.chatId + ".userInfo.date"]: serverTimestamp(),
     });
 
     setText("");

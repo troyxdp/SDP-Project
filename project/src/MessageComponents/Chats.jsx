@@ -14,7 +14,7 @@ const Chats = () => {
     const getChats = () => {
       const unsub = onSnapshot(doc(db, "userChats", currentUser.email), (doc) => {
         setChats(doc.data());
-        // console.log(chats);
+        console.log(chats);
       });
 
       return () => {
@@ -43,7 +43,7 @@ const Chats = () => {
           key={chat[0]}
           onClick={() => handleSelect(chat[1].userInfo)}
         >
-          <img src={chat[1].userInfo.photoURL} alt="" />
+          {chat[1].userInfo.profilePic && <img src={chat[1].userInfo.profilePic} alt="" />}
           <div className="userChatInfo">
             <span>{chat[1].userInfo.displayName}</span>
             <p>{chat[1].lastMessage?.text}</p>

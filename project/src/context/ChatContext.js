@@ -15,9 +15,9 @@ export const ChatContextProvider = ({children}) => {
             case "CHANGE_USER":
                 return {
                     user: action.payload,
-                    chatId: currentUser.email > action.payload.email 
+                    chatId: (currentUser.email > action.payload.email 
                             ? currentUser.email + action.payload.email
-                            : action.payload.email + currentUser.email
+                            : action.payload.email + currentUser.email).replace(/\./g, '')
                 }
 
             default:
