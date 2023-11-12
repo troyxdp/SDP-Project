@@ -81,20 +81,12 @@ const Search = () => {
         });
       }
 
-      const userChatsDocRef = doc(db, 'userChats', currentUser.email);
 
-// Assuming 'combinedId' is a variable containing the document ID you want to update
+        const currentUserRef = doc(db, "userChats", currentUser.email);
 
-// Use setDoc to create or update the document
-        await setDoc(userChatsDocRef, {
-        [`${combinedId}.userInfo`]: {
-            email: user.email,
-            displayName: user.displayName,
-            photoURL: user.photoURL,
-        },
-        [`${combinedId}.date`]: serverTimestamp(),
-        }, { merge: true });
-
+        await updateDoc(doc(db, "userChats", currentUser.email), {
+            test: `${user.email},${user.displayName}`
+          });
     } catch (err) {}
 
     setUser(null);
