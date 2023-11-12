@@ -92,6 +92,8 @@ export function PerformerConnectionsDisplay({performer, event, slotIndex, errorC
     const hourlyRate = performer.hourlyRate;
     const links = performer.links;
 
+    const [isInviteSent, setIsInviteSent] = useState(false);
+
     let genresString = "" + genres[0];
     for (let i = 1; i < genres.length; i++)
     {
@@ -143,6 +145,7 @@ export function PerformerConnectionsDisplay({performer, event, slotIndex, errorC
             {
                 await addDoc(requestsRef, request);
                 errorCallback(false);
+                setIsInviteSent(true);
             }
             else
             {
@@ -177,6 +180,7 @@ export function PerformerConnectionsDisplay({performer, event, slotIndex, errorC
             {
                 await addDoc(requestsRef, request);
                 errorCallback(false);
+                setIsInviteSent(true);
             }
             else
             {
@@ -190,6 +194,7 @@ export function PerformerConnectionsDisplay({performer, event, slotIndex, errorC
             <DetailsContainer>
                 <StyledHeader>{name}</StyledHeader>
                 <DetailsBox>
+                    <Detail><b>Email:</b> {email}</Detail>
                     <Detail><b>Type:</b> {type}</Detail>
                     <Detail><b>Genres:</b> {genresString}</Detail>
                     <Detail><b>Hourly Rate:</b> {hourlyRate}</Detail>
@@ -202,6 +207,9 @@ export function PerformerConnectionsDisplay({performer, event, slotIndex, errorC
                 <InviteButton onClick={invitePerformer}>
                     Invite
                 </InviteButton>
+                <p id="uidnote" style={isInviteSent ? {} : {display: "none"}}>
+                    Invite has been sent.
+                </p>
             </DetailsContainer>
         </>
     );

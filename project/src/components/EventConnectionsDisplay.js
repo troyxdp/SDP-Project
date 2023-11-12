@@ -95,6 +95,8 @@ export function EventConnectionsDisplay({event, errorCallback}) {
     const genres = event.genres;
     const slots = event.slots;
 
+    const [isInviteSent, setIsInviteSent] = useState(false);
+
     let startDateString = "" + startDate.getDate() + "/" + startDate.getMonth() + "/" + startDate.getFullYear() + " " + startDate.getHours() + ":";
     if (startDate.getDate() < 10)
     {
@@ -144,25 +146,28 @@ export function EventConnectionsDisplay({event, errorCallback}) {
         const slotStartDate = slots[i].startDate.toDate();
         const slotEndDate = slots[i].endDate.toDate();
 
-        let slotStartTimeString = "" + slotStartDate.getDate() + "/" + slotStartDate.getMonth() + "/" + slotStartDate.getFullYear() + " " + slotStartDate.getHours() + ":";
+        let slotStartTimeString = "" + slotStartDate.getDate() + "/" + slotStartDate.getMonth() + "/" + slotStartDate.getFullYear() + " ";
         if (slotStartDate.getDate() < 10)
         {
             slotStartTimeString = "0" + slotStartTimeString;
         }
+        if (slotStartDate.getHours() < 10)
+        {
+            slotStartTimeString += "0";
+        }
+        slotStartTimeString  += slotStartDate.getHours() + ":";
         if (slotStartDate.getMinutes() < 10)
         {
-            slotStartTimeString += "0" + slotStartDate.getMinutes();
+            slotStartTimeString += "0";
         }
-        else
-        {
-            slotStartTimeString += startDate.getMinutes();
-        }
+        slotStartTimeString += slotStartDate.getMinutes();
 
-        let slotEndTimeString = "" + slotEndDate.getHours() + ":";
+        let slotEndTimeString = "";
         if (slotEndDate.getHours() < 10)
         {
-            slotEndTimeString = "0" + slotEndTimeString;
+            slotEndTimeString += "0";
         }
+        slotEndTimeString += slotEndDate.getHours() + ":"
         if (slotEndDate.getMinutes() < 10)
         {
             slotEndTimeString += "0";
@@ -217,6 +222,7 @@ export function EventConnectionsDisplay({event, errorCallback}) {
         {
             await addDoc(requestsRef, slotRequest); //send slot request
             errorCallback(false);
+            setIsInviteSent(true);
         }
         else
         {
@@ -249,6 +255,7 @@ export function EventConnectionsDisplay({event, errorCallback}) {
         {
             await addDoc(requestsRef, toPerformRequest);
             errorCallback(false);
+            setIsInviteSent(true);
         }
         else
         {
@@ -278,6 +285,9 @@ export function EventConnectionsDisplay({event, errorCallback}) {
                         {slotDisplays}
                     </>
                 }
+                <p id="uidnote" style={isInviteSent ? {} : {display: "none"}}>
+                    Invite has been sent.
+                </p>
             </DetailsContainer>
         </>
     );
