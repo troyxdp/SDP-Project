@@ -1,33 +1,29 @@
 import React, { useContext } from "react";
+import Cam from "../img/cam.png";
 import Add from "../img/add.png";
 import More from "../img/more.png";
 import Messages from "./Messages";
 import Input from "./Input";
 import { ChatContext } from "../context/ChatContext";
-import './styles.css';
 
 const Chat = () => {
-  // Get the chat data from the context
   const { data } = useContext(ChatContext);
-
-  // Static user data for testing/demonstration
-  const staticUserData = {
-    displayName: "John Doe", // Replace with your desired user data
-  };
 
   return (
     <div className="chat">
+        <script>{console.log(data.user?.displayName)}</script>
       <div className="chatInfo">
-        {/* Display user's name (static data for testing) */}
-        <span>{staticUserData.displayName}</span>
+        <span>{data.user?.displayName}</span>
         <div className="chatIcons">
-          <img src={More} alt="More" />
+          <img src={Cam} alt="" />
+          <img src={Add} alt="" />
+          <img src={More} alt="" />
         </div>
       </div>
       <Messages />
-      <Input />
+      <Input/>
     </div>
   );
 };
 
-export default Chat;
+export default Chat
