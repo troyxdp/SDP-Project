@@ -53,14 +53,20 @@ const Search = () => {
         : user.email + currentUser.email;
 
     try {
-        // console.log(combinedId);
-        const res = await getDoc(doc(db, "chats", combinedId));
+      // console.log(combinedId);
+      const res = await getDoc(doc(db, "chats", combinedId));
 
-        if (!res.exists()) {
+      if (!res.exists()) {
         //create a chat in chats collection
         await setDoc(doc(db, "chats", combinedId), { messages: [] });
 
         //create user chats
+
+        const userUserChatsDocRef = doc(db, "userChats", currentUser.email);
+        const userUserChatsDocSnapshot = await getDoc(userUserChatsDocRef);
+        const userUserChatsData = userUserChatsDocSnapshot.data();
+        userUserChatsData[combinedId + ".userInfo"] = {email: user.email, displayName: user.displayName, photoURL: user.photoURL};
+        userUserChatsData[combinedId + ".date"] = serverTimestamp();
         
         await updateDoc(doc(db, "userChats", currentUser.email), {
           [combinedId + ".userInfo"]: {
@@ -82,11 +88,11 @@ const Search = () => {
       }
 
 
-        const currentUserRef = doc(db, "userChats", currentUser.email);
+      const currentUserRef = doc(db, "userChats", currentUser.email);
 
-        await updateDoc(doc(db, "userChats", currentUser.email), {
-            test: `${user.email},${user.displayName}`
-          });
+      await updateDoc(doc(db, "userChats", currentUser.email), {
+          test: `${user.email},${user.displayName}`
+        });
     } catch (err) {}
 
     setUser(null);
