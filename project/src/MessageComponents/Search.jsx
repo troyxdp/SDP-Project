@@ -106,6 +106,9 @@ const Search = () => {
         : user.email + currentUser.email).replace(/\./g, '');
 
     try {
+
+      console.log(currentUser);
+      console.log(user);
       // console.log(combinedId);
       const res = await getDoc(doc(db, "chats", combinedId));
 
@@ -121,17 +124,15 @@ const Search = () => {
                 displayName: user.displayName, 
                 photoURL: user.profilePic, 
                 date: serverTimestamp(), 
-                lastMessage: ""
             },
         });
 
         await updateDoc(doc(db, "userChats", user.email), {
             [combinedId + ".userInfo"] : { 
-                email: user.email, 
-                displayName: user.displayName, 
+                email: currentUser.email, 
+                displayName: currentUser.displayName, 
                 photoURL: user.profilePic, 
                 date: serverTimestamp(), 
-                lastMessage: ""
             },
         });
     }

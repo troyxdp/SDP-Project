@@ -19,11 +19,11 @@ const Message = ({ message }) => {
     >
       <div className="messageInfo">
         <img
-          src={
-            message.senderId === currentUser.email
-              ? currentUser.photoURL
-              : data.user.photoURL
-          }
+          // src={
+          //   message.senderId === currentUser.email
+          //     ? currentUser.photoURL
+          //     : data.user.photoURL
+          // }
           alt=""
         />
         <span>just now</span>
