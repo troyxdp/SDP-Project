@@ -7,20 +7,21 @@ import {
 } from "../firebase-config/firebase/storage";
 import { v4 } from "uuid";
 
-export default function imageUpload() {
-    const [imageUpload, setImageUpload] = useState(null);
-    const [imageUrls, setImageUrls] = useState(new Set()); // Use a Set to store unique URLs
-  
-    const imagesListRef = ref(storage, "images/");
-    const uploadFile = () => {
-      if (imageUpload == null) return;
-      const imageRef = ref(storage, `images/${imageUpload.name + v4()}`);
-      uploadBytes(imageRef, imageUpload).then((snapshot) => {
-        getDownloadURL(snapshot.ref).then((url) => {
-          setImageUrls(prev => new Set([...prev, url])); // Add URL to the Set
-        });
+const ImageUpload = ({ userEmail }) => {
+  const [imageUpload, setImageUpload] = useState(null);
+  const [imageUrls, setImageUrls] = useState(new Set()); // Use a Set to store unique URLs
+
+  const storageRef = ref(storage, `users/${userEmail}/images`); // Adjust the path according to your storage structure
+
+  const uploadFile = () => {
+    if (imageUpload == null) return;
+    const imageRef = ref(storageRef, `${imageUpload.name + v4()}`);
+    uploadBytes(imageRef, imageUpload).then((snapshot) => {
+      getDownloadURL(snapshot.ref).then((url) => {
+        setImageUrls((prev) => new Set([...prev, url])); // Add URL to the Set
       });
-    };
+    });
+  };
   
     useEffect(() => {
       listAll(imagesListRef).then((response) => {
@@ -46,4 +47,5 @@ export default function imageUpload() {
         ))}
       </div>
     );
-  }
+  };
+  export default ImageUpload;
