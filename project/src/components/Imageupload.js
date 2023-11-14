@@ -1,51 +1,83 @@
-import { useState, useEffect } from "react";
-import {
-  ref,
-  uploadBytes,
-  getDownloadURL,
-  listAll,
-} from "../firebase-config/firebase/storage";
+import "./App.css";
+import React, { useState, useEffect } from "react";
+import { ref, uploadBytes, getDownloadURL, listAll } from "firebase/storage";
+import { storage } from "./firebase";
 import { v4 } from "uuid";
 
-const ImageUpload = ({ userEmail }) => {
-  const [imageUpload, setImageUpload] = useState(null);
-  const [imageUrls, setImageUrls] = useState(new Set()); // Use a Set to store unique URLs
 
-  const storageRef = ref(storage, `users/${userEmail}/images`); // Adjust the path according to your storage structure
+function App() {
+  const [imageUpload, setImageUpload] = useState(null);
+  const [imageUrls, setImageUrls] = useState([]); // Use an array instead of Set
+  const [userEmail, setUserEmail] = useState("");
+
+  const imagesListRef = ref(storage);
+  const storageRef = ref(storage, `users/${userEmail}/images/`);
+
+  const handleEmailChange = (event) => {
+    setUserEmail(event.target.value);
+  };
 
   const uploadFile = () => {
-    if (imageUpload == null) return;
-    const imageRef = ref(storageRef, `${imageUpload.name + v4()}`);
+    if (imageUpload == null || userEmail === "") return;
+
+    const imageRef = ref(storageRef, `profile_photo_${v4()}_${imageUpload.name}`);
     uploadBytes(imageRef, imageUpload).then((snapshot) => {
       getDownloadURL(snapshot.ref).then((url) => {
-        setImageUrls((prev) => new Set([...prev, url])); // Add URL to the Set
+        setImageUrls((prev) => [...prev, url]); // Add URL to the array
       });
     });
   };
+
+  useEffect(() => {
+    if (userEmail === "") return;
   
-    useEffect(() => {
-      listAll(imagesListRef).then((response) => {
-        response.items.forEach((item) => {
+    listAll(storageRef).then((response) => {
+      const promises = [];
+  
+      response.items.forEach((item) => {
+        promises.push(
           getDownloadURL(item).then((url) => {
-            setImageUrls(prev => new Set([...prev, url])); // Add URL to the Set
-          });
-        });
+            if (url.includes("profile_photo")) {
+              return url;
+            }
+          })
+        );
+        
       });
-    }, []);
   
-    return (
-      <div className="ImageUpload">
+      Promise.all(promises).then((filteredUrls) => {
+        // Remove undefined values
+        const filteredUrlsArray = filteredUrls.filter((url) => url !== undefined);
+  
+        setImageUrls(filteredUrlsArray);
+        console.log(filteredUrls.length)
+
+      });
+    });
+  }, [userEmail, storageRef]);
+  return (
+    <div className="App">
+      <label>
+        Enter your email:
         <input
-          type="file"
-          onChange={(event) => {
-            setImageUpload(event.target.files[0]);
-          }}
+          type="text"
+          value={userEmail}
+          onChange={handleEmailChange}
         />
-        <button onClick={uploadFile}> Upload Image</button>
-        {[...imageUrls].map((url, index) => (
-          <img key={index} src={url} alt={`image-${index}`} />
-        ))}
-      </div>
-    );
-  };
-  export default ImageUpload;
+      </label>
+      <input
+        type="file"
+        onChange={(event) => {
+          setImageUpload(event.target.files[0]);
+        }}
+      />
+      <button onClick={uploadFile}> Upload Image</button>
+      {imageUrls.map((url, index) => (
+        <img key={index} src={url} alt={`image-${index}`} />
+      ))}
+    </div>
+  );
+}
+
+export default App;
+
