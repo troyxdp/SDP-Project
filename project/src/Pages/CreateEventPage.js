@@ -666,7 +666,7 @@ const CreateEventPage = () => {
                 stage: stageDetails, 
                 genres: genres,
                 description: description,
-                performerEmails: []
+                performerDetails: []
             };
             currSlots.push(slot);
             setSlots(currSlots);
@@ -678,14 +678,13 @@ const CreateEventPage = () => {
             //display error message
         }
     }
-    const sendHostRequest = async (user) => {
+    const sendHostRequest = async (user, event) => {
         const request = {
             requestingUserEmail : email,
             receivingUserEmail : user,
             requestType : "host",
-            eventName : eventName,
-            eventStartDate : eventStartDate
-        }
+            event : event
+        };
         const userDocRef = doc(db, "users", user);
         const userRequestsCollection = collection(db, "users", userDocRef.id, "requests");
         await addDoc(userRequestsCollection, request);
@@ -741,7 +740,7 @@ const CreateEventPage = () => {
 
             for (let i = 0; i < otherHostEmails.length; i++)
             {
-                sendHostRequest(otherHostEmails[i]);
+                sendHostRequest(otherHostEmails[i], upcomingEvent);
             }
 
             navigate("/profilePage", {state : email});

@@ -83,6 +83,11 @@ const StyledLink = styled.a`
   color: #0000ff;
 `;
 
+/*
+    TO-DO:
+    - Fix error where it doesn't accurately detect existing documents in the database +- line 139 and 174
+*/
+
 export function PerformerConnectionsDisplay({performer, event, slotIndex, errorCallback}) {
     const email = performer.userEmail;
     const name = performer.name;
@@ -118,30 +123,49 @@ export function PerformerConnectionsDisplay({performer, event, slotIndex, errorC
         const userEmail = sessionStorage.getItem("userEmail");
         const requestsRef = collection(db, "users", email, "requests");
         let isRequestSent = false;
+        let isPerformerAdded = false;
+
+        //check if performer has been added
+        const upcomingEventsRef = collection(db, "upcomingEvents");
+        const performerAddedQuery = query(upcomingEventsRef, and(where("eventName", "==", event.eventName),
+                                                                 where("creatingUserEmail", "==", userEmail)));
+        const performerAddedQuerySnapshot = await getDocs(performerAddedQuery);
+        performerAddedQuerySnapshot.forEach((doc) => {
+            const event = doc.data();
+            for (let i = 0; i < event.performerDetails.length; i++)
+            {
+                if (event.performerDetails[i].email === email)
+                {
+                    isPerformerAdded = true;
+                }
+            }
+        });
 
         if (event.slots.length === 0) //searching for a performer for an entire event, not just a slot
         {
             //create request object
             const request = {
                 requestType : "toHavePerform",
+                performer : performer,
                 requestingUserEmail : userEmail,
                 receivingUserEmail : email,
-                eventName : event.eventName
+                event : event,
+                slotIndex : -1
             };
 
             //run query to see if there is already a request from this user to the performer for this event
-            const q = query(requestsRef, and(where("requestType", "==", "toHavePerform"),
+            const requestSentQuery = query(requestsRef, and(where("requestType", "==", "toHavePerform"),
                                          where("requestingUserEmail", "==", userEmail),
                                          where("receivingUserEmail", "==", email),
-                                         where("eventName", "==", event.eventName)
+                                         where("event", "==", event)
                                         ));
-            const requestsQuerySnapshot = await getDocs(q);
+            const requestsQuerySnapshot = await getDocs(requestSentQuery);
             requestsQuerySnapshot.forEach((doc) => {
                 isRequestSent = true;
             });
 
             //send a request if one hasn't been sent already
-            if (!isRequestSent)
+            if (!isRequestSent && !isPerformerAdded)
             {
                 await addDoc(requestsRef, request);
                 errorCallback(false);
@@ -157,9 +181,10 @@ export function PerformerConnectionsDisplay({performer, event, slotIndex, errorC
             //create request object
             const request = {
                 requestType : "toHavePerform",
+                performer : performer,
                 requestingUserEmail : userEmail,
                 receivingUserEmail : email,
-                eventName : event.eventName,
+                event : event,
                 slotIndex : slotIndex
             };
 
@@ -167,8 +192,7 @@ export function PerformerConnectionsDisplay({performer, event, slotIndex, errorC
             const q = query(requestsRef, and(where("requestType", "==", "toHavePerform"),
                                          where("requestingUserEmail", "==", userEmail),
                                          where("receivingUserEmail", "==", email),
-                                         where("eventName", "==", event.eventName), 
-                                         where("slotIndex", "==", slotIndex)
+                                         where("event", "==", event) 
                                         ));
             const requestsQuerySnapshot = await getDocs(q);
             requestsQuerySnapshot.forEach((doc) => {
@@ -176,7 +200,7 @@ export function PerformerConnectionsDisplay({performer, event, slotIndex, errorC
             });
 
             //send a request if one hasn't been sent already
-            if (!isRequestSent)
+            if (!isRequestSent && !isPerformerAdded)
             {
                 await addDoc(requestsRef, request);
                 errorCallback(false);
