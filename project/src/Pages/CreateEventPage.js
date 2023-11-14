@@ -30,16 +30,7 @@ const Container = styled.div`
     justify-content: center;
     flex-direction: column;
 `;
-const EventDetailsDiv = styled.div`
-    padding-top: 5px;
-    padding-bottom: 10px;
-    padding-left: 15px;
-    padding-right: 15px;
-    display: flex;
-    align-items: left;
-    justify-content: center;
-    flex-direction: column;
-`;
+ 
 const StyledCheckboxContainer = styled.div`
     display: flex;
     flex-direction: column;
@@ -157,6 +148,16 @@ const TwoLineListBoxElement = styled.div`
     border: 2px solid #808080;
     border-radius: 8px;
     margin-top: 2px;
+`;
+const EventDetailsDiv = styled.div`
+    padding-top: 5px;
+    padding-bottom: 10px;
+    padding-left: 15px;
+    padding-right: 15px;
+    display: flex;
+    align-items: left;
+    justify-content: center;
+    flex-direction: column;
 `;
 
 /*
@@ -815,7 +816,7 @@ const CreateEventPage = () => {
                     </p>
 
                     <StyledLabel htmlFor="type">
-                        Type of Performer:
+                        Type of Event:
                     </StyledLabel>
                     <select value={eventType} onChange={(e) => setEventType(e.target.value)} style={{width: "250px", marginBottom: "10px"}}>
                         {eventTypeOptions.map((option) => (
