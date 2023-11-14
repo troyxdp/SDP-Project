@@ -1,4 +1,7 @@
 import styled from "styled-components";
+import { db } from '../firebase-config/firebase';
+import { collection, getDocs, addDoc, query, where, and  } from "firebase/firestore";
+import { useState } from "react";
 
 const DetailsContainer = styled.div`
     padding: 10px;
@@ -17,11 +20,6 @@ const StyledHeader = styled.h1`
   font-weight: bold;
   margin-bottom: 8px;
   margin-top: 0px;
-`;
-const StyledLabel = styled.label`
-    font-size: 0.9rem;
-    margin-bottom: 1px;
-    font-weight: bold;
 `;
 const DetailsBox = styled.div`
   display: flex;
@@ -57,7 +55,7 @@ const LeftContent = styled.div`
     display: flex;
     flex-direction: column;
 `;
-const StyledButton = styled.button`
+const SlotApplyButton = styled.button`
     display: inline-block;
     border: 0px solid #fff;
     border-radius: 5px;
@@ -66,20 +64,31 @@ const StyledButton = styled.button`
     color: white;
     margin-top: 10px;
 `;
+const EventApplyButton = styled.button`
+    display: inline-block;
+    border: 0px solid #fff;
+    border-radius: 5px;
+    background: #a13333;
+    padding: 7.5px 20px;
+    color: white;
+    margin-top: 10px;
+    width: 80px;
+    max-width: 80px;
+`;
 
-export function EventConnectionsDisplay({event}) {
+export function EventConnectionsDisplay({event, performerDetails, errorCallback}) {
     const isSlots = event.slots.length > 0;
     const email = event.creatingUserEmail;
     const eventName = event.eventName;
     const eventType = event.eventType;
-    const performerDetails = event.performerDetails;
-    const eventPlannerEmails = event.eventPlannerEmails;
-    let startDate =  event.startDate.toDate();
-    let endDate = event.endDate.toDate(); 
+    const startDate =  event.startDate.toDate();
+    const endDate = event.endDate.toDate(); 
     const venue = event.venue; 
     const eventDescription = event.eventDescription; 
     const genres = event.genres;
     const slots = event.slots;
+
+    const [isInviteSent, setIsInviteSent] = useState(false);
 
     let startDateString = "" + startDate.getDate() + "/" + startDate.getMonth() + "/" + startDate.getFullYear() + " " + startDate.getHours() + ":";
     if (startDate.getDate() < 10)
@@ -130,25 +139,28 @@ export function EventConnectionsDisplay({event}) {
         const slotStartDate = slots[i].startDate.toDate();
         const slotEndDate = slots[i].endDate.toDate();
 
-        let slotStartTimeString = "" + slotStartDate.getDate() + "/" + slotStartDate.getMonth() + "/" + slotStartDate.getFullYear() + " " + slotStartDate.getHours() + ":";
+        let slotStartTimeString = "" + slotStartDate.getDate() + "/" + slotStartDate.getMonth() + "/" + slotStartDate.getFullYear() + " ";
         if (slotStartDate.getDate() < 10)
         {
             slotStartTimeString = "0" + slotStartTimeString;
         }
+        if (slotStartDate.getHours() < 10)
+        {
+            slotStartTimeString += "0";
+        }
+        slotStartTimeString  += slotStartDate.getHours() + ":";
         if (slotStartDate.getMinutes() < 10)
         {
-            slotStartTimeString += "0" + slotStartDate.getMinutes();
+            slotStartTimeString += "0";
         }
-        else
-        {
-            slotStartTimeString += startDate.getMinutes();
-        }
+        slotStartTimeString += slotStartDate.getMinutes();
 
-        let slotEndTimeString = "" + slotEndDate.getHours() + ":";
+        let slotEndTimeString = "";
         if (slotEndDate.getHours() < 10)
         {
-            slotEndTimeString = "0" + slotEndTimeString;
+            slotEndTimeString += "0";
         }
+        slotEndTimeString += slotEndDate.getHours() + ":"
         if (slotEndDate.getMinutes() < 10)
         {
             slotEndTimeString += "0";
@@ -166,18 +178,116 @@ export function EventConnectionsDisplay({event}) {
                         {slotStartTimeString} - {slotEndTimeString} <br/>
                         {slotDescription}</p>
                     </LeftContent>
-                    <StyledButton onClick={() => applyForSlot(i)}>Apply</StyledButton>
+                    <SlotApplyButton onClick={() => applyForSlot(i)}>Apply</SlotApplyButton>
                 </TwoLineListBoxElement>
             </ListBox>
         );
     }
 
     const applyForSlot = async (index) => {
-        //add sending of request
+        const userEmail = sessionStorage.getItem("userEmail");
+        const slotRequest = {
+            requestType : "slot",
+            performer : performerDetails,
+            requestingUserEmail : userEmail,
+            receivingUserEmail : email,
+            event : event,
+            slotIndex : index
+        };
+
+        //check if a slot request has already been sent to prevent spamming
+        const requestsRef = collection(db, "users", email, "requests");
+        const q = query(requestsRef, and(where("requestType", "==", "slot"),
+                                         where("requestingUserEmail", "==", userEmail),
+                                         where("receivingUserEmail", "==", email),
+                                         where("event", "==", event)
+                                        ));
+        const requestsQuerySnapshot = await getDocs(q);
+        let isRequestForSlotSent = false;
+        requestsQuerySnapshot.forEach((doc) => {
+            isRequestForSlotSent = true;
+        }); 
+
+        const upcomingEventsRef = collection(db, "upcomingEvents");
+        const isPerformingQuery = query(upcomingEventsRef, and(where("eventName", "==", eventName),
+                                                               where("creatingUserEmail", "==", email)
+                                                               ));
+        const isPerformingQuerySnapshot = await getDocs(isPerformingQuery);
+        let isPerforming = false;
+        isPerformingQuerySnapshot.forEach((doc) => {
+            const currEvent = doc.data();
+            for (let i = 0; i < currEvent.performerDetails.length; i++)
+            {
+                if (currEvent.performerDetails[i].email === userEmail)
+                {
+                    isPerforming = true;
+                }
+            }
+        });
+
+        //if slot request has not already been sent
+        if (!isRequestForSlotSent && !isPerforming)
+        {
+            await addDoc(requestsRef, slotRequest); //send slot request
+            errorCallback(false);
+            setIsInviteSent(true);
+        }
+        else
+        {
+            errorCallback(true);
+        }
     }
 
     const applyForEvent = async () => {
-        //add sending of request
+        const userEmail = sessionStorage.getItem("userEmail");
+        const toPerformRequest = {
+            requestType : "toPerform",
+            performer : performerDetails,
+            requestingUserEmail : userEmail,
+            receivingUserEmail : email,
+            event : event,
+            slotIndex : -1
+        };
+
+        const requestsRef = collection(db, "users", email, "requests");
+        const q = query(requestsRef, and(where("requestType", "==", "toPerform"),
+                                         where("requestingUserEmail", "==", userEmail),
+                                         where("receivingUserEmail", "==", email),
+                                         where("event", "==", event)
+                                        ));
+        const requestsQuerySnapshot = await getDocs(q);
+        let isRequestSent = false;
+        requestsQuerySnapshot.forEach((doc) => {
+            isRequestSent = true;
+        }); 
+
+        const upcomingEventsRef = collection(db, "upcomingEvents");
+        const isPerformingQuery = query(upcomingEventsRef, and(where("eventName", "==", eventName),
+                                                               where("creatingUserEmail", "==", email)
+                                                               ));
+        const isPerformingQuerySnapshot = await getDocs(isPerformingQuery);
+        let isPerforming = false;
+        isPerformingQuerySnapshot.forEach((doc) => {
+            const currEvent = doc.data();
+            for (let i = 0; i < currEvent.performerDetails.length; i++)
+            {
+                if (currEvent.performerDetails[i].email === userEmail)
+                {
+                    isPerforming = true;
+                }
+            }
+        });
+
+        if (!isRequestSent && !isPerforming)
+        {
+            await addDoc(requestsRef, toPerformRequest);
+            errorCallback(false);
+            setIsInviteSent(true);
+        }
+        else
+        {
+            errorCallback(true);
+        }
     }
 
     return(
@@ -193,15 +303,18 @@ export function EventConnectionsDisplay({event}) {
                     <Detail>{eventDescription}</Detail>
                 </DetailsBox>
                 {!isSlots &&
-                    <StyledButton onClick={() => applyForEvent()}>
+                    <EventApplyButton onClick={() => applyForEvent()}>
                         Apply
-                    </StyledButton>
+                    </EventApplyButton>
                 }
                 {isSlots &&
                     <>
                         {slotDisplays}
                     </>
                 }
+                <p id="uidnote" style={isInviteSent ? {} : {display: "none"}}>
+                    Request has been sent.
+                </p>
             </DetailsContainer>
         </>
     );

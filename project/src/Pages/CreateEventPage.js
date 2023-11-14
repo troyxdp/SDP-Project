@@ -174,10 +174,10 @@ const CreateEventPage = () => {
         {value: "House", label: "House"},
         {value: "Techno", label: "Techno"},
         {value: "Trance", label: "Trance"},
-        {value: "DrumNBass", label: "Drum 'n Bass"},
+        {value: "Drum 'n Bass", label: "Drum 'n Bass"},
         {value: "Amapiano", label: "Amapiano"},
-        {value: "AfroTech", label: "Afro Tech"},
-        {value: "AfroHouse", label: "Afro House"},
+        {value: "Afro Tech", label: "Afro Tech"},
+        {value: "Afro House", label: "Afro House"},
         {value: "Hip Hop", label: "Hip Hop"},
         {value: "Pop", label: "Pop"},
         {value: "Rock", label: "Rock"},
@@ -190,17 +190,17 @@ const CreateEventPage = () => {
     ];
     //list of event types
     const eventTypeOptions = [
-        {value : "eventParty", label : "Event Party"},
-        {value : "festival", label : "Festival"},
-        {value : "rave", label : "Rave"},
-        {value : "clubSlot", label : "Club Slot"},
-        {value : "barSlot", label : "Bar Slot"},
-        {value : "residency", label : "Residency Opportunity"},
-        {value : "houseParty", label : "House Party"},
-        {value : "birthdayParty", label : "Birthday Party"},
-        {value : "wedding", label : "Wedding"},
-        {value : "ball", label : "Ball"},
-        {value : "other", label : "Other"}
+        {value : "Event Party", label : "Event Party"},
+        {value : "Festival", label : "Festival"},
+        {value : "Rave", label : "Rave"},
+        {value : "Club Slot", label : "Club Slot"},
+        {value : "Bar Slot", label : "Bar Slot"},
+        {value : "Residency Opportunity", label : "Residency Opportunity"},
+        {value : "House Party", label : "House Party"},
+        {value : "Birthday Party", label : "Birthday Party"},
+        {value : "Wedding", label : "Wedding"},
+        {value : "Ball", label : "Ball"},
+        {value : "Other", label : "Other"}
     ];
 
     //initializing object for user field
@@ -666,7 +666,7 @@ const CreateEventPage = () => {
                 stage: stageDetails, 
                 genres: genres,
                 description: description,
-                performerEmails: []
+                performerDetails: []
             };
             currSlots.push(slot);
             setSlots(currSlots);
@@ -678,14 +678,13 @@ const CreateEventPage = () => {
             //display error message
         }
     }
-    const sendHostRequest = async (user) => {
+    const sendHostRequest = async (user, event) => {
         const request = {
             requestingUserEmail : email,
             receivingUserEmail : user,
             requestType : "host",
-            eventName : eventName,
-            eventStartDate : eventStartDate
-        }
+            event : event
+        };
         const userDocRef = doc(db, "users", user);
         const userRequestsCollection = collection(db, "users", userDocRef.id, "requests");
         await addDoc(userRequestsCollection, request);
@@ -741,7 +740,7 @@ const CreateEventPage = () => {
 
             for (let i = 0; i < otherHostEmails.length; i++)
             {
-                sendHostRequest(otherHostEmails[i]);
+                sendHostRequest(otherHostEmails[i], upcomingEvent);
             }
 
             navigate("/profilePage", {state : email});

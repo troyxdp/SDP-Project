@@ -111,6 +111,10 @@ export function NavigationBar() {
   const routeToProfilePageUser = (userId) => {
     navigate(`/profilePage`, {state : userId});
   };
+
+  const routeToNotificationsPage = () => {
+    navigate("/notificationsPage");
+  }
   
   const search = async () => {
     const q = query(
@@ -143,10 +147,11 @@ export function NavigationBar() {
   return (
     <Container>
       <ItemsContainer>
+        <NavigationDisplay onClick={() => routeToProfilePage(userEmail)}>Profile</NavigationDisplay>
         <NavigationDisplay onClick={routeToConnectionsPage}>Connections</NavigationDisplay>
         <NavigationDisplay onClick={routeToMessagesPage}>Messages</NavigationDisplay>
         <NavigationDisplay onClick={routeToRequestsPage}>Requests</NavigationDisplay>
-        <NavigationDisplay onClick={() => routeToProfilePage(userEmail)}>Profile</NavigationDisplay>
+        <NavigationDisplay onClick={() => routeToNotificationsPage()}>Notifications</NavigationDisplay>
       </ItemsContainer>
       <ItemsContainer>
         <SearchContainer>

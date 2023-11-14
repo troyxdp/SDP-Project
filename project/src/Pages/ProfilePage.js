@@ -340,18 +340,18 @@ const ProfilePage = () => {
     }
 
     //THESE TWO METHODS ARE FOR TESTING NAVIGATING TO OTHER PROFILES AND DOING STUFF WHILE THERE
-    const testGoToOtherUserProfile8 = async (e) => {
-      e.preventDefault();
-      let email = "troydp8@gmail.com";
-      navigate("/profilePage", {state : email});
-      window.location.reload(false);
-    }
-    const testGoToOtherUserProfile7 = async (e) => {
-      e.preventDefault();
-      let email = "troydp7@gmail.com";
-      navigate("/profilePage", {state : email});
-      window.location.reload(false);
-    }
+    // const testGoToOtherUserProfile8 = async (e) => {
+    //   e.preventDefault();
+    //   let email = "troydp8@gmail.com";
+    //   navigate("/profilePage", {state : email});
+    //   window.location.reload(false);
+    // }
+    // const testGoToOtherUserProfile7 = async (e) => {
+    //   e.preventDefault();
+    //   let email = "troydp7@gmail.com";
+    //   navigate("/profilePage", {state : email});
+    //   window.location.reload(false);
+    // }
 
     //empty profile pic and dummy profile pic - to be replaced by profile pic imported from database
     let profilePic = [<img style={{ width : 135, height: 135, borderRadius: 135 }} src={no_profile_pic} alt="Profile" />];
