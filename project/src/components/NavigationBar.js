@@ -19,6 +19,11 @@ const ItemsContainer = styled.div`
   padding: 10px;
 `;
 const ResultsContainer = styled.div`
+  position: absolute;
+  top: 10px;
+  right: 110px;
+  transform: translateX(100%);
+  transform: translateY(20px);
   background: white;
   width: 300px;
   padding: 10px;

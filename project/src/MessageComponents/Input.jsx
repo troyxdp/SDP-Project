@@ -3,6 +3,7 @@ import Img from "../img/img.png";
 import Attach from "../img/attach.png";
 import { AuthContext } from "../context/AuthContext";
 import { ChatContext } from "../context/ChatContext";
+import styled  from "styled-components";
 import {
   arrayUnion,
   doc,
@@ -13,6 +14,12 @@ import {
 import { db, storage } from '../firebase-config/firebase';
 import { v4 as uuid } from "uuid";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
+
+const Sendbutton = styled.button`
+  padding: 10px 30px;
+  font-size: 12px;
+  vertical-align: middle;
+`;
 
 const Input = () => {
   const [text, setText] = useState("");
@@ -74,25 +81,56 @@ const Input = () => {
     setImg(null);
   };
   return (
-    <div className="input">
-      <input
-        type="text"
-        placeholder="Type something..."
-        onChange={(e) => setText(e.target.value)}
-        value={text}
-      />
-      <div className="send">
-        <img src={Attach} alt="" />
+    <div>
+      {/* <div className="messages">
+        {messages.map((message, index) => (
+          <div key={message.id} className={message.senderId === 'user1' ? 'left' : 'right'}>
+            <div className="sender-name">{message.senderName}</div>
+            <Message message={message} />
+            <div className="timestamp">{formatTimestamp(message.date)}</div>
+          </div>
+        ))}
+      </div> */}
+      <div className="input">
         <input
-          type="file"
-          style={{ display: "none" }}
-          id="file"
-          onChange={(e) => setImg(e.target.files[0])}
+          type="text"
+          placeholder="Messages..."
+          onChange={(e) => setText(e.target.value)}
+          value={text}
+          style={{
+            width: '400px',
+            height: '40px',
+            fontSize: '18px',
+          }}
+          onKeyDown={(e) => {
+            if (e.code === "Enter") {
+              handleSend();
+            }
+          }}
         />
-        <label htmlFor="file">
-          <img src={Img} alt="" />
-        </label>
-        <button onClick={handleSend}>Send</button>
+        <div className="send">
+          <input
+            type="file"
+            style={{ display: 'none' }}
+            id="file"
+            onChange={(e) => setImg(e.target.files[0])}
+          />
+          <div className="send-container">
+            <label htmlFor="file">
+              <img
+                src={Img}
+                alt=""
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  justifyContent: 'space-between',
+                  verticalAlign: 'middle',
+                }}
+              />
+            </label>
+            <Sendbutton onClick={handleSend}>Send</Sendbutton>
+          </div>
+        </div>
       </div>
     </div>
   );
