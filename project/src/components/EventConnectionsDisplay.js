@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import { db } from '../firebase-config/firebase';
-import { collection, doc, getDoc, getDocs, addDoc, setDoc, deleteDoc, query, where, and  } from "firebase/firestore";
-import { useEffect, useState } from "react";
+import { collection, getDocs, addDoc, query, where, and  } from "firebase/firestore";
+import { useState } from "react";
 
 const DetailsContainer = styled.div`
     padding: 10px;
@@ -20,11 +20,6 @@ const StyledHeader = styled.h1`
   font-weight: bold;
   margin-bottom: 8px;
   margin-top: 0px;
-`;
-const StyledLabel = styled.label`
-    font-size: 0.9rem;
-    margin-bottom: 1px;
-    font-weight: bold;
 `;
 const DetailsBox = styled.div`
   display: flex;
@@ -81,15 +76,13 @@ const EventApplyButton = styled.button`
     max-width: 80px;
 `;
 
-export function EventConnectionsDisplay({event, errorCallback}) {
+export function EventConnectionsDisplay({event, performerDetails, errorCallback}) {
     const isSlots = event.slots.length > 0;
     const email = event.creatingUserEmail;
     const eventName = event.eventName;
     const eventType = event.eventType;
-    const performerDetails = event.performerDetails;
-    const eventPlannerEmails = event.eventPlannerEmails;
-    let startDate =  event.startDate.toDate();
-    let endDate = event.endDate.toDate(); 
+    const startDate =  event.startDate.toDate();
+    const endDate = event.endDate.toDate(); 
     const venue = event.venue; 
     const eventDescription = event.eventDescription; 
     const genres = event.genres;
@@ -195,11 +188,11 @@ export function EventConnectionsDisplay({event, errorCallback}) {
         const userEmail = sessionStorage.getItem("userEmail");
         const slotRequest = {
             requestType : "slot",
+            performer : performerDetails,
             requestingUserEmail : userEmail,
             receivingUserEmail : email,
-            eventName : eventName,
-            stage : slots[index].stage,
-            startDate : slots[index].startDate
+            event : event,
+            slotIndex : index
         };
 
         //check if a slot request has already been sent to prevent spamming
@@ -207,9 +200,7 @@ export function EventConnectionsDisplay({event, errorCallback}) {
         const q = query(requestsRef, and(where("requestType", "==", "slot"),
                                          where("requestingUserEmail", "==", userEmail),
                                          where("receivingUserEmail", "==", email),
-                                         where("eventName", "==", eventName),
-                                         where("stage", "==", slots[index].stage),
-                                         where("startDate", "==", slots[index].startDate)
+                                         where("event", "==", event)
                                         ));
         const requestsQuerySnapshot = await getDocs(q);
         let isRequestForSlotSent = false;
@@ -217,8 +208,25 @@ export function EventConnectionsDisplay({event, errorCallback}) {
             isRequestForSlotSent = true;
         }); 
 
+        const upcomingEventsRef = collection(db, "upcomingEvents");
+        const isPerformingQuery = query(upcomingEventsRef, and(where("eventName", "==", eventName),
+                                                               where("creatingUserEmail", "==", email)
+                                                               ));
+        const isPerformingQuerySnapshot = await getDocs(isPerformingQuery);
+        let isPerforming = false;
+        isPerformingQuerySnapshot.forEach((doc) => {
+            const currEvent = doc.data();
+            for (let i = 0; i < currEvent.performerDetails.length; i++)
+            {
+                if (currEvent.performerDetails[i].email === userEmail)
+                {
+                    isPerforming = true;
+                }
+            }
+        });
+
         //if slot request has not already been sent
-        if (!isRequestForSlotSent)
+        if (!isRequestForSlotSent && !isPerforming)
         {
             await addDoc(requestsRef, slotRequest); //send slot request
             errorCallback(false);
@@ -234,16 +242,18 @@ export function EventConnectionsDisplay({event, errorCallback}) {
         const userEmail = sessionStorage.getItem("userEmail");
         const toPerformRequest = {
             requestType : "toPerform",
+            performer : performerDetails,
             requestingUserEmail : userEmail,
             receivingUserEmail : email,
-            eventName : eventName
+            event : event,
+            slotIndex : -1
         };
 
         const requestsRef = collection(db, "users", email, "requests");
         const q = query(requestsRef, and(where("requestType", "==", "toPerform"),
-                                         where("eventName", "==", eventName),
                                          where("requestingUserEmail", "==", userEmail),
-                                         where("receivingUserEmail", "==", email)
+                                         where("receivingUserEmail", "==", email),
+                                         where("event", "==", event)
                                         ));
         const requestsQuerySnapshot = await getDocs(q);
         let isRequestSent = false;
@@ -251,7 +261,24 @@ export function EventConnectionsDisplay({event, errorCallback}) {
             isRequestSent = true;
         }); 
 
-        if (!isRequestSent)
+        const upcomingEventsRef = collection(db, "upcomingEvents");
+        const isPerformingQuery = query(upcomingEventsRef, and(where("eventName", "==", eventName),
+                                                               where("creatingUserEmail", "==", email)
+                                                               ));
+        const isPerformingQuerySnapshot = await getDocs(isPerformingQuery);
+        let isPerforming = false;
+        isPerformingQuerySnapshot.forEach((doc) => {
+            const currEvent = doc.data();
+            for (let i = 0; i < currEvent.performerDetails.length; i++)
+            {
+                if (currEvent.performerDetails[i].email === userEmail)
+                {
+                    isPerforming = true;
+                }
+            }
+        });
+
+        if (!isRequestSent && !isPerforming)
         {
             await addDoc(requestsRef, toPerformRequest);
             errorCallback(false);
@@ -286,7 +313,7 @@ export function EventConnectionsDisplay({event, errorCallback}) {
                     </>
                 }
                 <p id="uidnote" style={isInviteSent ? {} : {display: "none"}}>
-                    Invite has been sent.
+                    Request has been sent.
                 </p>
             </DetailsContainer>
         </>
