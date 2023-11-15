@@ -214,17 +214,30 @@ let userData = {
             {
                 // upload to storage
                 const storageRef = ref(storage, `users/${email}/images/`);
+                //=========================
+                const handleUpload = async () => {
+                    if (profilePic !== null || email !== "") {
+                      console.log("Uploading image");
+                  
+                      try {
+                        const imageRef = ref(storageRef, `profile_photo_${v4()}_${profilePic.name}`);
+                        const snapshot = await uploadBytes(imageRef, profilePic);
+                        const url = await getDownloadURL(snapshot.ref);
+                  
+                        setImageUrls((prev) => [...prev, url]);
+                      } catch (error) {
+                        console.error("Error uploading image:", error);
+                      }
+                    }
+                  };
+                  
+                  // ... (other code)
+                  
+                  // Call handleUpload when needed
+                  // For example, in response to a user action or an event
+                  handleUpload();
 
-                
-                    if (profilePic == null || email === ""){console.log("no profile photo")}
-                    else{
-                    const imageRef = ref(storageRef, `profile_photo_${v4()}_${profilePic.name}`);
-                    uploadBytes(imageRef, profilePic).then((snapshot) => {
-                      getDownloadURL(snapshot.ref).then((url) => {
-                        setImageUrls((prev) => [...prev, url]); // Add URL to the array
-                      });
-                    });
-                };
+                //=========================
 
                 //reference to document in database
                 const userDocRef = doc(db, "users", email);
