@@ -1,16 +1,29 @@
-import React, { useContext, useEffect, useRef } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { ChatContext } from "../context/ChatContext";
 
 const Message = ({ message }) => {
   const { currentUser } = useContext(AuthContext);
   const { data } = useContext(ChatContext);
-
+  const [user, setUser] = useState(null);
   const ref = useRef();
 
   useEffect(() => {
     ref.current?.scrollIntoView({ behavior: "smooth" });
   }, [message]);
+
+  const getCurrentTime = () => {
+    const currentDate = new Date();
+    const hours = currentDate.getHours();
+    const minutes = currentDate.getMinutes();
+    return `${hours}:${minutes}`;
+  };
+
+  const getCurrentDate = () => {
+    const currentDate = new Date();
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    return currentDate.toLocaleDateString(undefined, options);
+  };
 
   return (
     <div
@@ -18,15 +31,16 @@ const Message = ({ message }) => {
       className={`message ${message.senderId === currentUser.email && "owner"}`}
     >
       <div className="messageInfo">
-        <img
-          // src={
-          //   message.senderId === currentUser.email
-          //     ? currentUser.photoURL
-          //     : data.user.photoURL
-          // }
-          alt=""
-        />
-        <span>just now</span>
+        <div className="userInfo">
+          {user?.photoURL && <img src={user.photoURL} alt="" />}
+          {user?.searchName && <span>{user.searchName}</span>}
+        </div>
+        <div className="timestamp">
+          <span>{getCurrentTime()}</span>
+        </div>
+        <div className="date">
+          <span>{getCurrentDate()}</span>
+        </div>
       </div>
       <div className="messageContent">
         <p>{message.text}</p>
