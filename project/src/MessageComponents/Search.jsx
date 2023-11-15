@@ -15,10 +15,10 @@ import { db } from '../firebase-config/firebase';
 import { AuthContext } from "../context/AuthContext";
 import { ChatContext } from "../context/ChatContext";
 
-const ResultsContainer = styled.div`
+const ResultRow = styled.div`
   position: absolute;
-  top: 10px;
-  left: 50%;
+  bottom: 480px;
+  left: 200px;
   transform: translateX(100%);
   transform: translateY(20px);
   background: white;
@@ -27,13 +27,10 @@ const ResultsContainer = styled.div`
   border: 1px solid #aaaaaa;
   border-radius: 5px;
   z-index: 2000;
-  display: ${props => props.visible ? "block" : "none"};
-`;
-
-const ResultRow = styled.div`
   margin: 10px 10px;
   cursor: pointer;
   display: flex;
+  overflow:scroll;
   flex-direction: column;
 `;
 
@@ -145,7 +142,6 @@ const Search = () => {
   return (
     <div className="search">
       {err && <span>User not found!</span>}
-      <SearchContainer>
         <SearchInput
           type="text"
           placeholder="Search"
@@ -153,23 +149,15 @@ const Search = () => {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
-      </SearchContainer>
-      {user && user.map && (
-        <ResultsContainer visible={user.length > 0}>
+      {user && (
+        <div className="results" onClick={handleSelect}>
+          <img src={user.photoURL} alt="" />
+          <div className="results">
+          <ResultRow onClick={handleSelect}>
           <h3>Search Results:</h3>
-          {user.map((user, index) => (
-            <ResultRow key={index} onClick={() => handleSelect(user)}>
               <NameSpan>{user.displayName}</NameSpan>
               {user.email && <EmailSpan>{user.email}</EmailSpan>}
             </ResultRow>
-          ))}
-        </ResultsContainer>
-      )}
-      {user && (
-        <div className="userChat" onClick={handleSelect}>
-          <img src={user.photoURL} alt="" />
-          <div className="userChatInfo">
-            <span>{user.displayName}</span>
           </div>
         </div>
       )}
