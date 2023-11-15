@@ -3,7 +3,7 @@ import { ref, uploadBytes, getDownloadURL, listAll } from "firebase/storage";
 import { storage } from "../firebase-config/firebase";
 import { v4 } from "uuid";
 
-function ImageUploader({ userEmail, imageUpload, onUploadSuccess}) {
+function ImageUploader( userEmail, imageUpload) {
   const [imageUrls, setImageUrls] = useState([]); // Use an array instead of Set
 
   const storageRef = ref(storage, `users/${userEmail}/images/`);
@@ -19,7 +19,6 @@ function ImageUploader({ userEmail, imageUpload, onUploadSuccess}) {
     uploadBytes(imageRef, imageUpload).then((snapshot) => {
       getDownloadURL(snapshot.ref).then((url) => {
         setImageUrls((prev) => [...prev, url]); // Add URL to the array
-        onUploadSuccess(url); // Call the callback function with the uploaded URL
       });
     });
   };

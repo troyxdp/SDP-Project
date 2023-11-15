@@ -6,7 +6,9 @@ import styled from "styled-components";
 import { EventPlannerDetailsForm } from "../components/EventPlannerDetailsForm";
 import { PerformerDetailsForm } from "../components/PerformerDetailsForm";
 import { db } from '../firebase-config/firebase';
-import {ImageUploader} from "../components/Imageupload"
+import { ref, uploadBytes, getDownloadURL, listAll } from "firebase/storage";
+import { storage } from "../firebase-config/firebase";
+import { v4 } from "uuid";
 
 const PageContainer = styled.div`
     position: fixed;
@@ -70,6 +72,7 @@ const DisplayFormButton = styled.button`
 
 export default function DetailsPage() {
 //fetch email from session storage
+
 const email = sessionStorage.getItem("userEmail");
 const usrData = useLocation().state.usrData;
 const profilePic = useLocation().state.usrData.profilePic;
@@ -90,6 +93,7 @@ let userData = {
     //useState to store user data fetched from database that has already been added
     const [user, setUser] = useState(userData);
     const [pwd, setPwd] = useState(usrData.password);
+    const [imageUrls, setImageUrls] = useState([]);
 
     
 
@@ -208,6 +212,20 @@ let userData = {
             //try add the details to the firebase
             try
             {
+                // upload to storage
+                const storageRef = ref(storage, `users/${email}/images/`);
+
+                
+                    if (profilePic == null || email === ""){console.log("no profile photo")}
+                    else{
+                    const imageRef = ref(storageRef, `profile_photo_${v4()}_${profilePic.name}`);
+                    uploadBytes(imageRef, profilePic).then((snapshot) => {
+                      getDownloadURL(snapshot.ref).then((url) => {
+                        setImageUrls((prev) => [...prev, url]); // Add URL to the array
+                      });
+                    });
+                };
+
                 //reference to document in database
                 const userDocRef = doc(db, "users", email);
                 await setDoc(userDocRef, currUser);
