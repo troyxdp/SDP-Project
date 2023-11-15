@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate} from "react-router-dom";
 import styled from "styled-components";
-import { doc, updateDoc, addDoc, collection, getDoc, getDocs, query, where, or} from "firebase/firestore";
+import { doc, addDoc, collection, getDoc, getDocs, query, where, or} from "firebase/firestore";
 import { db } from '../firebase-config/firebase';
 import { SlotDetailsForm } from "../components/SlotDetailsForm";
 import {NavigationBar} from "../components/NavigationBar";
