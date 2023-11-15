@@ -22,7 +22,7 @@ const PageContainer = styled.div`
 `;
 const Container = styled.div`
   display: grid;
-  grid-template-columns: 1fr 0.5fr; /* Three columns: two flexible and one 200px wide */
+  grid-template-columns: 1fr 0.6fr; /* Three columns: two flexible and one 200px wide */
   height: 100vh;
 `;
 const UserDetailsContainer = styled.div`
@@ -168,7 +168,7 @@ const DescriptionInput = styled.textarea`
 const StyledButton = styled.button`
   display: inline-block;
   border: 0px solid #fff;
-  border-radius: 10px;
+  border-radius: 25px;
   background: #a13333;
   padding: 15px 45px;
   color: white;
