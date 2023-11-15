@@ -7,6 +7,7 @@ import { PerformerDetailsProfileOverview } from "../components/PerformerDetailsP
 import {NavigationBar} from "../components/NavigationBar";
 import { db, storage } from '../firebase-config/firebase';
 import LoadProfilepic from "../Pages/loadImages"
+import ImageUploader  from "../components/Imageupload";
 
 
 const PageContainer = styled.div`
@@ -446,6 +447,7 @@ const ProfilePage = () => {
                   <Detail><b>Location:</b> {user.location}</Detail>
                   <Detail>{user.bio}</Detail>
                 </DetailsBox>
+                <ImageUploader userEmail={userEmail}/>
 
                 {/* These components were added just for testing navigation to other profiles as well as some other features like adding friends */}
                 {/* <TabsButton onClick={testGoToOtherUserProfile8}>
