@@ -6,6 +6,7 @@ import styled from "styled-components";
 import { EventPlannerDetailsForm } from "../components/EventPlannerDetailsForm";
 import { PerformerDetailsForm } from "../components/PerformerDetailsForm";
 import { db } from '../firebase-config/firebase';
+import {ImageUploader} from "../components/Imageupload"
 
 const PageContainer = styled.div`
     position: fixed;
@@ -68,25 +69,29 @@ const DisplayFormButton = styled.button`
 */
 
 export default function DetailsPage() {
-    //fetch email from session storage
-    let email = sessionStorage.getItem("userEmail");
-    let usrData = useLocation().state.usrData;
+//fetch email from session storage
+const email = sessionStorage.getItem("userEmail");
+const usrData = useLocation().state.usrData;
+const profilePic = useLocation().state.usrData.profilePic;
+const isProfilePic = profilePic !== null;
 
-    let userData = {
-        email: email,
-        displayName: usrData.displayName,
-        searchName: usrData.displayName.toLowerCase(),
-        location: usrData.location,
-        bio: usrData.bio,
-        profilePic: usrData.profilePic,
-        isPerformer: false,
-        isEventPlanner: false,
-        isInGroup: false
-    };
+let userData = {
+    email: email,
+    displayName: usrData.displayName,
+    searchName: usrData.displayName.toLowerCase(),
+    location: usrData.location,
+    bio: usrData.bio,
+    profilePic: isProfilePic,
+    isPerformer: false,
+    isEventPlanner: false,
+    isInGroup: false
+};
 
     //useState to store user data fetched from database that has already been added
     const [user, setUser] = useState(userData);
     const [pwd, setPwd] = useState(usrData.password);
+
+    
 
     //useState for performer details
     const [isPerformer, setIsPerformer] = useState(false);
@@ -293,6 +298,7 @@ export default function DetailsPage() {
                 {displayEventPlannerForm &&
                     <EventPlannerDetailsForm parentCallback={onSubmitEventPlannerDetails}/>
                 }
+              
 
                 <StyledButton onClick={handleSubmit}>
                     Submit All Details
