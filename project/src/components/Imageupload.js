@@ -1,83 +1,124 @@
-import "./App.css";
 import React, { useState, useEffect } from "react";
 import { ref, uploadBytes, getDownloadURL, listAll } from "firebase/storage";
-import { storage } from "./firebase";
+import { storage } from "../firebase-config/firebase";
 import { v4 } from "uuid";
+import styled from "styled-components";
 
 
-function App() {
+
+const UploadButton = styled.button`
+    display: inline-block;
+    border: 0px solid #fff;
+    border-radius: 10px;
+    background: #a13333;
+    padding: 10px 10px;
+    color: white;
+    margin-top: 10px;
+`;
+const StyledInput = styled.input`
+  padding: 5px;
+  background: #a13333;
+  font-color: white
+  font-size: 13px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  outline: none; /* Remove default focus border */
+`;
+
+
+function ImageUploader({ userEmail }) {
+  const [mediaItems, setMediaItems] = useState([]);
   const [imageUpload, setImageUpload] = useState(null);
-  const [imageUrls, setImageUrls] = useState([]); // Use an array instead of Set
-  const [userEmail, setUserEmail] = useState("");
 
-  const imagesListRef = ref(storage);
-  const storageRef = ref(storage, `users/${userEmail}/images/`);
+  const storageRef = ref(storage, `users/${userEmail}/media/`);
 
   const handleEmailChange = (event) => {
-    setUserEmail(event.target.value);
+    // If needed, you can update the parent component state with the user's email here
+  };
+
+  const handleFileChange = (event) => {
+    setImageUpload(event.target.files[0]);
   };
 
   const uploadFile = () => {
     if (imageUpload == null || userEmail === "") return;
 
-    const imageRef = ref(storageRef, `profile_photo_${v4()}_${imageUpload.name}`);
-    uploadBytes(imageRef, imageUpload).then((snapshot) => {
+    const mediaRef = ref(storageRef, `social_media_${v4()}_${imageUpload.name}`);
+    uploadBytes(mediaRef, imageUpload).then((snapshot) => {
       getDownloadURL(snapshot.ref).then((url) => {
-        setImageUrls((prev) => [...prev, url]); // Add URL to the array
+        setMediaItems((prev) => [...prev, { url, type: getImageType(url) }]);
       });
     });
   };
 
+  const getImageType = (url) => {
+    const lowercasedUrl = url.toLowerCase();
+  
+    if (lowercasedUrl.includes(".mp4")) {
+      return "video";
+    } else if (
+      lowercasedUrl.includes(".jpg") ||
+      lowercasedUrl.includes(".jpeg") ||
+      lowercasedUrl.includes(".png") ||
+      lowercasedUrl.includes(".gif") ||
+      lowercasedUrl.includes(".bmp")
+    ) {
+      return "image";
+    } else if (
+      lowercasedUrl.includes(".mp3") ||
+      lowercasedUrl.includes(".wav") ||
+      lowercasedUrl.includes(".ogg")
+    ) {
+      return "audio";
+    } else {
+      return "unknown";
+    }
+  };
+  
+
+  
+  
+
   useEffect(() => {
     if (userEmail === "") return;
-  
-    listAll(storageRef).then((response) => {
-      const promises = [];
-  
-      response.items.forEach((item) => {
-        promises.push(
-          getDownloadURL(item).then((url) => {
-            if (url.includes("profile_photo")) {
-              return url;
-            }
-          })
-        );
-        
-      });
-  
-      Promise.all(promises).then((filteredUrls) => {
-        // Remove undefined values
-        const filteredUrlsArray = filteredUrls.filter((url) => url !== undefined);
-  
-        setImageUrls(filteredUrlsArray);
-        console.log(filteredUrls.length)
 
+    listAll(storageRef)
+      .then((response) => {
+        const promises = response.items.map((item) => {
+          return getDownloadURL(item).then((url) => {
+            //console.log(url.type)
+            return { url, type: getImageType(url) };
+          });
+        });
+
+        return Promise.all(promises);
+      })
+      .then((mediaItems) => {
+        setMediaItems(mediaItems);
       });
-    });
   }, [userEmail, storageRef]);
+
+  // Render the media items
+  const mediaElements = mediaItems.map((item, index) => {
+    //console.log(item.type)
+    if (item.type === "image") {
+      return <img key={index} src={item.url} alt={`image-${index}`} style={{ width: "200px", height: "140px", margin: "5px" }} />;
+    } else if (item.type === "video") {
+      return <video autoPlay loop key={index} src={item.url} controls style={{ width: "200px", height: "150px", margin: "5px" }} />;
+    } else if (item.type === "audio"){
+      return <audio controls src={item.url} type="audio/mp3"/>
+    }
+    return null; // Handle other types or invalid URLs as needed
+  });
+
   return (
-    <div className="App">
-      <label>
-        Enter your email:
-        <input
-          type="text"
-          value={userEmail}
-          onChange={handleEmailChange}
-        />
-      </label>
-      <input
-        type="file"
-        onChange={(event) => {
-          setImageUpload(event.target.files[0]);
-        }}
-      />
-      <button onClick={uploadFile}> Upload Image</button>
-      {imageUrls.map((url, index) => (
-        <img key={index} src={url} alt={`image-${index}`} />
-      ))}
+    <div>
+      <StyledInput type="file" onChange={handleFileChange} />
+      <UploadButton onClick={uploadFile}>Upload Media</UploadButton>
+      <div>{mediaElements}</div>
     </div>
   );
 }
 
-export default App;
-
+export default ImageUploader;

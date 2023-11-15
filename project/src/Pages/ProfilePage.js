@@ -6,9 +6,10 @@ import { EventPlannerDetailsProfileOverview } from "../components/EventPlannerDe
 import { PerformerDetailsProfileOverview } from "../components/PerformerDetailsProfileOverview";
 import { ReviewDisplay } from "../components/ReviewDisplay";
 import {NavigationBar} from "../components/NavigationBar";
-import { db } from '../firebase-config/firebase';
-import dummy_profile_pic from "../profile-pics/dummy-profile-pic.jpg";
-import no_profile_pic from "../profile-pics/no-profile-pic-image.jpg";
+import { db, storage } from '../firebase-config/firebase';
+import LoadProfilepic from "../Pages/loadImages"
+import ImageUploader  from "../components/Imageupload";
+
 
 const PageContainer = styled.div`
     position: fixed;
@@ -217,7 +218,7 @@ const ProfilePage = () => {
     const [performerDetails, setPerformerDetails] = useState([]);
     const [eventPlannerDetails, setEventPlannerDetails] = useState(null);
     const [groupDetails, setGroupDetails] = useState([]); //for later - add details of groups that user is member of
-    const [isProfilePic, setIsProfilePic] = useState(false);
+    const [isProfilePic, setIsProfilePic] = useState(true); // may need to change this 
     const [eventPlannerUpcomingEvents, setEventPlannerUpcomingEvents] = useState([]);
     const [eventPlannerPastEvents, setEventPlannerPastEvents] = useState([]);
     const [reviews, setReviews] = useState([]);
@@ -473,12 +474,20 @@ const ProfilePage = () => {
       window.location.reload(false);
     }
 
-    //empty profile pic and dummy profile pic - to be replaced by profile pic imported from database
-    let profilePic = [<img style={{ width : 135, height: 135, borderRadius: 135 }} src={no_profile_pic} alt="Profile" />];
-    if (isProfilePic)
-    {
-      profilePic = [<img style={{ width : 135, height: 135, borderRadius: 135 }} src={dummy_profile_pic} alt="dummy profile pic" />];
+    //THESE TWO METHODS ARE FOR TESTING NAVIGATING TO OTHER PROFILES AND DOING STUFF WHILE THERE
+    const testGoToOtherUserProfile8 = async (e) => {
+      e.preventDefault();
+      let email = "troydp8@gmail.com";
+      navigate("/profilePage", {state : email});
+      window.location.reload(false);
     }
+    const testGoToOtherUserProfile7 = async (e) => {
+      e.preventDefault();
+      let email = "troydp7@gmail.com";
+      navigate("/profilePage", {state : email});
+      window.location.reload(false);
+    }
+
 
     //method to send friend request if it is not user's profile
     const sendFriendRequest = async () => {
@@ -612,13 +621,23 @@ const ProfilePage = () => {
                   </CreationButtonsBox>
                 }
                 <StyledHeader>Profile Page</StyledHeader>
-                {profilePic}
+                <LoadProfilepic isProfilePic={isProfilePic} userEmail={userEmail}/>
                 <Name>{user.displayName}</Name>
                 <DetailsBox>
                   <Detail><b>Email:</b> {user.email}</Detail>
                   <Detail><b>Location:</b> {user.location}</Detail>
                   <Detail>{user.bio}</Detail>
                 </DetailsBox>
+                <ImageUploader userEmail={userEmail}/>
+
+                {/* These components were added just for testing navigation to other profiles as well as some other features like adding friends */}
+                {/* <TabsButton onClick={testGoToOtherUserProfile8}>
+                  Test 8
+                </TabsButton>
+                <TabsButton onClick={testGoToOtherUserProfile7}>
+                  Test 7
+                </TabsButton> */}
+
               </TopPanel>
 
               <BottomPanel>
