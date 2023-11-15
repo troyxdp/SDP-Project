@@ -4,6 +4,7 @@ import {useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { EventPlannerDetailsProfileOverview } from "../components/EventPlannerDetailsProfileOverview";
 import { PerformerDetailsProfileOverview } from "../components/PerformerDetailsProfileOverview";
+import { ReviewDisplay } from "../components/ReviewDisplay";
 import {NavigationBar} from "../components/NavigationBar";
 import { db } from '../firebase-config/firebase';
 import dummy_profile_pic from "../profile-pics/dummy-profile-pic.jpg";
@@ -84,15 +85,11 @@ const TabsButton = styled.button`
   cursor: pointer;
   transition: background-color 0.3s;
   border: 0px solid #fff;
-  border-radius: 10px;
+  border-radius: 3px;
   background: #a13333;
   padding: 10px 20px;
   color: white;
   margin-left: 12px;
-`;
-const VerticalPanel = styled.div`
-  background-color: #a9a9a9;
-  padding: 20px;
 `;
 const CreationButtonsBox = styled.div`
   position: absolute;
@@ -109,6 +106,84 @@ const CreateButton = styled.button`
     padding: 15px 15px;
     color: white;
     margin-top: 10px;
+`;
+
+const VerticalPanel = styled.div`
+  background-color: #a9a9a9;
+  padding: 20px;
+  position: relative;
+`;
+const BottomDiv = styled.div`
+  position: absolute; 
+  bottom:17px; 
+  width: 90%; 
+  background-color: #a9a9a9; 
+  padding: 10px;
+  border: 1px solid #000;
+  border-radius: 10px; 
+`;
+const SubHeader = styled.h2`
+  font-size: 1.2rem;
+  color: #000;
+  margin-top: 0px;
+  margin-bottom: 10px;
+`;
+const ScoreContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start; /* Adjust to your preference */
+  align-items: center;
+  margin-bottom: 10px;
+`;
+const StyledLabel = styled.label`
+  margin-top: 5px;
+  margin-bottom: 2px;
+`;
+const StyledInput = styled.input`
+  display: flex;
+  background: #e4e4e4;
+  border-radius: 10px;
+  border: 0;
+  width: 50px;
+  height: 30px;
+  box-sizing: border-box;
+  padding: 10px;
+  margin-left: 10px;
+  background: #ffffff;
+`;
+const DescriptionInput = styled.textarea`
+  display: flex;
+  background: #e4e4e4;
+  border-radius: 10px;
+  border: 0;
+  width: 100%;
+  height: 150px;
+  box-sizing: border-box;
+  padding: 15px 0 15px 10px;
+  word-break: break-word;
+  font-family: "Roboto", Roboto, sans-serif;
+  background: #ffffff;
+  margin-top: 10px;
+`;
+const StyledButton = styled.button`
+  display: inline-block;
+  border: 0px solid #fff;
+  border-radius: 10px;
+  background: #a13333;
+  padding: 15px 45px;
+  color: white;
+  margin-top: 10px;
+`;
+const VerticalPanelTabsButton = styled.button`
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  border: 0px solid #fff;
+  border-radius: 3px;
+  background: #a13333;
+  padding: 10px 20px;
+  color: white;
+  margin-right: 12px;
 `;
 
 /*
@@ -145,12 +220,55 @@ const ProfilePage = () => {
     const [isProfilePic, setIsProfilePic] = useState(false);
     const [eventPlannerUpcomingEvents, setEventPlannerUpcomingEvents] = useState([]);
     const [eventPlannerPastEvents, setEventPlannerPastEvents] = useState([]);
+    const [reviews, setReviews] = useState([]);
+    const [friends, setFriends] = useState([]);
 
     //useStates for dictating the conditional rendering of details
     const [displayPerformerDetails, setDisplayPerformerDetails] = useState(false);
     const [displayEventPlannerDetails, setDisplayEventPlannerDetails] = useState(false);
     const [displayGroupDetails, setDisplayGroupDetails] = useState(false);
     const [isDataLoadedFromDatabase, setIsDataLoadedFromDatabase] = useState(false);
+    const [displayReviews, setDisplayReviews] = useState(true);
+
+    //useStates for leaving reviews
+    const [comment, setComment] = useState("");
+    const [reviewScore, setReviewScore] = useState(10);
+
+    //useStates for error messages
+    const [isReviewError, setIsReviewError] = useState(false);
+    const [reviewErrMsg, setReviewErrMsg] = useState("");
+
+    //useState for reviews display
+    const [reviewsDisplays, setReviewsDisplays] = useState([]);
+    const createReviewsDisplays = (reviews) => {
+      const currDisplays = [];
+      for (let i = 0; i < reviews.length; i++)
+      {
+        currDisplays.push(
+          <ReviewDisplay 
+            review = {reviews[i]}
+          />
+        )
+      }
+      setReviewsDisplays(currDisplays);
+    }
+
+    //useState for friends display
+    const [friendsDisplays, setFriendsDisplays] = useState([]);
+    const createFriendsDisplays = (friends) => {
+      const currDisplays = [];
+      for (let i = 0; i < friends.length; i++)
+      {
+        currDisplays.push(
+          <>
+            <DetailsBox>
+              <Detail>{friends[i].email}</Detail>
+            </DetailsBox>
+          </>
+        );
+      }
+      setFriendsDisplays(currDisplays);
+    }
 
     //useEffect to fetch user data from database
     useEffect(() => {
@@ -249,7 +367,23 @@ const ProfilePage = () => {
           setPerformerDetails(currPerformerDetails);
         }
 
-        //add importing of group details
+        const reviewsRef = collection(db, "users", profileEmail, "reviews");
+        const reviewsSnapshot = await getDocs(reviewsRef);
+        const currReviews = [];
+        reviewsSnapshot.forEach((doc) => {
+          currReviews.push(doc.data());
+        });
+        setReviews(currReviews);
+        createReviewsDisplays(currReviews);
+
+        const friendsRef = collection(db, "users", profileEmail, "friends");
+        const friendsSnapshot = getDocs(friendsRef);
+        const currFriends = [];
+        (await friendsSnapshot).forEach((doc) => {
+          currFriends.push(doc.data());
+        });
+        setFriends(currFriends);
+        createFriendsDisplays(currFriends);
 
         setIsDataLoadedFromDatabase(true);
       };
@@ -399,6 +533,53 @@ const ProfilePage = () => {
       }
     }
 
+    const submitReview = async () => {
+      if (reviewScore >= 0 && reviewScore <= 10 && comment !== "")
+      {
+        const reviewsRef = collection(db, "users", profileEmail, "reviews");
+        const isAlreadyReviewQuery = query(reviewsRef, where("reviewerEmail", "==", userEmail));
+        const isAlreadyReviewSnapshot = await getDocs(isAlreadyReviewQuery);
+        let isAlreadyReview = false;
+        isAlreadyReviewSnapshot.forEach((doc) => {
+          isAlreadyReview = true;
+        })
+
+        if (!isAlreadyReview)
+        {
+          setIsReviewError(false);
+          const review = {
+            score : reviewScore,
+            comment : comment,
+            reviewerEmail : userEmail
+          };
+          await addDoc(reviewsRef, review);
+
+          const currReviews = reviews;
+          currReviews.push(review);
+          setReviews(currReviews);
+          setReviewScore(10);
+          setComment("");
+          createReviewsDisplays(currReviews);
+        }
+        else
+        {
+          setIsReviewError(true);
+          setReviewErrMsg("Error: you have already left a review for this user.");
+          alert("Error: you have already left a review for this user.")
+        }
+      }
+      else if (reviewScore < 0 || reviewScore > 10)
+      {
+        setIsReviewError(true);
+        setReviewErrMsg("Error: please leave a score in the range 0 to 10.")
+      }
+      else
+      {
+        setIsReviewError(true);
+        setReviewErrMsg("Error: please leave a comment with your review.")
+      }
+    }
+
     return (
       <PageContainer>
         <NavigationBar/>
@@ -472,7 +653,55 @@ const ProfilePage = () => {
             </HorizontalPanel>
 
             <VerticalPanel>
-              <StyledHeader>Reviews:</StyledHeader>
+              <Tabs>
+                <VerticalPanelTabsButton onClick={() => setDisplayReviews(true)}>Reviews</VerticalPanelTabsButton>
+                <VerticalPanelTabsButton onClick={() => setDisplayReviews(false)}>Friends</VerticalPanelTabsButton>
+              </Tabs>
+              {displayReviews && 
+                <StyledHeader>Reviews:</StyledHeader>
+              }
+              {displayReviews && reviewsDisplays}
+              {!isUserProfile && displayReviews &&
+                <BottomDiv>
+                  <SubHeader>Leave a Review:</SubHeader>
+                  <ScoreContainer>
+                    <StyledLabel><b>Score ( /10): </b></StyledLabel>
+                    <StyledInput 
+                        type="number"
+                        id="reviewScore"
+                        autoComplete="off"
+                        min="0"
+                        max="10"
+                        step="1"
+                        value={reviewScore}
+                        onChange={(e) => setReviewScore(e.target.value)}
+                        required
+                    />
+                  </ScoreContainer>
+
+                  <StyledLabel><b>Comment:</b></StyledLabel>
+                  <DescriptionInput 
+                    type="text"
+                    id="review"
+                    autoComplete="off"
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    required
+                  />
+                  <StyledButton onClick={submitReview}>
+                    Submit Review
+                  </StyledButton>
+                  {isReviewError &&
+                    <p>{reviewErrMsg}</p>
+                  }
+                </BottomDiv>
+              }
+              {!displayReviews && 
+                <>
+                  <StyledHeader>Friends:</StyledHeader>
+                  {friendsDisplays}
+                </>
+              }
             </VerticalPanel>
           </Container>
         }

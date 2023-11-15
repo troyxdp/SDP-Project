@@ -289,6 +289,17 @@ const ConnectionsPage = () => {
             setUpcomingEvents(currUpcomingEvents);
             createUpcomingEventsDisplays(currUpcomingEvents, currPerformer);
           }
+
+          if (userData.isPerformer && !userData.isEventPlanner)
+          {
+            setIsViewAsPerformer(true);
+            setIsViewAsEventPlanner(false);
+          }
+          else if (userData.isEventPlanner && !userData.isPerformer)
+          {
+            setIsViewAsEventPlanner(true);
+            setIsViewAsPerformer(false);
+          }
           setIsDataLoaded(true);
         }
       };
