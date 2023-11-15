@@ -69,8 +69,10 @@ const DisplayFormButton = styled.button`
 
 export default function DetailsPage() {
     //fetch email from session storage
-    let email = sessionStorage.getItem("userEmail");
-    let usrData = useLocation().state.usrData;
+    const email = sessionStorage.getItem("userEmail");
+    const usrData = useLocation().state.usrData;
+    const profilePic = useLocation().state.usrData.profilePic;
+    const isProfilePic = profilePic !== null;
 
     let userData = {
         email: email,
@@ -207,8 +209,6 @@ export default function DetailsPage() {
                 const userDocRef = doc(db, "users", email);
                 await setDoc(userDocRef, currUser);
                 console.log("ID: " + userDocRef.id);
-
-                await setDoc(doc(db, "userChats", email), {});
 
                 if (isEventPlanner)
                 {
