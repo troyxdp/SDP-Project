@@ -30,7 +30,7 @@ const ResultsContainer = styled.div`
   border: 1px solid #aaaaaa;
   border-radius: 5px;
   margin-top: 10px;
-  display: ${props => props.visible ? "block" : "none"};
+  z-index: 200;
 `;
 const ResultRow = styled.div`
   margin: 5px 0;
@@ -107,9 +107,10 @@ export function NavigationBar() {
   const handleSearchInputChange = (e) => {
     setUserName(e.target.value);
   };
-
   const routeToProfilePageUser = (userId) => {
-    navigate(`/profilePage`, {state : userId});
+    navigate(`/profilePage`, { state: userId });
+    // Clear the search results when navigating to the profile page
+    setUsers([]);
   };
 
   const routeToNotificationsPage = () => {
@@ -168,7 +169,7 @@ export function NavigationBar() {
           <ResultsContainer visible={users.length > 0}>
             <h3>Search Results:</h3>
             {users.map((user, index) => (
-              <ResultRow key={index} onClick={() => routeToProfilePageUser(user.userId)}>
+              <ResultRow key={index} onClick={() => routeToProfilePageUser(user.email)}>
                 <NameSpan>{user.displayName}</NameSpan>
                 {user.email && <EmailSpan>{user.email}</EmailSpan>}
               </ResultRow>
