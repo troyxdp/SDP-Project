@@ -2,6 +2,7 @@ import styled from "styled-components";
 import { db } from '../firebase-config/firebase';
 import { collection, doc, getDoc, getDocs, addDoc, setDoc, deleteDoc, query, where, and  } from "firebase/firestore";
 import { useEffect, useState } from "react";
+import {useNavigate} from "react-router-dom";
 
 const DetailsContainer = styled.div`
     padding: 10px;
@@ -213,12 +214,17 @@ export function PerformerConnectionsDisplay({performer, event, slotIndex, errorC
         }
     }
 
+    const navigate = useNavigate();
+    const goToUserProfilePage = async () => {
+        navigate("/profilePage", {state : email});
+    }
+
     return(
         <>
             <DetailsContainer>
                 <StyledHeader>{name}</StyledHeader>
                 <DetailsBox>
-                    <Detail><b>Email:</b> {email}</Detail>
+                    <Detail onClick={goToUserProfilePage}><b>Email:</b> {email}</Detail>
                     <Detail><b>Type:</b> {type}</Detail>
                     <Detail><b>Genres:</b> {genresString}</Detail>
                     <Detail><b>Hourly Rate:</b> {hourlyRate}</Detail>
