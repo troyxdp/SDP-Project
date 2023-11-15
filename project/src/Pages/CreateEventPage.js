@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate} from "react-router-dom";
 import styled from "styled-components";
-import { doc, updateDoc, addDoc, collection, getDoc, getDocs, query, where, or} from "firebase/firestore";
+import { doc, addDoc, collection, getDoc, getDocs, query, where, or} from "firebase/firestore";
 import { db } from '../firebase-config/firebase';
 import { SlotDetailsForm } from "../components/SlotDetailsForm";
 import {NavigationBar} from "../components/NavigationBar";
@@ -30,16 +30,7 @@ const Container = styled.div`
     justify-content: center;
     flex-direction: column;
 `;
-const EventDetailsDiv = styled.div`
-    padding-top: 5px;
-    padding-bottom: 10px;
-    padding-left: 15px;
-    padding-right: 15px;
-    display: flex;
-    align-items: left;
-    justify-content: center;
-    flex-direction: column;
-`;
+ 
 const StyledCheckboxContainer = styled.div`
     display: flex;
     flex-direction: column;
@@ -157,6 +148,16 @@ const TwoLineListBoxElement = styled.div`
     border: 2px solid #808080;
     border-radius: 8px;
     margin-top: 2px;
+`;
+const EventDetailsDiv = styled.div`
+    padding-top: 5px;
+    padding-bottom: 10px;
+    padding-left: 15px;
+    padding-right: 15px;
+    display: flex;
+    align-items: left;
+    justify-content: center;
+    flex-direction: column;
 `;
 
 /*
@@ -666,7 +667,7 @@ const CreateEventPage = () => {
                 stage: stageDetails, 
                 genres: genres,
                 description: description,
-                performerEmails: []
+                performerDetails: []
             };
             currSlots.push(slot);
             setSlots(currSlots);
@@ -678,14 +679,13 @@ const CreateEventPage = () => {
             //display error message
         }
     }
-    const sendHostRequest = async (user) => {
+    const sendHostRequest = async (user, event) => {
         const request = {
             requestingUserEmail : email,
             receivingUserEmail : user,
             requestType : "host",
-            eventName : eventName,
-            eventStartDate : eventStartDate
-        }
+            event : event
+        };
         const userDocRef = doc(db, "users", user);
         const userRequestsCollection = collection(db, "users", userDocRef.id, "requests");
         await addDoc(userRequestsCollection, request);
@@ -741,7 +741,7 @@ const CreateEventPage = () => {
 
             for (let i = 0; i < otherHostEmails.length; i++)
             {
-                sendHostRequest(otherHostEmails[i]);
+                sendHostRequest(otherHostEmails[i], upcomingEvent);
             }
 
             navigate("/profilePage", {state : email});
@@ -816,7 +816,7 @@ const CreateEventPage = () => {
                     </p>
 
                     <StyledLabel htmlFor="type">
-                        Type of Performer:
+                        Type of Event:
                     </StyledLabel>
                     <select value={eventType} onChange={(e) => setEventType(e.target.value)} style={{width: "250px", marginBottom: "10px"}}>
                         {eventTypeOptions.map((option) => (

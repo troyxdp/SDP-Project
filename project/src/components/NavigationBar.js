@@ -19,13 +19,18 @@ const ItemsContainer = styled.div`
   padding: 10px;
 `;
 const ResultsContainer = styled.div`
+  position: absolute;
+  top: 10px;
+  right: 110px;
+  transform: translateX(100%);
+  transform: translateY(20px);
   background: white;
   width: 300px;
   padding: 10px;
   border: 1px solid #aaaaaa;
   border-radius: 5px;
   margin-top: 10px;
-  display: ${props => props.visible ? "block" : "none"};
+  z-index: 200;
 `;
 const ResultRow = styled.div`
   margin: 5px 0;
@@ -102,10 +107,15 @@ export function NavigationBar() {
   const handleSearchInputChange = (e) => {
     setUserName(e.target.value);
   };
-
   const routeToProfilePageUser = (userId) => {
-    navigate(`/profilePage`, {state : userId});
+    navigate(`/profilePage`, { state: userId });
+    // Clear the search results when navigating to the profile page
+    setUsers([]);
   };
+
+  const routeToNotificationsPage = () => {
+    navigate("/notificationsPage");
+  }
   
   const search = async () => {
     const q = query(
@@ -138,10 +148,11 @@ export function NavigationBar() {
   return (
     <Container>
       <ItemsContainer>
+        <NavigationDisplay onClick={() => routeToProfilePage(userEmail)}>Profile</NavigationDisplay>
         <NavigationDisplay onClick={routeToConnectionsPage}>Connections</NavigationDisplay>
         <NavigationDisplay onClick={routeToMessagesPage}>Messages</NavigationDisplay>
         <NavigationDisplay onClick={routeToRequestsPage}>Requests</NavigationDisplay>
-        <NavigationDisplay onClick={() => routeToProfilePage(userEmail)}>Profile</NavigationDisplay>
+        <NavigationDisplay onClick={() => routeToNotificationsPage()}>Notifications</NavigationDisplay>
       </ItemsContainer>
       <ItemsContainer>
         <SearchContainer>
@@ -158,7 +169,7 @@ export function NavigationBar() {
           <ResultsContainer visible={users.length > 0}>
             <h3>Search Results:</h3>
             {users.map((user, index) => (
-              <ResultRow key={index} onClick={() => routeToProfilePageUser(user.userId)}>
+              <ResultRow key={index} onClick={() => routeToProfilePageUser(user.email)}>
                 <NameSpan>{user.displayName}</NameSpan>
                 {user.email && <EmailSpan>{user.email}</EmailSpan>}
               </ResultRow>

@@ -7,6 +7,7 @@ import { EventPlannerDetailsProfileOverview } from "../components/EventPlannerDe
 import { PerformerDetailsProfileOverview } from "../components/PerformerDetailsProfileOverview";
 import { db } from '../firebase-config/firebase';
 import { EventConnectionsDisplay } from "../components/EventConnectionsDisplay";
+import { PerformerConnectionsDisplay } from "../components/PerformerConnectionsDisplay";
 
 const PageContainer = styled.div`
     position: fixed;
@@ -20,17 +21,9 @@ const PageContainer = styled.div`
 `;
 const Container = styled.div`
   display: flex;
-  grid-template-columns: 1fr 0.5fr; /* Three columns: two flexible and one 200px wide */
   align-items: center;
   padding: 16px;
   flex-direction: column;
-`;
-const RadioBoxContainer = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  margin-top: 2px;
 `;
 const StyledHeader = styled.h1`
   font-size: 1.8rem;
@@ -70,21 +63,12 @@ const SelectedSlotLabel = styled.label`
   margin-top: 10px;
   margin-bottom: 0px;
 `;
-const RadioBoxLabel = styled.label`
-  margin-top: 5px;
-  margin-bottom: 2px;
-  font-size: 0.8rem;
-`;
-const RadioBoxRow = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-`;
 
 /*
   TO-DO:
-  -Add display of limited number of items +- 15/20 items
-  -Add conditional display of events based on genre - started on this
+  - Add display of limited number of items +- 15/20 items
+  - Add conditional display of events based on genre - started on this
+  - Try make it not display anything on the event planner side if the event planner has no events
 */
 
 const ConnectionsPage = () => {
@@ -107,6 +91,7 @@ const ConnectionsPage = () => {
     const [isViewAsPerformer, setIsViewAsPerformer] = new useState(false);
     const [isViewAsEventPlanner, setIsViewAsEventPlanner] = new useState(false);
     const [isPerformerErrorMsg, setIsPerformerErrorMsg] = useState(false);
+    const [isEventPlannerErrorMsg, setIsEventPlannerErrorMsg] = useState(false);
 
     //useStates for storing profile data
     const [user, setUser] = useState(userInitializer);
@@ -125,6 +110,7 @@ const ConnectionsPage = () => {
     const [eventSelectedName, setEventSelectedName] = useState("");
     const [eventSelected, setEventSelected] = useState(null);
     const [isEventHasSlots, setIsEventHasSlots] = useState(false);
+    const [isEventPlannerHasEvents, setIsEventPlannerHasEvents] = useState(true);
 
     const [slots, setSlots] = useState([]);
     const [slotIsSelectedArray, setSlotIsSelectedArray] = useState([]);
@@ -134,16 +120,17 @@ const ConnectionsPage = () => {
     const [upcomingEvents, setUpcomingEvents] = useState([]);
     const [performers, setPerformers] = useState([]);
 
-    //useState for variable length rendering
+    //useStates for variable length rendering
     const [upcomingEventsDisplays, setUpcomingEventsDisplays] = useState([]);
-    const createUpcomingEventsDisplays = (events) => {
+    const createUpcomingEventsDisplays = (events, performer) => {
       const currDisplay = [];
       for (let i = 0; i < events.length; i++)
       {
         currDisplay.push(
           <EventConnectionsDisplay 
             event={events[i]}
-            errorCallback={toPerformerRequestErrorCallback}
+            performerDetails={performer}
+            errorCallback={performerRequestErrorCallback}
           />
         );
       }
@@ -194,6 +181,29 @@ const ConnectionsPage = () => {
               currUpcomingEvents.push(doc.data());
             });
 
+            //get performer user IDs
+            const performerUserIDs = [];
+            const usersRef = collection(db, "users");
+            const performerQuery = query(usersRef, where("isPerformer", "==", true));
+            const performerQuerySnapshot = await getDocs(performerQuery);
+            performerQuerySnapshot.forEach((doc) => {
+              const performer = doc.data();
+              if (performer.userEmail !== userEmail)
+              {
+                performerUserIDs.push(doc.id);
+              }
+            });
+            //get every performer
+            const currPerformers = [];
+            for (let i = 0; i < performerUserIDs.length; i++)
+            {
+              const performerDetailsRef = collection(db, "users", performerUserIDs[i], "performerInfo");
+              const performerSnapshot = await getDocs(performerDetailsRef);
+              performerSnapshot.forEach((doc) => {
+                currPerformers.push(doc.data());
+              });
+            }
+
             if (currUpcomingEvents.length > 0)
             {
               setEventPlannerUpcomingEvents(currUpcomingEvents);
@@ -215,6 +225,8 @@ const ConnectionsPage = () => {
               setSlots(currUpcomingEvents[0].slots);
               setEventSelected(currUpcomingEvents[0]);
               setEventSelectedName(currUpcomingEventsNames[0]);
+              setPerformers(currPerformers);
+              setIsEventPlannerHasEvents(true);
             }
             else
             {
@@ -222,9 +234,12 @@ const ConnectionsPage = () => {
               setEventNames([]);
               setEventSelected(null);
               setEventSelectedName("");
+              setPerformers(currPerformers);
+              setIsEventPlannerHasEvents(false);
             }
           }
 
+          let currPerformer;
           //if user is a performer
           if (userData.isPerformer)
           {
@@ -240,7 +255,10 @@ const ConnectionsPage = () => {
             setPerformerDetails(currPerformerDetails);
             setPerformerTypes(currPerformerTypes);
             setPerformerTypeSelected(currPerformerTypes[0]);
+            setPerformer(currPerformerDetails[0]);
             setGenres(currPerformerDetails[0].genres);
+
+            currPerformer = currPerformerDetails[0];
 
             //GET UPCOMING AND PAST EVENTS
             //collection references
@@ -269,34 +287,24 @@ const ConnectionsPage = () => {
 
             //set useStates with values that have been fetched
             setUpcomingEvents(currUpcomingEvents);
-            createUpcomingEventsDisplays(currUpcomingEvents);
+            createUpcomingEventsDisplays(currUpcomingEvents, currPerformer);
+          }
+
+          if (userData.isPerformer && !userData.isEventPlanner)
+          {
+            setIsViewAsPerformer(true);
+            setIsViewAsEventPlanner(false);
+          }
+          else if (userData.isEventPlanner && !userData.isPerformer)
+          {
+            setIsViewAsEventPlanner(true);
+            setIsViewAsPerformer(false);
           }
           setIsDataLoaded(true);
         }
       };
       getUserData();
     }, []);
-
-    //useEffect for fetching upcoming events data from the database
-    useEffect(() => {
-      const getUpcomingEvents = async () => {
-        if (isViewAsPerformer)
-        {
-          const today = new Date();
-          const currUpcomingEvents = [];
-
-          const upcomingEventsRef = collection(db, "upcomingEvents");
-          const q = query(upcomingEventsRef, where("startDate", ">", today));
-          const querySnapshot = await getDocs(q);
-          querySnapshot.forEach((doc) => {
-            currUpcomingEvents.push(doc.data());
-          });
-
-          setUpcomingEvents(currUpcomingEvents);
-        }
-      };
-      getUpcomingEvents();
-    }, [isViewAsPerformer, genres]);
 
     const changeSearchTypeToPerformer = () => {
       setIsViewAsPerformer(true);
@@ -328,6 +336,7 @@ const ConnectionsPage = () => {
       }
       console.log(performerDetailsOfType);
       setPerformer(performerDetailsOfType);
+      createUpcomingEventsDisplays(upcomingEvents, selectedPerformerType);
     }
     //method for handling selection of upcoming event to find performers for
     const handleSelectionOfEvent = async (e) => {
@@ -371,6 +380,18 @@ const ConnectionsPage = () => {
 
       const currSlotIndex = Number(e.target.value);
       setSlotIndex(currSlotIndex);
+    }
+    
+    //callback methods for displaying error messages
+    const performerRequestErrorCallback = (isError) => {
+      setIsPerformerErrorMsg(isError);
+      if (isError)
+        alert("Error: You have already sent a request for this event, and you cannot send requests for multiple slots in the same event.");
+    }
+    const eventPlannerRequestErrorCallback = (isError) => {
+      setIsEventPlannerErrorMsg(isError);
+      if (isError)
+        alert("Error: you have already sent a request to this performer for your currently selected event/slot.")
     }
 
     const slotOptions = [];
@@ -420,11 +441,22 @@ const ConnectionsPage = () => {
         );
       }
     }
-    
-    //callback method for displaying error message
-    const toPerformerRequestErrorCallback = (isError) => {
-      setIsPerformerErrorMsg(isError);
-      alert("Error: you have already sent a request for this event/slot.");
+
+    if (performers.length > 0)
+    {
+      console.log(performers);
+    }
+    const performerDisplays = [];
+    for (let i = 0; i < performers.length; i++)
+    {
+      performerDisplays.push(
+        <PerformerConnectionsDisplay 
+          performer={performers[i]}
+          event={eventSelected}
+          slotIndex={slotIndex}
+          errorCallback={eventPlannerRequestErrorCallback}
+        />
+      );
     }
     
     return(
@@ -453,12 +485,12 @@ const ConnectionsPage = () => {
                       ))}
                   </select>
                   <p id="uidnote" style={isPerformerErrorMsg ? {} : {display: "none"}}>
-                    Error: You have already sent a request for this event/slot.
+                    Error: You have already sent a request for this event, and you cannot send requests for multiple slots in the same event.
                   </p>
                   {upcomingEventsDisplays}
                 </>
               }
-              {isViewAsEventPlanner &&
+              {isViewAsEventPlanner && isEventPlannerHasEvents &&
                 <>
                   <StyledLabel htmlFor="event">
                     Event:
@@ -478,12 +510,22 @@ const ConnectionsPage = () => {
                       </select>
                     </>
                   }
+                  <p id="uidnote" style={isEventPlannerErrorMsg ? {} : {display: "none"}}>
+                    Error: you have already sent a request to this performer for your currently selected event/slot.
+                  </p>
+                  {performerDisplays}
                 </>
+              }
+              {isViewAsEventPlanner && !isEventPlannerHasEvents &&
+                <p id="uidnote" style={!isEventPlannerHasEvents ? {} : {display: "none"}}>
+                  You have no upcoming events.
+                </p>
               }
 
           </Container>
       </PageContainer>
     );
 }
+
 
 export default ConnectionsPage;
