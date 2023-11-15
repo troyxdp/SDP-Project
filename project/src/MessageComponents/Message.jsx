@@ -6,18 +6,21 @@ const Message = ({ message }) => {
   const { currentUser } = useContext(AuthContext);
   const { data } = useContext(ChatContext);
   const [user, setUser] = useState(null);
-  const ref = useRef();
 
-  useEffect(() => {
-    ref.current?.scrollIntoView({ behavior: "smooth" });
-  }, [message]);
-
+  // Define getCurrentTime before using it
   const getCurrentTime = () => {
     const currentDate = new Date();
     const hours = currentDate.getHours();
     const minutes = currentDate.getMinutes();
     return `${hours}:${minutes}`;
   };
+
+  const [timestamp, setTimestamp] = useState(() => getCurrentTime()); // Initialize with the result of getCurrentTime
+  const ref = useRef();
+
+  useEffect(() => {
+    ref.current?.scrollIntoView({ behavior: "smooth" });
+  }, [message]);
 
   const getCurrentDate = () => {
     const currentDate = new Date();
@@ -36,7 +39,7 @@ const Message = ({ message }) => {
           {user?.searchName && <span>{user.searchName}</span>}
         </div>
         <div className="timestamp">
-          <span>{getCurrentTime()}</span>
+          <span>{timestamp}</span>
         </div>
         <div className="date">
           <span>{getCurrentDate()}</span>
