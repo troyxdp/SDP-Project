@@ -1,12 +1,8 @@
-import { collection, doc, getDoc, getDocs, updateDoc, addDoc, query, where, and } from "firebase/firestore";
+import { collection, doc, getDocs, updateDoc, query, where, and } from "firebase/firestore";
 import { useEffect, useState} from "react";
-import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { NavigationBar } from "../components/NavigationBar";
 import { db } from '../firebase-config/firebase';
-import x_solid from "../profile-pics/x-solid.svg";
-import { EventPlannerDetailsForm } from "../components/EventPlannerDetailsForm";
-import { PerformerDetailsForm } from "../components/PerformerDetailsForm";
 
 const PageContainer = styled.div`
     position: fixed;
@@ -55,23 +51,6 @@ const StyledButton = styled.button`
     color: white;
     margin-top: 10px;
 `;
-const DisplayOptionContainer = styled.div`
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    margin-top: 5px;
-    margin-bottom: 10px;
-`;
-const DisplayFormButton = styled.button`
-    display: flex;
-    background: #fff;
-    border: 0px solid #fff;
-    color: black;
-    height: 20px;
-    width: 20px;
-    font-size: 20px;
-    margin-right: 2px;
-`;
 const StyledInput = styled.input`
     display: flex;
     background: #e4e4e4;
@@ -99,84 +78,6 @@ const StyledLabel = styled.label`
     margin-top: 5px;
     margin-bottom: 2px;
 `;
-const StyledSubheader = styled.h2`
-  font-size: 1.5rem;
-  margin-top: 8px;
-  margin-bottom: 0px;
-  font-weight: bold; 
-`;
-const DetailsFormDiv = styled.div`
-    padding-top: 5px;
-    padding-bottom: 10px;
-    padding-left: 15px;
-    padding-right: 15px;
-    display: flex;
-    align-items: left;
-    justify-content: center;
-    flex-direction: column;
-    border: 1px solid #444;
-    border-radius: 10px;
-`;
-const ListBox = styled.div`
-    display: flex;
-    flex-direction: column;
-    align-items: left;
-    justify-content: center;
-    margin-bottom: 8px;
-`;
-const ListBoxElement = styled.div`
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border: 1px solid #444; 
-    padding: 10px; 
-    width: 375px;
-    max-width: 375px;
-    height: 12px;
-    max-height: 12px;
-    border: 2px solid #808080;
-    border-radius: 8px;
-    margin-top: 2px;
-`;
-const TwoLineListBoxElement = styled.div`
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border: 1px solid #444; 
-    padding: 10px; 
-    width: 475px;
-    max-width: 475px;
-    height: 28px;
-    max-height: 28px;
-    border: 2px solid #808080;
-    border-radius: 8px;
-    margin-top: 2px;
-`;
-const AdderContainer = styled.div`
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    padding-top: 5px;
-    padding-bottom: 5px;
-`;
-const AdderInput = styled.input`
-    display: flex;
-    background: #e4e4e4;
-    border-radius: 10px;
-    border: 0;
-    width: 250px;
-    box-sizing: border-box;
-    padding: 15px 0 15px 10px;
-    margin-right: 8px;
-`;
-const AdderButton = styled.button`
-    display: inline-block;
-    border: 0px solid #fff;
-    border-radius: 10px;
-    background: #a13333;
-    padding: 15px 45px;
-    color: white;
-`;
 
 export default function EditUpcomingEventsDetailsPage() {
     const userEmail = sessionStorage.getItem("userEmail");
@@ -198,20 +99,6 @@ export default function EditUpcomingEventsDetailsPage() {
         {value: "Classical", label: "Classical"},
         {value: "Jazz", label: "Jazz"},
         {value: "Other", label: "Other"}
-    ];
-    //list of event types
-    const eventTypeOptions = [
-        {value : "Event Party", label : "Event Party"},
-        {value : "Festival", label : "Festival"},
-        {value : "Rave", label : "Rave"},
-        {value : "Club Slot", label : "Club Slot"},
-        {value : "Bar Slot", label : "Bar Slot"},
-        {value : "Residency Opportunity", label : "Residency Opportunity"},
-        {value : "House Party", label : "House Party"},
-        {value : "Birthday Party", label : "Birthday Party"},
-        {value : "Wedding", label : "Wedding"},
-        {value : "Ball", label : "Ball"},
-        {value : "Other", label : "Other"}
     ];
     const genresSelectedInitializer = [];
     for (let i = 0; i < genreOptions.length; i++)
