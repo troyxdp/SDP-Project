@@ -53,22 +53,30 @@ function ImageUploader({ userEmail }) {
   };
 
   const getImageType = (url) => {
-    if (url.toLowerCase().includes(".mp4")) {
+    const lowercasedUrl = url.toLowerCase();
+  
+    if (lowercasedUrl.includes(".mp4")) {
       return "video";
     } else if (
-      url.toLowerCase().includes(".jpg") ||
-      url.toLowerCase().includes(".jpeg") ||
-      url.toLowerCase().includes(".png") ||
-      url.toLowerCase().includes(".gif") ||
-      url.toLowerCase().includes(".bmp")
+      lowercasedUrl.includes(".jpg") ||
+      lowercasedUrl.includes(".jpeg") ||
+      lowercasedUrl.includes(".png") ||
+      lowercasedUrl.includes(".gif") ||
+      lowercasedUrl.includes(".bmp")
     ) {
       return "image";
+    } else if (
+      lowercasedUrl.includes(".mp3") ||
+      lowercasedUrl.includes(".wav") ||
+      lowercasedUrl.includes(".ogg")
+    ) {
+      return "audio";
     } else {
       return "unknown";
     }
   };
   
-  
+
   
   
 
@@ -98,6 +106,8 @@ function ImageUploader({ userEmail }) {
       return <img key={index} src={item.url} alt={`image-${index}`} style={{ width: "200px", height: "140px", margin: "5px" }} />;
     } else if (item.type === "video") {
       return <video autoPlay loop key={index} src={item.url} controls style={{ width: "200px", height: "150px", margin: "5px" }} />;
+    } else if (item.type === "audio"){
+      return <audio controls src={item.url} type="audio/mp3"/>
     }
     return null; // Handle other types or invalid URLs as needed
   });
