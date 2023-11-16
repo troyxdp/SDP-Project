@@ -22,7 +22,7 @@ const PageContainer = styled.div`
 `;
 const Container = styled.div`
   display: grid;
-  grid-template-columns: 1fr 0.6fr; /* Three columns: two flexible and one 200px wide */
+  grid-template-columns: 1fr 0.7fr; /* Three columns: two flexible and one 200px wide */
   height: 100vh;
 `;
 const UserDetailsContainer = styled.div`
