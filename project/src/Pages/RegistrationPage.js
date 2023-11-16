@@ -6,14 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {getAuth,createUserWithEmailAndPassword} from "firebase/auth";
 import { doc, setDoc, collection, addDoc, getDoc } from "firebase/firestore";
 import { db } from '../firebase-config/firebase';
-
-import User from '../classes/User';
-import Performer from '../classes/Performer'; 
-import Event from '../classes/Event'; 
-import Review from '../classes/Review'; 
-import EventPlanner from '../classes/EventPlanner';
-
-import {PerformerDetailsForm} from "../components/PerformerDetailsForm";
+import Map from "../components/google-maps"
 
 // Check for one instance before @; Check for @; Check for "wits.ac.za" or "students.wits.ac.za".
 const USER_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+(\.[a-zA-Z0-9.-]+){0,3}$/;
@@ -49,7 +42,8 @@ const StyledInput = styled.input`
     width: 250px;
     box-sizing: border-box;
     padding: 15px 0 15px 10px;
-    margin-bottom: 20px;
+    margin-top: 20px;
+    marging-bottom: 20px;
 `;
 const StyledHeader = styled.h1`
     padding: 20px;
@@ -135,6 +129,12 @@ const RegistrationPage = () => {
 
     //Const for Error Message
     const [errMsg,setErrMsg] = useState('');
+    const [selectedCoordinates, setSelectedCoordinates] = useState(null);
+
+    // Event handler to update the coordinates
+    const handleCoordinatesChange = (coordinates) => {
+      setSelectedCoordinates(coordinates);
+    };
 
     // useEffect Hook: Used to set focus to username input.
     useEffect(() => {
@@ -286,7 +286,10 @@ const RegistrationPage = () => {
                         <span style={validLocation ? {} : {display: "none"}}>
                             <FontAwesomeIcon icon={faCheck} />
                         </span>
-                    </label>
+                    </label> 
+                    <div>
+                    <Map onCoordinatesChange={handleCoordinatesChange} />
+                    {/* Input field for location */}
                     <StyledInput 
                         type="text"
                         id="location"
@@ -298,7 +301,15 @@ const RegistrationPage = () => {
                         aria-describedby="uidnote"
                         onFocus={() => setLocationFocus(true)}
                         onBlur={() => setLocationFocus(false)}
+                        name="location"
+                        placeholder="Selected Location"
+                        value={selectedCoordinates ? `${selectedCoordinates.lat}, ${selectedCoordinates.lng}` : ''}
+                        readOnly
                     />
+                    </div>
+                    
+                   
+
                     <p id="uidnote" style={locationFocus && location && !validLocation ? {} : {display: "none"}}>
                         <FontAwesomeIcon icon={faInfoCircle} />
                         Please enter what area you operate from. <br />
