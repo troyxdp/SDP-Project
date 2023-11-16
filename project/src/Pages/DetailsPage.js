@@ -6,9 +6,6 @@ import styled from "styled-components";
 import { EventPlannerDetailsForm } from "../components/EventPlannerDetailsForm";
 import { PerformerDetailsForm } from "../components/PerformerDetailsForm";
 import { db } from '../firebase-config/firebase';
-import { ref, uploadBytes, getDownloadURL, listAll } from "firebase/storage";
-import { storage } from "../firebase-config/firebase";
-import { v4 } from "uuid";
 
 const PageContainer = styled.div`
     position: fixed;
@@ -71,31 +68,27 @@ const DisplayFormButton = styled.button`
 */
 
 export default function DetailsPage() {
-//fetch email from session storage
+    //fetch email from session storage
+    const email = sessionStorage.getItem("userEmail");
+    const usrData = useLocation().state.usrData;
+    const profilePic = useLocation().state.usrData.profilePic;
+    const isProfilePic = profilePic !== null;
 
-const email = sessionStorage.getItem("userEmail");
-const usrData = useLocation().state.usrData;
-const profilePic = useLocation().state.usrData.profilePic;
-const isProfilePic = profilePic !== null;
-
-let userData = {
-    email: email,
-    displayName: usrData.displayName,
-    searchName: usrData.displayName.toLowerCase(),
-    location: usrData.location,
-    bio: usrData.bio,
-    profilePic: isProfilePic,
-    isPerformer: false,
-    isEventPlanner: false,
-    isInGroup: false
-};
+    let userData = {
+        email: email,
+        displayName: usrData.displayName,
+        searchName: usrData.displayName.toLowerCase(),
+        location: usrData.location,
+        bio: usrData.bio,
+        profilePic: usrData.profilePic,
+        isPerformer: false,
+        isEventPlanner: false,
+        isInGroup: false
+    };
 
     //useState to store user data fetched from database that has already been added
     const [user, setUser] = useState(userData);
     const [pwd, setPwd] = useState(usrData.password);
-    const [imageUrls, setImageUrls] = useState([]);
-
-    
 
     //useState for performer details
     const [isPerformer, setIsPerformer] = useState(false);
@@ -212,33 +205,6 @@ let userData = {
             //try add the details to the firebase
             try
             {
-                // upload to storage
-                const storageRef = ref(storage, `users/${email}/images/`);
-                //=========================
-                const handleUpload = async () => {
-                    if (profilePic !== null || email !== "") {
-                      console.log("Uploading image");
-                  
-                      try {
-                        const imageRef = ref(storageRef, `profile_photo_${v4()}_${profilePic.name}`);
-                        const snapshot = await uploadBytes(imageRef, profilePic);
-                        const url = await getDownloadURL(snapshot.ref);
-                  
-                        setImageUrls((prev) => [...prev, url]);
-                      } catch (error) {
-                        console.error("Error uploading image:", error);
-                      }
-                    }
-                  };
-                  
-                  // ... (other code)
-                  
-                  // Call handleUpload when needed
-                  // For example, in response to a user action or an event
-                  handleUpload();
-
-                //=========================
-
                 //reference to document in database
                 const userDocRef = doc(db, "users", email);
                 await setDoc(userDocRef, currUser);
@@ -329,7 +295,6 @@ let userData = {
                 {displayEventPlannerForm &&
                     <EventPlannerDetailsForm parentCallback={onSubmitEventPlannerDetails}/>
                 }
-              
 
                 <StyledButton onClick={handleSubmit}>
                     Submit All Details
