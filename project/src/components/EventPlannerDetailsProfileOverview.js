@@ -48,7 +48,7 @@ const StyledLink = styled.a`
     - Add display of links to pastEvents and upcomingEvents details pages
     - Add display of media of the event planner
 */
-export function EventPlannerDetailsProfileOverview({email, types, pastEvents, upcomingEvents, links, media}){
+export function EventPlannerDetailsProfileOverview({types, pastEvents, upcomingEvents, links, media}){
     //write the types of events hosted by the user out as a string for display using types array passed as a prop
     let eventTypes = [];
     for (let i = 0; i < types.length; i++)

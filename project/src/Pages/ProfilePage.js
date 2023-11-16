@@ -4,16 +4,30 @@ import {useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { EventPlannerDetailsProfileOverview } from "../components/EventPlannerDetailsProfileOverview";
 import { PerformerDetailsProfileOverview } from "../components/PerformerDetailsProfileOverview";
-import { GroupDetailsProfileOverview } from "../components/GroupDetailsProfileOverview";
-import {NavigationBar} from "../components/NavigationBar";
-import { db } from '../firebase-config/firebase';
-import dummy_profile_pic from "../profile-pics/dummy-profile-pic.jpg";
-import no_profile_pic from "../profile-pics/no-profile-pic-image.jpg";
 
-//components of the page's css
+import { GroupDetailsProfileOverview } from "../components/GroupDetailsProfileOverview";
+
+import { ReviewDisplay } from "../components/ReviewDisplay";
+
+import {NavigationBar} from "../components/NavigationBar";
+import { db, storage } from '../firebase-config/firebase';
+import LoadProfilepic from "../Pages/loadImages"
+import ImageUploader  from "../components/Imageupload";
+
+
+const PageContainer = styled.div`
+    position: fixed;
+    top: 40px;
+    left: 40px;
+    right: 40px;
+    bottom: 40px;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 10px;
+`;
 const Container = styled.div`
   display: grid;
-  grid-template-columns: 1fr 0.5fr; /* Three columns: two flexible and one 200px wide */
+  grid-template-columns: 1fr 0.6fr; /* Three columns: two flexible and one 200px wide */
   height: 100vh;
 `;
 const UserDetailsContainer = styled.div`
@@ -86,15 +100,11 @@ const TabsButton = styled.button`
   cursor: pointer;
   transition: background-color 0.3s;
   border: 0px solid #fff;
-  border-radius: 10px;
+  border-radius: 3px;
   background: #a13333;
   padding: 10px 20px;
   color: white;
   margin-left: 12px;
-`;
-const VerticalPanel = styled.div`
-  background-color: #a9a9a9;
-  padding: 20px;
 `;
 const CreationButtonsBox = styled.div`
   position: absolute;
@@ -113,20 +123,90 @@ const CreateButton = styled.button`
     margin-top: 10px;
 `;
 
+const VerticalPanel = styled.div`
+  background-color: #a9a9a9;
+  padding: 20px;
+  position: relative;
+`;
+const BottomDiv = styled.div`
+  position: absolute; 
+  bottom:17px; 
+  width: 90%; 
+  background-color: #a9a9a9; 
+  padding: 10px;
+  border: 1px solid #000;
+  border-radius: 10px; 
+`;
+const SubHeader = styled.h2`
+  font-size: 1.2rem;
+  color: #000;
+  margin-top: 0px;
+  margin-bottom: 10px;
+`;
+const ScoreContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start; /* Adjust to your preference */
+  align-items: center;
+  margin-bottom: 10px;
+`;
+const StyledLabel = styled.label`
+  margin-top: 5px;
+  margin-bottom: 2px;
+`;
+const StyledInput = styled.input`
+  display: flex;
+  background: #e4e4e4;
+  border-radius: 10px;
+  border: 0;
+  width: 50px;
+  height: 30px;
+  box-sizing: border-box;
+  padding: 10px;
+  margin-left: 10px;
+  background: #ffffff;
+`;
+const DescriptionInput = styled.textarea`
+  display: flex;
+  background: #e4e4e4;
+  border-radius: 10px;
+  border: 0;
+  width: 100%;
+  height: 150px;
+  box-sizing: border-box;
+  padding: 15px 0 15px 10px;
+  word-break: break-word;
+  font-family: "Roboto", Roboto, sans-serif;
+  background: #ffffff;
+  margin-top: 10px;
+`;
+const StyledButton = styled.button`
+  display: inline-block;
+  border: 0px solid #fff;
+  border-radius: 25px;
+  background: #a13333;
+  padding: 15px 45px;
+  color: white;
+  margin-top: 10px;
+`;
+const VerticalPanelTabsButton = styled.button`
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  border: 0px solid #fff;
+  border-radius: 3px;
+  background: #a13333;
+  padding: 10px 20px;
+  color: white;
+  margin-right: 12px;
+`;
+
 /*
   TO-DO:
   - Add profile picture functionality
   - Add display of media
-  - Add different rendering of profile page depending on if it is the user's profile page vs someone else's
-  - Add "Edit Profile" button that takes the user to a page that allows them to edit all of their details.
-    ~ This button only renders when the user is on their own profile page
-  - Add "Add Friend"/"Remove Friend" button
-    ~ This button only renders when the user is on someone else's profile page
-    ~ The button displays "Add Friend" when they aren't friends and "Remove Friend" when they are friends
-    ~ When button is pressed when it is displaying "Add Friend",  a pending friend request is sent to the profile page's user
-    ~ When button is pressed when it is display "Remove Friend", the profile page's user is removed from the user's friend list and vice versa
-  - Add header bar that redirects to different pages
-  - Add moving of events from upcoming to past for EventPlanner users
+  - Add the ability to add reviews. Display of input is conditional based on if it is the user's profile page or not
+  - Potentially add loading animation
 */
 const ProfilePage = () => {
     //fetch email from session storage
@@ -137,7 +217,8 @@ const ProfilePage = () => {
     //initializing object for user field
     const userInitializer = {
       email : profileEmail,
-      fullName : "",
+      displayName : "",
+      searchName : "",
       location : "",
       bio : "",
       profilePic : null,
@@ -151,12 +232,58 @@ const ProfilePage = () => {
     const [performerDetails, setPerformerDetails] = useState([]);
     const [eventPlannerDetails, setEventPlannerDetails] = useState(null);
     const [groupDetails, setGroupDetails] = useState([]); //for later - add details of groups that user is member of
-    const [isProfilePic, setIsProfilePic] = useState(false);
+    const [isProfilePic, setIsProfilePic] = useState(true); // may need to change this 
+    const [eventPlannerUpcomingEvents, setEventPlannerUpcomingEvents] = useState([]);
+    const [eventPlannerPastEvents, setEventPlannerPastEvents] = useState([]);
+    const [reviews, setReviews] = useState([]);
+    const [friends, setFriends] = useState([]);
 
     //useStates for dictating the conditional rendering of details
     const [displayPerformerDetails, setDisplayPerformerDetails] = useState(false);
     const [displayEventPlannerDetails, setDisplayEventPlannerDetails] = useState(false);
     const [displayGroupDetails, setDisplayGroupDetails] = useState(false);
+    const [isDataLoadedFromDatabase, setIsDataLoadedFromDatabase] = useState(false);
+    const [displayReviews, setDisplayReviews] = useState(true);
+
+    //useStates for leaving reviews
+    const [comment, setComment] = useState("");
+    const [reviewScore, setReviewScore] = useState(10);
+
+    //useStates for error messages
+    const [isReviewError, setIsReviewError] = useState(false);
+    const [reviewErrMsg, setReviewErrMsg] = useState("");
+
+    //useState for reviews display
+    const [reviewsDisplays, setReviewsDisplays] = useState([]);
+    const createReviewsDisplays = (reviews) => {
+      const currDisplays = [];
+      for (let i = 0; i < reviews.length; i++)
+      {
+        currDisplays.push(
+          <ReviewDisplay 
+            review = {reviews[i]}
+          />
+        )
+      }
+      setReviewsDisplays(currDisplays);
+    }
+
+    //useState for friends display
+    const [friendsDisplays, setFriendsDisplays] = useState([]);
+    const createFriendsDisplays = (friends) => {
+      const currDisplays = [];
+      for (let i = 0; i < friends.length; i++)
+      {
+        currDisplays.push(
+          <>
+            <DetailsBox>
+              <Detail>{friends[i].email}</Detail>
+            </DetailsBox>
+          </>
+        );
+      }
+      setFriendsDisplays(currDisplays);
+    }
 
     //useEffect to fetch user data from database
     useEffect(() => {
@@ -166,7 +293,8 @@ const ProfilePage = () => {
 
         let userData = {
           email : profileEmail,
-          fullName : docSnap.data().fullName,
+          displayName : docSnap.data().displayName,
+          searchName : docSnap.data().searchName,
           location : docSnap.data().location,
           bio : docSnap.data().bio,
           profilePic : docSnap.data().profilePic,
@@ -180,28 +308,66 @@ const ProfilePage = () => {
         if (userData.isEventPlanner)
         {
           //get event planner details
-          let eventPlannerDetails = null;
-          const querySnapshot = await getDocs(collection(db, "users", profileEmail, "eventPlannerInfo"));
+          let currEventPlannerDetails = null;
+          const eventPlannerSnapshot = await getDocs(collection(db, "users", profileEmail, "eventPlannerInfo"));
           let eventPlannerID;
-          querySnapshot.forEach((doc) => {
-            eventPlannerDetails = doc.data();
+          eventPlannerSnapshot.forEach((doc) => {
+            currEventPlannerDetails = doc.data();
             eventPlannerID = doc.id;
           });
+          setEventPlannerDetails(currEventPlannerDetails);
           
-          //check which events have already happened and move them from upcoming events to past events
+          //GET UPCOMING AND PAST EVENTS
+          //collection references
+          const upcomingEventsRef = collection(db, "upcomingEvents");
+          const pastEventsRef = collection(db, "pastEvents");
+
+          //get upcoming events
+          const upcomingEventsQuery = query(upcomingEventsRef, where("creatingUserEmail", "==", profileEmail));
+          const upcomingEventsQuerySnapshot = await getDocs(upcomingEventsQuery);
+          const currUpcomingEvents = [];
+          const currUpcomingEventsIDs = [];
+          upcomingEventsQuerySnapshot.forEach((doc) => {
+            currUpcomingEvents.push(doc.data());
+            currUpcomingEventsIDs.push(doc.id);
+          });
+
+          //get past events
+          const pastEventsQuery = query(pastEventsRef, where("creatingUserEmail", "==", profileEmail));
+          const pastEventsQuerySnapshot = await getDocs(pastEventsQuery);
+          const currPastEvents = [];
+          pastEventsQuerySnapshot.forEach((doc) => {
+            currPastEvents.push(doc.data());
+          });
+
+          //move upcoming events that have already happened to past events
           const today = new Date();
-          for (let i = 0; i < eventPlannerDetails.upcomingEvents.length; i++)
+          const newPastEvents = [];
+          const eventIDsToRemove = [];
+          for (let i = 0; i < currUpcomingEvents.length; i++)
           {
-            const currEventEndDate = new Date(eventPlannerDetails.upcomingEvents[i].endDate.toDate());
+            const currEventEndDate = new Date(currUpcomingEvents[i].endDate.toDate());
             if (currEventEndDate < today)
             {
-              eventPlannerDetails.pastEvents.push(eventPlannerDetails.upcomingEvents[i]);
-              eventPlannerDetails.upcomingEvents.splice(i, 1);
+              newPastEvents.push(currUpcomingEvents[i]);
+              currPastEvents.push(currUpcomingEvents[i]);
+              eventIDsToRemove.push(currUpcomingEventsIDs[i]);
+              currUpcomingEvents.splice(i, 1);
+              currUpcomingEventsIDs.splice(i, 1);
               i--;
             }
           }
-          await setDoc(doc(db, "users", profileEmail, "eventPlannerInfo", eventPlannerID), eventPlannerDetails); //update database
-          setEventPlannerDetails(eventPlannerDetails);
+
+          //set useStates to values of currPastEvents and currUpcomingEvents arrays
+          setEventPlannerPastEvents(currPastEvents);
+          setEventPlannerUpcomingEvents(currUpcomingEvents);
+
+          //make move of events reflect on database
+          for (let i = 0; i < newPastEvents.length; i++)
+          {
+            await addDoc(pastEventsRef, newPastEvents[i]); //add event to pastEvents collection
+            await deleteDoc(doc(db, "upcomingEvents", eventIDsToRemove[i])); //remove event from upcomingEvents collection
+          }
         }
 
         //if user is a performer
@@ -210,12 +376,12 @@ const ProfilePage = () => {
           const currPerformerDetails = [];
           const querySnapshot = await getDocs(collection(db, "users", profileEmail, "performerInfo"));
           querySnapshot.forEach((doc) => {
-            // doc.data() is never undefined for query doc snapshots
             console.log(doc.id, " => ", doc.data());
             currPerformerDetails.push(doc.data());
           });
           setPerformerDetails(currPerformerDetails);
         }
+
 
         //add importing of group details
         if (userData.isInGroup)
@@ -230,9 +396,30 @@ const ProfilePage = () => {
           setGroupDetails(currGroupDetails);
         }
         //add moving of events from upcoming to past based on current date and time
+
+        const reviewsRef = collection(db, "users", profileEmail, "reviews");
+        const reviewsSnapshot = await getDocs(reviewsRef);
+        const currReviews = [];
+        reviewsSnapshot.forEach((doc) => {
+          currReviews.push(doc.data());
+        });
+        setReviews(currReviews);
+        createReviewsDisplays(currReviews);
+
+        const friendsRef = collection(db, "users", profileEmail, "friends");
+        const friendsSnapshot = getDocs(friendsRef);
+        const currFriends = [];
+        (await friendsSnapshot).forEach((doc) => {
+          currFriends.push(doc.data());
+        });
+        setFriends(currFriends);
+        createFriendsDisplays(currFriends);
+
+        setIsDataLoadedFromDatabase(true);
+
       };
       getUserData();
-    }, [])
+    }, [profileEmail])
 
     //methods executed on the click of tab buttons in bottom panel
     const onClickPerformerDetailsButton = () => {
@@ -312,6 +499,27 @@ const ProfilePage = () => {
       navigate("/createGroupPage");
       window.location.reload(false);
     }
+    const goToEditPersonalDetailsPage = async (e) => {
+      e.preventDefault();
+      const userInfo = [];
+      userInfo.push(user);
+      userInfo.push(eventPlannerDetails);
+      userInfo.push(performerDetails);
+      //navigate('/editPersonalDetailsPage', {state : userInfo});
+      navigate('/editPersonalDetailsPage');
+      window.location.reload(false);
+    }
+    const goToEditUpcomingEventsDetailsPage = async (e) => {
+      e.preventDefault();
+      navigate('/editUpcomingEventDetailsPage');
+      window.location.reload(false);
+    }
+    const goToEditGroupsDetailsPage = async (e) => {
+      e.preventDefault();
+      navigate('/editGroupsDetailsPage');
+      window.location.reload(false);
+    }
+
     //THESE TWO METHODS ARE FOR TESTING NAVIGATING TO OTHER PROFILES AND DOING STUFF WHILE THERE
     const testGoToOtherUserProfile8 = async (e) => {
       e.preventDefault();
@@ -326,12 +534,6 @@ const ProfilePage = () => {
       window.location.reload(false);
     }
 
-    //empty profile pic and dummy profile pic - to be replaced by profile pic imported from database
-    let profilePic = [<img style={{ width : 135, height: 135, borderRadius: 135 }} src={no_profile_pic} alt="Profile" />];
-    if (isProfilePic)
-    {
-      profilePic = [<img style={{ width : 135, height: 135, borderRadius: 135 }} src={dummy_profile_pic} alt="dummy profile pic" />];
-    }
 
     //method to send friend request if it is not user's profile
     const sendFriendRequest = async () => {
@@ -386,70 +588,180 @@ const ProfilePage = () => {
       }
     }
 
+    const submitReview = async () => {
+      if (reviewScore >= 0 && reviewScore <= 10 && comment !== "")
+      {
+        const reviewsRef = collection(db, "users", profileEmail, "reviews");
+        const isAlreadyReviewQuery = query(reviewsRef, where("reviewerEmail", "==", userEmail));
+        const isAlreadyReviewSnapshot = await getDocs(isAlreadyReviewQuery);
+        let isAlreadyReview = false;
+        isAlreadyReviewSnapshot.forEach((doc) => {
+          isAlreadyReview = true;
+        })
+
+        if (!isAlreadyReview)
+        {
+          setIsReviewError(false);
+          const review = {
+            score : reviewScore,
+            comment : comment,
+            reviewerEmail : userEmail
+          };
+          await addDoc(reviewsRef, review);
+
+          const currReviews = reviews;
+          currReviews.push(review);
+          setReviews(currReviews);
+          setReviewScore(10);
+          setComment("");
+          createReviewsDisplays(currReviews);
+        }
+        else
+        {
+          setIsReviewError(true);
+          setReviewErrMsg("Error: you have already left a review for this user.");
+          alert("Error: you have already left a review for this user.")
+        }
+      }
+      else if (reviewScore < 0 || reviewScore > 10)
+      {
+        setIsReviewError(true);
+        setReviewErrMsg("Error: please leave a score in the range 0 to 10.")
+      }
+      else
+      {
+        setIsReviewError(true);
+        setReviewErrMsg("Error: please leave a comment with your review.")
+      }
+    }
+
     return (
-      <>
+      <PageContainer>
         <NavigationBar/>
-        <Container>
-          <HorizontalPanel>
-            <TopPanel background-color = "#f2f2f2">
-              {isUserProfile &&
-                <CreationButtonsBox>
-                  {user.isEventPlanner &&
-                    <CreateButton onClick={goToCreateEventPage}>Create Event</CreateButton>
-                  }
-                  {user.isPerformer &&
-                    <CreateButton onClick={goToCreateGroupPage}>Create Group</CreateButton>
-                  }
-                </CreationButtonsBox>
-              }
-              {!isUserProfile &&
-                <CreationButtonsBox>
-                  <CreateButton onClick={sendFriendRequest}>
-                    Add Friend
-                  </CreateButton>
-                </CreationButtonsBox>
-              }
-              <StyledHeader>Profile Page</StyledHeader>
-              {profilePic}
-              <Name>{user.fullName}</Name>
-              <DetailsBox>
-                <Detail><b>Email:</b> {user.email}</Detail>
-                <Detail><b>Location:</b> {user.location}</Detail>
-                <Detail>{user.bio}</Detail>
-              </DetailsBox>
-              {/* These components were added just for testing navigation to other profiles as well as some other features like adding friends */}
-              {/* <TabsButton onClick={testGoToOtherUserProfile8}>
-                Test 8
-              </TabsButton>
-              <TabsButton onClick={testGoToOtherUserProfile7}>
-                Test 7
-              </TabsButton> */}
-            </TopPanel>
-            <BottomPanel>
+        {isDataLoadedFromDatabase &&
+          <Container>
+            <HorizontalPanel>
+              <TopPanel background-color = "#f2f2f2">
+                {isUserProfile &&
+                  <CreationButtonsBox>
+                    {user.isEventPlanner &&
+                      <CreateButton onClick={goToCreateEventPage}>Create Event</CreateButton>
+                    }
+                    {user.isPerformer &&
+                      <CreateButton onClick={goToCreateGroupPage}>Create Group</CreateButton>
+                    }
+                    <CreateButton onClick={goToEditPersonalDetailsPage}>Edit Profile</CreateButton>
+                    {user.isEventPlanner &&
+                      <CreateButton onClick={goToEditUpcomingEventsDetailsPage}>Edit Events</CreateButton>
+                    }
+                    {user.isInGroup &&
+                      <CreateButton onClick={goToEditGroupsDetailsPage}>Edit Groups</CreateButton>
+                    }
+                  </CreationButtonsBox>
+                }
+                {!isUserProfile &&
+                  <CreationButtonsBox>
+                    <CreateButton onClick={sendFriendRequest}>
+                      Add Friend
+                    </CreateButton>
+                  </CreationButtonsBox>
+                }
+                <StyledHeader>Profile Page</StyledHeader>
+                <LoadProfilepic isProfilePic={isProfilePic} userEmail={userEmail}/>
+                <Name>{user.displayName}</Name>
+                <DetailsBox>
+                  <Detail><b>Email:</b> {user.email}</Detail>
+                  <Detail><b>Location:</b> {user.location}</Detail>
+                  <Detail>{user.bio}</Detail>
+                </DetailsBox>
+                <ImageUploader userEmail={userEmail}/>
+
+                {/* These components were added just for testing navigation to other profiles as well as some other features like adding friends */}
+                {/* <TabsButton onClick={testGoToOtherUserProfile8}>
+                  Test 8
+                </TabsButton>
+                <TabsButton onClick={testGoToOtherUserProfile7}>
+                  Test 7
+                </TabsButton> */}
+
+              </TopPanel>
+
+              <BottomPanel>
+                <Tabs>
+                  {tabButtons}
+                </Tabs>
+                {displayPerformerDetails &&
+                  <UserDetailsContainer>
+                    <StyledHeader>Performer Details:</StyledHeader>
+                    <PerformerDetailsContainer>
+                      {performerDetailsOverviewComponents}
+                    </PerformerDetailsContainer>
+                  </UserDetailsContainer>
+                }
+                {displayEventPlannerDetails &&
+                  <UserDetailsContainer>
+                    <StyledHeader>Event Planner Details:</StyledHeader>
+                    <EventPlannerDetailsProfileOverview
+                      types={eventPlannerDetails.types}
+                      pastEvents={eventPlannerPastEvents}
+                      upcomingEvents={eventPlannerUpcomingEvents}
+                      links={eventPlannerDetails.links}
+                      media={eventPlannerDetails.media}
+                    />
+                  </UserDetailsContainer>
+                }
+                {displayGroupDetails &&
+                  <p>DISPLAY HERE: GroupDetailsProfileOverview components</p>
+                }
+              </BottomPanel>
+
+            </HorizontalPanel>
+
+            <VerticalPanel>
               <Tabs>
-                {tabButtons}
+                <VerticalPanelTabsButton onClick={() => setDisplayReviews(true)}>Reviews</VerticalPanelTabsButton>
+                <VerticalPanelTabsButton onClick={() => setDisplayReviews(false)}>Friends</VerticalPanelTabsButton>
               </Tabs>
-              {displayPerformerDetails &&
-                <UserDetailsContainer>
-                  <StyledHeader>Performer Details:</StyledHeader>
-                  <PerformerDetailsContainer>
-                    {performerDetailsOverviewComponents}
-                  </PerformerDetailsContainer>
-                </UserDetailsContainer>
+              {displayReviews && 
+                <StyledHeader>Reviews:</StyledHeader>
               }
-              {displayEventPlannerDetails &&
-                <UserDetailsContainer>
-                  <StyledHeader>Event Planner Details:</StyledHeader>
-                  <EventPlannerDetailsProfileOverview
-                    email={userEmail}
-                    types={eventPlannerDetails.types}
-                    pastEvents={eventPlannerDetails.pastEvents}
-                    upcomingEvents={eventPlannerDetails.upcomingEvents}
-                    links={eventPlannerDetails.links}
-                    media={eventPlannerDetails.media}
+              {displayReviews && reviewsDisplays}
+              {!isUserProfile && displayReviews &&
+                <BottomDiv>
+                  <SubHeader>Leave a Review:</SubHeader>
+                  <ScoreContainer>
+                    <StyledLabel><b>Score ( /10): </b></StyledLabel>
+                    <StyledInput 
+                        type="number"
+                        id="reviewScore"
+                        autoComplete="off"
+                        min="0"
+                        max="10"
+                        step="1"
+                        value={reviewScore}
+                        onChange={(e) => setReviewScore(e.target.value)}
+                        required
+                    />
+                  </ScoreContainer>
+
+                  <StyledLabel><b>Comment:</b></StyledLabel>
+                  <DescriptionInput 
+                    type="text"
+                    id="review"
+                    autoComplete="off"
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    required
                   />
-                </UserDetailsContainer>
+                  <StyledButton onClick={submitReview}>
+                    Submit Review
+                  </StyledButton>
+                  {isReviewError &&
+                    <p>{reviewErrMsg}</p>
+                  }
+                </BottomDiv>
               }
+
               {displayGroupDetails &&
                 <UserDetailsContainer>
                 <StyledHeader>Group Details23S:</StyledHeader>
@@ -457,14 +769,18 @@ const ProfilePage = () => {
                     {groupDetailsOverviewComponents}
                     </GroupDetailsContainer>
               </UserDetailsContainer>
+
+              {!displayReviews && 
+                <>
+                  <StyledHeader>Friends:</StyledHeader>
+                  {friendsDisplays}
+                </>
+
               }
-            </BottomPanel>
-          </HorizontalPanel>
-          <VerticalPanel>
-            <StyledHeader>Reviews:</StyledHeader>
-          </VerticalPanel>
-        </Container>
-      </>
+            </VerticalPanel>
+          </Container>
+        }
+      </PageContainer>
     );
 }
 

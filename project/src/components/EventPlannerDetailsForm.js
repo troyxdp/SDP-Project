@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import x_solid from "../profile-pics/x-solid.svg";
 import styled from "styled-components";
 
 const Container = styled.div`
@@ -21,15 +22,11 @@ const DetailsFormDiv = styled.div`
     border: 1px solid #444;
     border-radius: 10px;
 `;
-const StyledInput = styled.input`
-    display: flex;
-    background: #e4e4e4;
-    border-radius: 10px;
-    border: 0;
-    width: 250px;
-    box-sizing: border-box;
-    padding: 15px 0 15px 10px;
-    margin-bottom: 2px;
+const StyledSubheader = styled.h2`
+  font-size: 1.5rem;
+  margin-top: 8px;
+  margin-bottom: 0px;
+  font-weight: bold; 
 `;
 const AdderInput = styled.input`
     display: flex;
@@ -74,19 +71,46 @@ const StyledLabel = styled.label`
     margin-top: 5px;
     margin-bottom: 2px;
 `;
+const ListBox = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+    justify-content: center;
+    margin-bottom: 8px;
+`;
+const ListBoxElement = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #444; 
+    padding: 10px; 
+    width: 375px;
+    max-width: 375px;
+    height: 12px;
+    max-height: 12px;
+    border: 2px solid #808080;
+    border-radius: 8px;
+    margin-top: 2px;
+`;
+
+/*
+    TO-DO:
+    - Add verification of links entered using the link regex from performer details form
+*/
 
 export function EventPlannerDetailsForm({parentCallback}) {
     const eventTypeOptions = [
-        {value : "eventParty", label : "Event Party"},
-        {value : "festival", label : "Festival"},
-        {value : "rave", label : "Rave"},
-        {value : "clubSlot", label : "Club Slot"},
-        {value : "barSlot", label : "Bar Slot"},
-        {value : "houseParty", label : "House Party"},
-        {value : "birthdayParty", label : "Birthday Party"},
-        {value : "wedding", label : "Wedding"},
-        {value : "ball", label : "Ball"},
-        {value : "other", label : "Other"}
+        {value : "Event Party", label : "Event Party"},
+        {value : "Festival", label : "Festival"},
+        {value : "Rave", label : "Rave"},
+        {value : "Club Slot", label : "Club Slot"},
+        {value : "Bar Slot", label : "Bar Slot"},
+        {value : "Residency Opportunity", label : "Residency Opportunity"},
+        {value : "House Party", label : "House Party"},
+        {value : "Birthday Party", label : "Birthday Party"},
+        {value : "Wedding", label : "Wedding"},
+        {value : "Ball", label : "Ball"},
+        {value : "Other", label : "Other"}
     ];
 
     let callback = parentCallback;
@@ -97,10 +121,28 @@ export function EventPlannerDetailsForm({parentCallback}) {
         eventTypesSelectedInitializer.push(false);
     }
 
+    //useStates for storing data
     const [eventTypesSelected, setEventTypesSelected] = useState(eventTypesSelectedInitializer);
     const [links, setLinks] = useState([]);
     const [linkToAdd, setLinkToAdd] = useState("");
 
+    //useState for storing list box displays of links
+    const [linkListBoxDisplays, setLinkListBoxDisplays] = useState([]);
+    const createLinkListDisplay = async (links) => {
+        const linkDisplays = [];
+        for (let i = 0; i < links.length; i++)
+        {
+            linkDisplays.push(
+                <ListBoxElement>
+                    <a href={links[i]}>{links[i]}</a>
+                    <img style={{ width : 12, height: 12, borderRadius: 0 }} src={x_solid} alt="x_solid" onClick={() => handleRemoveLink(i)}/>
+                </ListBoxElement>
+            );
+        }
+        setLinkListBoxDisplays(linkDisplays);
+    }
+
+    //handle changes in inputted data
     const handleTypeSelectedChange = (index) => {
         const currTypesSelected = eventTypesSelected;
         currTypesSelected[index] = !currTypesSelected[index];
@@ -121,9 +163,17 @@ export function EventPlannerDetailsForm({parentCallback}) {
         currLinks.push(linkToAdd);
         setLinks(currLinks);
         setLinkToAdd("");
+        createLinkListDisplay(currLinks);
         console.log(links);
     }
+    const handleRemoveLink = async (index) => {
+        const linkList = links;
+        linkList.splice(index, 1);
+        setLinks(linkList);
+        createLinkListDisplay(linkList);
+    }
 
+    //method for handling submission of form data
     const handleSubmit = async (e) => {
         let eventTypes = [];
         for (let i = 0; i < eventTypeOptions.length; i++)
@@ -161,12 +211,14 @@ export function EventPlannerDetailsForm({parentCallback}) {
     return(
         <Container>
             <DetailsFormDiv>
-                <StyledLabel htmlFor="genres">
+            <StyledSubheader>Create Event Planner Details:</StyledSubheader>
+                <StyledLabel htmlFor="eventTypes">
                     What types of events do you do?
                 </StyledLabel>
                 <StyledCheckboxContainer>
                         {plannerTypeCheckboxes}
                 </StyledCheckboxContainer>
+
                 <StyledLabel htmlFor="links">
                     Links:
                 </StyledLabel>
@@ -182,6 +234,10 @@ export function EventPlannerDetailsForm({parentCallback}) {
                         Add Link
                     </AdderButton>
                 </AdderContainer>
+                <ListBox>
+                    {linkListBoxDisplays}
+                </ListBox>
+
                 <StyledButton onClick={handleSubmit}>
                     Save Details
                 </StyledButton>

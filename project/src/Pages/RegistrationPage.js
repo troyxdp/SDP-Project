@@ -24,7 +24,16 @@ const TEXT_REGEX = /^\w+([ -]+\w+)*$/;
 // Check that the bio contains words, numbers and only the special characters ',', '.' and '-' and that it is between 1 and 64 characters.
 const BIO_REGEX = /^[a-zA-Z0-9,.-\s!]{1,280}$/;
 
-//CSS Component: Container for Registration Form
+const PageContainer = styled.div`
+    position: fixed;
+    top: 40px;
+    left: 40px;
+    right: 40px;
+    bottom: 40px;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 10px;
+`;
 const Container = styled.div`
     padding: 15px 0;
     display: flex;
@@ -32,7 +41,6 @@ const Container = styled.div`
     justify-content: center;
     flex-direction: column;
 `;
-//CSS Component: Input Field
 const StyledInput = styled.input`
     display: flex;
     background: #e4e4e4;
@@ -43,13 +51,11 @@ const StyledInput = styled.input`
     padding: 15px 0 15px 10px;
     margin-bottom: 20px;
 `;
-//CSS Component: Header
 const StyledHeader = styled.h1`
     padding: 20px;
     font-size: 1.5rem;
     font-weight: bold;
 `;
-//CSS Component: Form Containing Inputs
 const StyledForm = styled.form`
     padding: 10px;
     display: flex;
@@ -57,7 +63,6 @@ const StyledForm = styled.form`
     justify-content: center;
     flex-direction: column;
 `;
-//CSS Component: Link to Other Page
 const StyledLink = styled.a`
     display: flex;
     align-items: center;
@@ -81,8 +86,6 @@ const StyledParagraph = styled.p`
 
 /*
     TO-DO:
-    - Add error messages for when email address is already in use
-    - Make it so that authentication profile is only added on details page
 */
 
 const RegistrationPage = () => {
@@ -91,48 +94,19 @@ const RegistrationPage = () => {
     
     let date = new Date();
 
-    const dummyEventData = {
-        creatingUserEmail : "troydp7@gmail.com",
-        eventName : "Afrobiza",
-        eventType : "Event",
-        date : [date],
-        venue : "Maracana",
-        eventDescription : "Afro Tech and Afro House event",
-        genres : ["Afro Tech", "Afro House", "Amapiano"]
-    };
-
     const dummyReview = {
         userEmail : "troydp7@gmail.com",
         rating : 10,
         comment : "Great DJ! Played very well and played some BANGING tunes!"
     };
 
-    const dummyEventPlannerInfo = {
-        userEmail : "troydp8@gmail.com",
-        types : ["Events", "Rave"],
-        pastEvents : [],
-        upcomingEvents : [dummyEventData],
-        links : ["https://www.instagram.com/troyxdp_/"],
-        media : []
-    };
-
-    const dummyPerformerInfo = {
-        userEmail : "troydp8@gmail.com",
-        name : "Algorhythmic",
-        type : "DJ",
-        genres : ["House", "Techno", "Hip Hop"],
-        equipment : ["DDJ-400"],
-        hourlyRate : 350.0,
-        pastEvents : [],
-        upcomingEvents : [dummyEventData],
-        links : ["https://www.instagram.com/troyxdp_/"],
-        media : []
-    };
-
     //Consts for Email
     const [user,setUser] = useState('');
     const [validName, setValidName] = useState(false);
     const [userFocus, setUserFocus] = useState(false);
+
+    // profile photo
+    const[imageUpload,setImageUpload] = useState("Null");
 
     //Consts for Password
     const [pwd,setPwd] = useState('');
@@ -145,9 +119,9 @@ const RegistrationPage = () => {
     const [matchFocus, setMatchFocus] = useState(false);
 
     //Consts for Full Name
-    const [fullName,setFullName] = useState('');
-    const [validFullName, setValidFullName] = useState(false);
-    const [fullNameFocus, setFullNameFocus] = useState(false);
+    const [displayName,setDisplayName] = useState('');
+    const [validDisplayName, setValidDisplayName] = useState(false);
+    const [displayNameFocus, setDisplayNameFocus] = useState(false);
 
     //Consts for Pronouns
     const [location,setLocation] = useState('');
@@ -169,15 +143,11 @@ const RegistrationPage = () => {
     // useEffect Hook: Validate username via USER_REGEX.     -- DON'T NEED
     useEffect(() => {
         const result = USER_REGEX.test(user);
-        console.log(result);
-        console.log(user);
         setValidName(result);
     }, [user])
     // useEffect Hook: Validate password against PWD_REGEX.
     useEffect(() => {
         const result = PWD_REGEX.test(pwd);
-        console.log(result);
-        console.log(pwd);
         setValidPwd(result);
         // Compare the password to the matchPassword. IE: See if the password confirmation is correct.
         const match = pwd === matchPwd;
@@ -185,22 +155,18 @@ const RegistrationPage = () => {
     }, [pwd, matchPwd])
     // useEffect Hook: Validate full name via TEXT_REGEX.
     useEffect(() => {
-        const result =TEXT_REGEX.test(fullName);
-        console.log(result);
-        console.log(fullName);
-        setValidFullName(result);
-    }, [fullName])
+        const result =TEXT_REGEX.test(displayName);
+        setValidDisplayName(result);
+    }, [displayName])
     // useEffect Hook: Validate bio via BIO_REGEX.
     useEffect(() => {
         const result =BIO_REGEX.test(bio);
-        console.log(result);
-        console.log(bio);
         setValidBio(result);
     }, [bio])
     // Clear error message every time user, pwd, matchPwd, fullName, pronouns, qualifications or bio is changed (to account for the user fixing the error).
     useEffect(() => {
         setErrMsg('');
-    }, [user, pwd, matchPwd, fullName, location, bio])
+    }, [user, pwd, matchPwd, displayName, location, bio])
 
     const navigate = useNavigate();
     const HandleSubmit = async (e) => {
@@ -209,7 +175,7 @@ const RegistrationPage = () => {
         // Checks in case user enables the submit button via JS hack:
         const v1 = USER_REGEX.test(user);
         const v2 = PWD_REGEX.test(pwd);
-        const v3 = TEXT_REGEX.test(fullName);
+        const v3 = TEXT_REGEX.test(displayName);
         const v6 = BIO_REGEX.test(bio);
         
         //Display error if any validation criteria not met
@@ -218,13 +184,17 @@ const RegistrationPage = () => {
             return;
         } // End of precaution.
 
+        if (imageUpload === undefined){
+            imageUpload = null
+        }
         const usrData = {
             email : user,
             password : pwd,
-            fullName : fullName,
+            displayName : displayName,
+            searchName : displayName.toLowerCase(),
             location : location,
             bio : bio,
-            profilePic : null,
+            profilePic : imageUpload,
             eventPlannerInfo : null,
             isPerformer : false,
             isEventPlanner : false,
@@ -247,185 +217,191 @@ const RegistrationPage = () => {
         {
             setErrMsg("Error: email address already in use.");
         }
+        
     }
     
     return (
-        <Container>
-            <p ref={errRef} style={errMsg ? {} : {display: "none"}} aria-live="assertive">{errMsg}</p>
-            {/* <img style = {{ width : 90, height: 90 }}src = {logo} alt = "logo" /> */}
-            {/* Render the Header */}
-            <StyledHeader>Register</StyledHeader>
-            <StyledForm onSubmit={HandleSubmit}>
-            {/* <StyledForm> */}
-                {/* Input for the Email field */}
-                <label htmlFor="username">
-                    Email: 
-                    {/* Display tick if name meets validation criteria */}
-                    <span style={validName ? {} : {display: "none"}}>
-                        <FontAwesomeIcon icon={faCheck} />
-                    </span>
-                </label>
-                <StyledInput 
-                    type="text"
-                    id="username"
-                    ref={userRef}
-                    autoComplete="off"
-                    onChange={(e) => setUser(e.target.value)}
-                    required
-                    aria-invalid={validName ? "false" : "true"}
-                    aria-describedby="uidnote"
-                    onFocus={() => setUserFocus(true)}
-                    onBlur={() => setUserFocus(false)}
-                />
-                <p id="uidnote" style={userFocus && user && !validName ? {} : {display: "none"}}>
-                    <FontAwesomeIcon icon={faInfoCircle} />
-                    Only wits emails allowed. <br />
-                    Must begin with a letter or number. <br />
-                    Letter, numbers, special characters and dots allowed.
-                </p>
+        <PageContainer>
+            <Container>
+                <p ref={errRef} style={errMsg ? {} : {display: "none"}} aria-live="assertive">{errMsg}</p>
+                <StyledHeader>Register</StyledHeader>
+                <StyledForm onSubmit={HandleSubmit}>
+                {/* <StyledForm> */}
+                    {/* Input for the Email field */}
+                    <label htmlFor="username">
+                        Email: 
+                        {/* Display tick if name meets validation criteria */}
+                        <span style={validName ? {} : {display: "none"}}>
+                            <FontAwesomeIcon icon={faCheck} />
+                        </span>
+                    </label>
+                    <StyledInput 
+                        type="text"
+                        id="username"
+                        ref={userRef}
+                        autoComplete="off"
+                        onChange={(e) => setUser(e.target.value)}
+                        required
+                        aria-invalid={validName ? "false" : "true"}
+                        aria-describedby="uidnote"
+                        onFocus={() => setUserFocus(true)}
+                        onBlur={() => setUserFocus(false)}
+                    />
+                    <p id="uidnote" style={userFocus && user && !validName ? {} : {display: "none"}}>
+                        <FontAwesomeIcon icon={faInfoCircle} />
+                        Only wits emails allowed. <br />
+                        Must begin with a letter or number. <br />
+                        Letter, numbers, special characters and dots allowed.
+                    </p>
 
                 {/* Input for the Full Name field */}
-                <label htmlFor="fullname">
+                <label htmlFor="displayName">
                     Full Name: 
                     {/* Display tick based on validation criteria */}
-                    <span style={validFullName ? {} : {display: "none"}}>
+                    <span style={validDisplayName ? {} : {display: "none"}}>
                         <FontAwesomeIcon icon={faCheck} />
                     </span>
                 </label>
                 <StyledInput 
                     type="text"
-                    id="fullname"
+                    id="displayName"
                     //ref={userRef}
                     autoComplete="off"
-                    onChange={(e) => setFullName(e.target.value)}
+                    onChange={(e) => setDisplayName(e.target.value)}
                     required
-                    aria-invalid={validFullName ? "false" : "true"}
+                    aria-invalid={validDisplayName ? "false" : "true"}
                     aria-describedby="uidnote"
-                    onFocus={() => setFullNameFocus(true)}
-                    onBlur={() => setFullNameFocus(false)}
+                    onFocus={() => setDisplayNameFocus(true)}
+                    onBlur={() => setDisplayNameFocus(false)}
                 />
-                <p id="uidnote" style={fullNameFocus && fullName && !validFullName ? {} : {display: "none"}}>
+                <p id="uidnote" style={displayNameFocus && displayName && !validDisplayName ? {} : {display: "none"}}>
                     <FontAwesomeIcon icon={faInfoCircle} />
                     Please enter your full name. <br />
                 </p>
-                
 
-                {/* Input for the Pronouns field */}
-                <label htmlFor="location">
-                    Location: 
-                    {/* Display tick based on validation criteria */}
-                    <span style={validLocation ? {} : {display: "none"}}>
-                        <FontAwesomeIcon icon={faCheck} />
+                    {/* Input for the Pronouns field */}
+                    <label htmlFor="location">
+                        Location: 
+                        {/* Display tick based on validation criteria */}
+                        <span style={validLocation ? {} : {display: "none"}}>
+                            <FontAwesomeIcon icon={faCheck} />
+                        </span>
+                    </label>
+                    <StyledInput 
+                        type="text"
+                        id="location"
+                        //ref={userRef}
+                        autoComplete="off"
+                        onChange={(e) => setLocation(e.target.value)}
+                        required
+                        aria-invalid={validLocation ? "false" : "true"}
+                        aria-describedby="uidnote"
+                        onFocus={() => setLocationFocus(true)}
+                        onBlur={() => setLocationFocus(false)}
+                    />
+                    <p id="uidnote" style={locationFocus && location && !validLocation ? {} : {display: "none"}}>
+                        <FontAwesomeIcon icon={faInfoCircle} />
+                        Please enter what area you operate from. <br />
+                    </p>
+
+                    {/* Input for the Bio field */}
+                    <label htmlFor="bio">
+                        Bio: 
+                        {/* Display tick based on validation criteria */}
+                        <span style={validBio ? {} : {display: "none"}}>
+                            <FontAwesomeIcon icon={faCheck} />
+                        </span>
+                    </label>
+                    <StyledInput 
+                        type="text"
+                        id="bio"
+                        //ref={userRef}
+                        autoComplete="off"
+                        onChange={(e) => setBio(e.target.value)}
+                        required
+                        aria-invalid={validBio ? "false" : "true"}
+                        aria-describedby="uidnote"
+                        onFocus={() => setBioFocus(true)}
+                        onBlur={() => setBioFocus(false)}
+                    />
+                    <p id="uidnote" style={bioFocus && bio && !validBio ? {} : {display: "none"}}>
+                        <FontAwesomeIcon icon={faInfoCircle} />
+                        Please enter your bio. <br />
+                        Must be 1-280 characters. <br />
+                        Special characters allowed: .,-!
+                    </p>
+
+                    {/* Input for the Password field */}
+                    <label htmlFor="password">
+                        Password: 
+                        {/* Display Tick or Cross based on validation criteria */}
+                        <span style={validPwd ? {} : {display: "none"}}>
+                            <FontAwesomeIcon icon={faCheck} />
+                        </span>
+                    </label>
+                    <StyledInput 
+                        type="password"
+                        id="password"
+                        onChange={(e) => setPwd(e.target.value)}
+                        value={pwd}
+                        required
+                        aria-invalid={validPwd ? "false" : "true"}
+                        aria-describedby="pwdnote"
+                        onFocus={() => setPwdFocus(true)}
+                        onBlur={() => setPwdFocus(false)}
+                    />
+                    <p id="pwdnote" style={pwdFocus && !validPwd ? {} : {display: "none"}}>
+                        {/* <FontAwesomeIcon icon={faInfoCircle} /> */}
+                        8 to 24 characters. <br />
+                        Must include uppercase and lowercase letters, a number and a special character. <br />
+                        Special characters allowed: 
+                        <span aria-label="exclamation mark"> !</span>
+                        <span aria-label="at symbol">@</span>
+                        <span aria-label="hashtag">#</span>
+                        <span aria-label="dollar sign">$</span>
+                        <span aria-label="percent">%</span>
+                    </p>
+
+                    {/* Input for the Confirm Password field */}
+                    <label htmlFor="confirm_pwd">
+                        Confirm Password: 
+                    </label>
+                    <StyledInput 
+                        type="password"
+                        id="confirm_pwd"
+                        onChange={(e) => setMatchPwd(e.target.value)}
+                        value={matchPwd}
+                        required
+                        aria-invalid={validMatch ? "false" : "true"}
+                        aria-describedby="confirmnote"
+                        onFocus={() => setMatchFocus(true)}
+                        onBlur={() => setMatchFocus(false)}
+                    />
+                    <p id="confirmnote" style={matchFocus && !validMatch ? {} : {display: "none"}}>
+                        <FontAwesomeIcon icon={faInfoCircle} />
+                        Must match the first password input.
+                    </p>
+                    <input
+                    type="file"
+                    onChange={(event) => {
+                    setImageUpload(event.target.files[0]);
+                    }}
+                />
+
+                    <StyledButton onClick={HandleSubmit}>
+                        Sign Up
+                    </StyledButton>
+                </StyledForm>
+
+                <StyledParagraph>
+                    Already registered?<br />
+                    <span className="line">
+                        {/* Link to the Sign In page if user has an account */}
+                        <StyledLink href="/loginPage"><b>Sign In</b></StyledLink>
                     </span>
-                </label>
-                <StyledInput 
-                    type="text"
-                    id="location"
-                    //ref={userRef}
-                    autoComplete="off"
-                    onChange={(e) => setLocation(e.target.value)}
-                    required
-                    aria-invalid={validLocation ? "false" : "true"}
-                    aria-describedby="uidnote"
-                    onFocus={() => setLocationFocus(true)}
-                    onBlur={() => setLocationFocus(false)}
-                />
-                <p id="uidnote" style={locationFocus && location && !validLocation ? {} : {display: "none"}}>
-                    <FontAwesomeIcon icon={faInfoCircle} />
-                    Please enter what area you operate from. <br />
-                </p>
-
-                {/* Input for the Bio field */}
-                <label htmlFor="bio">
-                    Bio: 
-                    {/* Display tick based on validation criteria */}
-                    <span style={validBio ? {} : {display: "none"}}>
-                        <FontAwesomeIcon icon={faCheck} />
-                    </span>
-                </label>
-                <StyledInput 
-                    type="text"
-                    id="bio"
-                    //ref={userRef}
-                    autoComplete="off"
-                    onChange={(e) => setBio(e.target.value)}
-                    required
-                    aria-invalid={validBio ? "false" : "true"}
-                    aria-describedby="uidnote"
-                    onFocus={() => setBioFocus(true)}
-                    onBlur={() => setBioFocus(false)}
-                />
-                <p id="uidnote" style={bioFocus && bio && !validBio ? {} : {display: "none"}}>
-                    <FontAwesomeIcon icon={faInfoCircle} />
-                    Please enter your bio. <br />
-                    Must be 1-280 characters. <br />
-                    Special characters allowed: .,-!
-                </p>
-
-                {/* Input for the Password field */}
-                <label htmlFor="password">
-                    Password: 
-                    {/* Display Tick or Cross based on validation criteria */}
-                    <span style={validPwd ? {} : {display: "none"}}>
-                        <FontAwesomeIcon icon={faCheck} />
-                    </span>
-                </label>
-                <StyledInput 
-                    type="password"
-                    id="password"
-                    onChange={(e) => setPwd(e.target.value)}
-                    value={pwd}
-                    required
-                    aria-invalid={validPwd ? "false" : "true"}
-                    aria-describedby="pwdnote"
-                    onFocus={() => setPwdFocus(true)}
-                    onBlur={() => setPwdFocus(false)}
-                />
-                <p id="pwdnote" style={pwdFocus && !validPwd ? {} : {display: "none"}}>
-                    {/* <FontAwesomeIcon icon={faInfoCircle} /> */}
-                    8 to 24 characters. <br />
-                    Must include uppercase and lowercase letters, a number and a special character. <br />
-                    Special characters allowed: 
-                    <span aria-label="exclamation mark"> !</span>
-                    <span aria-label="at symbol">@</span>
-                    <span aria-label="hashtag">#</span>
-                    <span aria-label="dollar sign">$</span>
-                    <span aria-label="percent">%</span>
-                </p>
-
-                {/* Input for the Confirm Password field */}
-                <label htmlFor="confirm_pwd">
-                    Confirm Password: 
-                </label>
-                <StyledInput 
-                    type="password"
-                    id="confirm_pwd"
-                    onChange={(e) => setMatchPwd(e.target.value)}
-                    value={matchPwd}
-                    required
-                    aria-invalid={validMatch ? "false" : "true"}
-                    aria-describedby="confirmnote"
-                    onFocus={() => setMatchFocus(true)}
-                    onBlur={() => setMatchFocus(false)}
-                />
-                <p id="confirmnote" style={matchFocus && !validMatch ? {} : {display: "none"}}>
-                    <FontAwesomeIcon icon={faInfoCircle} />
-                    Must match the first password input.
-                </p>
-
-                <StyledButton onClick={HandleSubmit}>
-                    Sign Up
-                </StyledButton>
-            </StyledForm>
-
-            <StyledParagraph>
-                Already registered?<br />
-                <span className="line">
-                    {/* Link to the Sign In page if user has an account */}
-                    <StyledLink href="/loginPage"><b>Sign In</b></StyledLink>
-                </span>
-            </StyledParagraph>
-        </Container>
+                </StyledParagraph>
+            </Container>
+        </PageContainer>
     )
 }
 

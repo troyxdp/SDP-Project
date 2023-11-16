@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState, useMemo } from "react";
 import styled from "styled-components";
+import x_solid from "../profile-pics/x-solid.svg";
 
 const Container = styled.div`
     padding: 15px 0;
@@ -18,6 +19,12 @@ const StyledInput = styled.input`
     box-sizing: border-box;
     padding: 15px 0 15px 10px;
     margin-bottom: 2px;
+`;
+const StyledSubheader = styled.h2`
+  font-size: 1.5rem;
+  margin-top: 8px;
+  margin-bottom: 0px;
+  font-weight: bold; 
 `;
 const AdderInput = styled.input`
     display: flex;
@@ -50,6 +57,13 @@ const StyledButton = styled.button`
     color: white;
     margin-top: 10px;
 `;
+const AdderContainer = styled.div`
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    padding-top: 5px;
+    padding-bottom: 5px;
+`;
 const AdderButton = styled.button`
     display: inline-block;
     border: 0px solid #fff;
@@ -63,16 +77,44 @@ const StyledCheckboxContainer = styled.div`
     flex-direction: column;
     align-items: left;
 `;
-const AdderContainer = styled.div`
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    padding-top: 5px;
-    padding-bottom: 5px;
-`;
 const StyledLabel = styled.label`
     margin-top: 5px;
     margin-bottom: 2px;
+`;
+const ListBox = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+    justify-content: center;
+    margin-bottom: 8px;
+`;
+const ListBoxElement = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #444; 
+    padding: 10px; 
+    width: 375px;
+    max-width: 375px;
+    height: 12px;
+    max-height: 12px;
+    border: 2px solid #808080;
+    border-radius: 8px;
+    margin-top: 2px;
+`;
+const TwoLineListBoxElement = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #444; 
+    padding: 10px; 
+    width: 475px;
+    max-width: 475px;
+    height: 28px;
+    max-height: 28px;
+    border: 2px solid #808080;
+    border-radius: 8px;
+    margin-top: 2px;
 `;
 
 //REGEX expressions
@@ -93,9 +135,9 @@ export function PerformerDetailsForm({parentCallback}) {
         {value: "DJ", label: "DJ"},
         {value: "Vocalist", label: "Vocalist"},
         {value: "Guitarist", label: "Guitarist"},
-        {value: "BassGuitarist", label: "Bass Guitarist"},
+        {value: "Bass Guitarist", label: "Bass Guitarist"},
         {value: "Drummer", label: "Drummer"},
-        {value: "Pianist", label: "Pianist/Keyboardist"},
+        {value: "Pianist/Keyboardist", label: "Pianist/Keyboardist"},
         {value: "Saxophonist", label: "Saxophonist"},
         {value: "Trumpeter", label: "Trumpeter"},
         {value: "Violinist", label: "Violinist"},
@@ -106,10 +148,10 @@ export function PerformerDetailsForm({parentCallback}) {
         {value: "House", label: "House"},
         {value: "Techno", label: "Techno"},
         {value: "Trance", label: "Trance"},
-        {value: "DrumNBass", label: "Drum 'n Bass"},
+        {value: "Drum 'n Bass", label: "Drum 'n Bass"},
         {value: "Amapiano", label: "Amapiano"},
-        {value: "AfroTech", label: "Afro Tech"},
-        {value: "AfroHouse", label: "Afro House"},
+        {value: "Afro Tech", label: "Afro Tech"},
+        {value: "Afro House", label: "Afro House"},
         {value: "Hip Hop", label: "Hip Hop"},
         {value: "Pop", label: "Pop"},
         {value: "Rock", label: "Rock"},
@@ -151,6 +193,10 @@ export function PerformerDetailsForm({parentCallback}) {
     const [isValidPerformerName, setIsValidPerformerName] = useState(false);
     const [isValidLinkToAdd, setIsValidLinkToAdd] = useState(false);
 
+    //useStates for error message display
+    const [isDisplayErrorMsg, setIsDisplayErrorMsg] = useState(false);
+    const [errMsg, setErrMsg] = useState("");
+
     //useEffects to check if an enterred fields are valid
     //checks performer name
     useEffect(() => {
@@ -167,6 +213,37 @@ export function PerformerDetailsForm({parentCallback}) {
         setIsValidLinkToAdd(result);
     }, [linkToAdd])
 
+    //useEffect for storing list box displays of equipment items and a method for updating the useState
+    const [equipmentListBoxDisplays, setEquipmentListDisplays] = useState([]);
+    const createEquipmentListDisplay = async (equipment) => {
+        const equipDisplays = [];
+        for (let i = 0; i < equipment.length; i++)
+        {
+            equipDisplays.push(
+                <ListBoxElement>
+                    <p>{equipment[i]}</p>
+                    <img style={{ width : 12, height: 12, borderRadius: 0 }} src={x_solid} alt="x_solid" onClick={() => handleRemoveEquipmentItem(i)}/>
+                </ListBoxElement>
+            );
+        }
+        setEquipmentListDisplays(equipDisplays);
+    };
+
+    //useState for storing list box displays of links and a method for updating the useState
+    const [linkListBoxDisplays, setLinkListBoxDisplays] = useState([]);
+    const createLinkListDisplay = async (links) => {
+        const linkDisplays = [];
+        for (let i = 0; i < links.length; i++)
+        {
+            linkDisplays.push(
+                <ListBoxElement>
+                    <a href={links[i]}>{links[i]}</a>
+                    <img style={{ width : 12, height: 12, borderRadius: 0 }} src={x_solid} alt="x_solid" onClick={() => handleRemoveLink(i)}/>
+                </ListBoxElement>
+            );
+        }
+        setLinkListBoxDisplays(linkDisplays);
+    }
     //method that is executed when form is submitted
     const handleSubmit = async (e) => {
         let genres = [];
@@ -178,10 +255,11 @@ export function PerformerDetailsForm({parentCallback}) {
             }
         }
 
+        let isSuccessfulCallback = false;
         //check to see that performer name is valid and if it is execute callback function, otherwise display error
         if (isValidPerformerName)
         {
-            callback(performerName, type, genres, equipment, hourlyRate, links, media);
+            isSuccessfulCallback = await callback(performerName, type, genres, equipment, hourlyRate, links, media);
             e.preventDefault();
         }
         else
@@ -192,16 +270,26 @@ export function PerformerDetailsForm({parentCallback}) {
             console.log(performerName);
         }
 
-        //reset all the fields back to empty
-        setPerformerName("");
-        setType("");
-        setEquipment([]);
-        setEquipmentItem("");
-        setLinks([]);
-        setLinkToAdd("");
-        setGenresSelected(genresSelectedInitializer);
+        if (isSuccessfulCallback)
+        {
+            //reset all the fields back to empty
+            setPerformerName("");
+            setType("");
+            setEquipment([]);
+            setEquipmentItem("");
+            setLinks([]);
+            setLinkToAdd("");
+            setGenresSelected(genresSelectedInitializer);
+            setIsDisplayErrorMsg(false);
+        }
+        else
+        {
+            setIsDisplayErrorMsg(true);
+            setErrMsg("Error: please add details for a type you haven't already added details for.")
+        }
     }
 
+    //methods for handling input and modification of data
     const handleGenreSelectedChange = async (index) => {
         let currGenresSelected = genresSelected;
         currGenresSelected[index] = !currGenresSelected[index];
@@ -222,6 +310,7 @@ export function PerformerDetailsForm({parentCallback}) {
         currEquipment.push(equipmentItem);
         setEquipment(currEquipment);
         setEquipmentItem("");
+        createEquipmentListDisplay(currEquipment);
         console.log(equipment);
     }
     const handleAddLink = async () => {
@@ -243,9 +332,22 @@ export function PerformerDetailsForm({parentCallback}) {
                 currLinks.push(linkToAdd);
                 setLinks(currLinks);
                 setLinkToAdd("");
+                createLinkListDisplay(currLinks);
                 console.log(links);
             }
         }
+    }
+    const handleRemoveEquipmentItem = async (index) => {
+        const equipmentList = equipment;
+        equipmentList.splice(index, 1);
+        setEquipment(equipmentList);
+        createEquipmentListDisplay(equipmentList);
+    }
+    const handleRemoveLink = async (index) => {
+        const linkList = links;
+        linkList.splice(index, 1);
+        setLinks(linkList);
+        createLinkListDisplay(linkList);
     }
 
     //create genre checkbox components array for rendering
@@ -267,6 +369,7 @@ export function PerformerDetailsForm({parentCallback}) {
     return(
         <Container>
             <DetailsFormDiv>
+                <StyledSubheader>Create Performer Details:</StyledSubheader>
                 <StyledLabel htmlFor="performerName">
                         Performer Name:
                 </StyledLabel>
@@ -325,6 +428,10 @@ export function PerformerDetailsForm({parentCallback}) {
                     Please enter a non-empty value.
                 </p>
 
+                <ListBox>
+                    {equipmentListBoxDisplays}
+                </ListBox>
+
                 <StyledLabel htmlFor="hourlyRate">
                     Hourly Rate:
                 </StyledLabel>
@@ -360,10 +467,17 @@ export function PerformerDetailsForm({parentCallback}) {
                     Error: Invalid link entered. <br/>
                     Please enter a valid link.
                 </p>
+                <ListBox>
+                    {linkListBoxDisplays}
+                </ListBox>
 
                 <StyledButton onClick={handleSubmit}>
                     Save Details
                 </StyledButton>
+
+                {isDisplayErrorMsg && 
+                    <p>{errMsg}</p>
+                }
             </DetailsFormDiv>
         </Container>
     );

@@ -6,12 +6,19 @@ import styled from "styled-components";
 import { EventPlannerDetailsForm } from "../components/EventPlannerDetailsForm";
 import { PerformerDetailsForm } from "../components/PerformerDetailsForm";
 import { db } from '../firebase-config/firebase';
+import { ref, uploadBytes, getDownloadURL, listAll } from "firebase/storage";
+import { storage } from "../firebase-config/firebase";
+import { v4 } from "uuid";
 
-const StyledHeader = styled.h1`
-    font-size: 2.1rem;
-    font-weight: bold;
-    margin-top: 5px;
-    margin-bottom: 5px;
+const PageContainer = styled.div`
+    position: fixed;
+    top: 40px;
+    left: 40px;
+    right: 40px;
+    bottom: 40px;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 10px;
 `;
 const Container = styled.div`
     padding: 15px 0;
@@ -24,6 +31,12 @@ const StyledCheckboxContainer = styled.div`
     display: flex;
     flex-direction: column;
     align-items: left;
+`;
+const StyledHeader = styled.h1`
+    font-size: 2.1rem;
+    font-weight: bold;
+    margin-top: 5px;
+    margin-bottom: 5px;
 `;
 const StyledButton = styled.button`
     display: inline-block;
@@ -55,31 +68,34 @@ const DisplayFormButton = styled.button`
 
 /*
     TO-DO:
-    - Add error messages for invalid details enterred
-    - Add the functionality of being able to have multiple forms and multiple submissions
-    - See if there is a way to add multiple documents at the same time instead of adding each performer type details one at a time
-    - Add submission of equipment item or link in AdderContainer on the pressing of the enter key
 */
 
 export default function DetailsPage() {
-    //fetch email from session storage
-    let email = sessionStorage.getItem("userEmail");
-    let usrData = useLocation().state.usrData;
+//fetch email from session storage
 
-    let userData = {
-        email: email,
-        fullName: usrData.fullName,
-        location: usrData.location,
-        bio: usrData.bio,
-        profilePic: usrData.profilePic,
-        isPerformer: false,
-        isEventPlanner: false,
-        isInGroup: false
-    };
+const email = sessionStorage.getItem("userEmail");
+const usrData = useLocation().state.usrData;
+const profilePic = useLocation().state.usrData.profilePic;
+const isProfilePic = profilePic !== null;
+
+let userData = {
+    email: email,
+    displayName: usrData.displayName,
+    searchName: usrData.displayName.toLowerCase(),
+    location: usrData.location,
+    bio: usrData.bio,
+    profilePic: isProfilePic,
+    isPerformer: false,
+    isEventPlanner: false,
+    isInGroup: false
+};
 
     //useState to store user data fetched from database that has already been added
     const [user, setUser] = useState(userData);
     const [pwd, setPwd] = useState(usrData.password);
+    const [imageUrls, setImageUrls] = useState([]);
+
+    
 
     //useState for performer details
     const [isPerformer, setIsPerformer] = useState(false);
@@ -97,7 +113,7 @@ export default function DetailsPage() {
     const [isTypeSelected, setIsTypeSelected] = useState(true);
 
     //callback functions called by the PerformerDetails and EventPlannerDetails forms to get their data
-    const onSubmitPerformerDetails = (name, type, genres, equipment, hourlyRate, links, media) => {
+    const onSubmitPerformerDetails = async (name, type, genres, equipment, hourlyRate, links, media) => {
         let currPerformerDetails = performerDetails;
 
         //checks if the user has already listed performance details of a certain type of performer - can't have two sets of details for one type
@@ -118,8 +134,6 @@ export default function DetailsPage() {
             genres : genres,
             equipment : equipment,
             hourlyRate : hourlyRate,
-            pastEvents : [],
-            upcomingEvents : [],
             links : links,
             media : media
         };
@@ -142,13 +156,13 @@ export default function DetailsPage() {
 
         console.log("New Performer Details:");
         console.log(performerDetails);
+
+        return true;
     }
     const onSubmitEventPlannerDetails = (types, links) => {
         let newEventPlannerDetails = {
             userEmail : email,
             types : types,
-            pastEvents : [],
-            upcomingEvents : [],
             links : links,
             media : []
         }
@@ -173,7 +187,8 @@ export default function DetailsPage() {
         {
             try
             {
-                await createUserWithEmailAndPassword(getAuth(), email, pwd);
+                await createUserWithEmailAndPassword(getAuth(), email, pwd)
+               
             }
             catch (err)
             {
@@ -197,6 +212,33 @@ export default function DetailsPage() {
             //try add the details to the firebase
             try
             {
+                // upload to storage
+                const storageRef = ref(storage, `users/${email}/images/`);
+                //=========================
+                const handleUpload = async () => {
+                    if (profilePic !== null || email !== "") {
+                      console.log("Uploading image");
+                  
+                      try {
+                        const imageRef = ref(storageRef, `profile_photo_${v4()}_${profilePic.name}`);
+                        const snapshot = await uploadBytes(imageRef, profilePic);
+                        const url = await getDownloadURL(snapshot.ref);
+                  
+                        setImageUrls((prev) => [...prev, url]);
+                      } catch (error) {
+                        console.error("Error uploading image:", error);
+                      }
+                    }
+                  };
+                  
+                  // ... (other code)
+                  
+                  // Call handleUpload when needed
+                  // For example, in response to a user action or an event
+                  handleUpload();
+
+                //=========================
+
                 //reference to document in database
                 const userDocRef = doc(db, "users", email);
                 await setDoc(userDocRef, currUser);
@@ -217,10 +259,6 @@ export default function DetailsPage() {
                         await addDoc(performerInfoCollection, performerDetails[i]);
                     }
                 }
-                
-                //commenting out the reviewCollection because when they first create their page there will be no reviews
-                //const reviewCollection = collection(db, "users", userDocRef.id, "reviews");
-                //await addDoc(reviewCollection, dummyReview);
             }
             catch (err)
             {
@@ -238,67 +276,70 @@ export default function DetailsPage() {
     }
 
     return(
-        <Container>
-            <StyledHeader>
-                User Details
-            </StyledHeader>
-            <p>
-                What type/s of user are you?
-            </p>
-            <StyledCheckboxContainer>
-                <label>
-                    <input 
-                        type="checkbox"
-                        value={displayAddPerformerButton}
-                        onChange={handleDisplayPerformerDetailsChange}
-                    />
-                    I am a performer
-                </label>
-                <label>
-                    <input 
-                        type="checkbox"
-                        value={displayEventPlannerForm}
-                        onChange={(e) => setDisplayEventPlannerForm(!displayEventPlannerForm)}
-                    />
-                    I am an event planner
-                </label>
-            </StyledCheckboxContainer>
-
-            {displayAddPerformerButton && !displayPerformerForm &&
-                <DisplayOptionContainer onClick={() => setDisplayPerformerForm(true)}>
-                    <DisplayFormButton>+</DisplayFormButton>
+        <PageContainer>
+            <Container>
+                <StyledHeader>
+                    User Details
+                </StyledHeader>
+                <p>
+                    What type/s of user are you?
+                </p>
+                <StyledCheckboxContainer>
                     <label>
-                        Add Performer Details
+                        <input 
+                            type="checkbox"
+                            value={displayAddPerformerButton}
+                            onChange={handleDisplayPerformerDetailsChange}
+                        />
+                        I am a performer
                     </label>
-                </DisplayOptionContainer>
-            }
-            {displayAddPerformerButton && displayPerformerForm &&
-                <DisplayOptionContainer onClick={() => setDisplayPerformerForm(false)}>
-                    <DisplayFormButton>-</DisplayFormButton>
                     <label>
-                        Hide Form
+                        <input 
+                            type="checkbox"
+                            value={displayEventPlannerForm}
+                            onChange={(e) => setDisplayEventPlannerForm(!displayEventPlannerForm)}
+                        />
+                        I am an event planner
                     </label>
-                </DisplayOptionContainer>
-            }
+                </StyledCheckboxContainer>
 
-            {/* Form for inputting performer details */}
-            {displayPerformerForm &&
-                <PerformerDetailsForm parentCallback={onSubmitPerformerDetails}/>
-            }
+                {displayAddPerformerButton && !displayPerformerForm &&
+                    <DisplayOptionContainer onClick={() => setDisplayPerformerForm(true)}>
+                        <DisplayFormButton>+</DisplayFormButton>
+                        <label>
+                            Add Performer Details
+                        </label>
+                    </DisplayOptionContainer>
+                }
+                {displayAddPerformerButton && displayPerformerForm &&
+                    <DisplayOptionContainer onClick={() => setDisplayPerformerForm(false)}>
+                        <DisplayFormButton>-</DisplayFormButton>
+                        <label>
+                            Hide Form
+                        </label>
+                    </DisplayOptionContainer>
+                }
 
-            {/* Form for inputting event planner details */}
-            {displayEventPlannerForm &&
-                <EventPlannerDetailsForm parentCallback={onSubmitEventPlannerDetails}/>
-            }
+                {/* Form for inputting performer details */}
+                {displayPerformerForm &&
+                    <PerformerDetailsForm parentCallback={onSubmitPerformerDetails}/>
+                }
 
-            <StyledButton onClick={handleSubmit}>
-                Submit All Details
-            </StyledButton>
+                {/* Form for inputting event planner details */}
+                {displayEventPlannerForm &&
+                    <EventPlannerDetailsForm parentCallback={onSubmitEventPlannerDetails}/>
+                }
+              
 
-            <p id="uidnote" style={!isTypeSelected ? {} : {display: "none"}}>
-                    {/* <FontAwesomeIcon icon={faInfoCircle} /> */}
-                    Error: Please select a type and input details for it.<br/>
-            </p>
-    </Container>
+                <StyledButton onClick={handleSubmit}>
+                    Submit All Details
+                </StyledButton>
+
+                <p id="uidnote" style={!isTypeSelected ? {} : {display: "none"}}>
+                        {/* <FontAwesomeIcon icon={faInfoCircle} /> */}
+                        Error: Please select a type and input details for it.<br/>
+                </p>
+            </Container>
+        </PageContainer>
     )
 }
