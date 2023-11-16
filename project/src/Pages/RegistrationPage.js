@@ -99,9 +99,6 @@ const RegistrationPage = () => {
     const [validName, setValidName] = useState(false);
     const [userFocus, setUserFocus] = useState(false);
 
-    // profile photo
-    const[imageUpload,setImageUpload] = useState("Null");
-
     //Consts for Password
     const [pwd,setPwd] = useState('');
     const [validPwd, setValidPwd] = useState(false);
@@ -184,9 +181,6 @@ const RegistrationPage = () => {
             return;
         } // End of precaution.
 
-        if (imageUpload === undefined){
-            imageUpload = null
-        }
         const usrData = {
             email : user,
             password : pwd,
@@ -194,7 +188,7 @@ const RegistrationPage = () => {
             searchName : displayName.toLowerCase(),
             location : location,
             bio : bio,
-            profilePic : imageUpload,
+            profilePic : null,
             eventPlannerInfo : null,
             isPerformer : false,
             isEventPlanner : false,
@@ -392,12 +386,6 @@ const RegistrationPage = () => {
                         <FontAwesomeIcon icon={faInfoCircle} />
                         Must match the first password input.
                     </p>
-                    <input
-                    type="file"
-                    onChange={(event) => {
-                    setImageUpload(event.target.files[0]);
-                    }}
-                />
 
                     <StyledButton onClick={HandleSubmit}>
                         Sign Up
