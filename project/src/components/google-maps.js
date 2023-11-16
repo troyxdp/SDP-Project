@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import PlacesAutocomplete, { geocodeByAddress, getLatLng } from 'react-places-autocomplete';
 
+
 const Map = ({ onCoordinatesChange }) => {
 
     const mapStyles = {
@@ -13,6 +14,7 @@ const Map = ({ onCoordinatesChange }) => {
         lat: -26.186129990422717, 
         lng: 28.029252482000715,
       }
+      
 
   const apiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
   console.log(apiKey)
