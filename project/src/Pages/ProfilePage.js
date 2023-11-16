@@ -766,13 +766,7 @@ const ProfilePage = () => {
                   }
                 </BottomDiv>
               }
-<<<<<<< Updated upstream
-=======
 
-            
-                
-
->>>>>>> Stashed changes
               {!displayReviews && 
                 <>
                   <StyledHeader>Friends:</StyledHeader>
