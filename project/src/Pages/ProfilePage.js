@@ -665,7 +665,12 @@ const ProfilePage = () => {
                   </UserDetailsContainer>
                 }
                 {displayGroupDetails &&
-                  <p>DISPLAY HERE: GroupDetailsProfileOverview components</p>
+                  <UserDetailsContainer>
+                  <StyledHeader>Group Details23S:</StyledHeader>
+                  <GroupDetailsContainer>
+                      {groupDetailsOverviewComponents}
+                      </GroupDetailsContainer>
+                </UserDetailsContainer>
                 }
               </BottomPanel>
 
@@ -715,6 +720,13 @@ const ProfilePage = () => {
                   }
                 </BottomDiv>
               }
+<<<<<<< Updated upstream
+=======
+
+            
+                
+
+>>>>>>> Stashed changes
               {!displayReviews && 
                 <>
                   <StyledHeader>Friends:</StyledHeader>
