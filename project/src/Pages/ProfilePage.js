@@ -13,6 +13,7 @@ import {NavigationBar} from "../components/NavigationBar";
 import { db } from '../firebase-config/firebase';
 import dummy_profile_pic from "../profile-pics/dummy-profile-pic.jpg";
 import no_profile_pic from "../profile-pics/no-profile-pic-image.jpg";
+import ImageUploader from "../components/Imageupload";
 
 const PageContainer = styled.div`
     position: fixed;
@@ -665,6 +666,7 @@ const ProfilePage = () => {
                   <Detail><b>Location:</b> {user.location}</Detail>
                   <Detail>{user.bio}</Detail>
                 </DetailsBox>
+                <ImageUploader userEmail={userEmail}/>
               </TopPanel>
 
               <BottomPanel>
