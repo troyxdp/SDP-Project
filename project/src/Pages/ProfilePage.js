@@ -4,6 +4,7 @@ import {useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { EventPlannerDetailsProfileOverview } from "../components/EventPlannerDetailsProfileOverview";
 import { PerformerDetailsProfileOverview } from "../components/PerformerDetailsProfileOverview";
+import { GroupDetailsProfileOverview } from "../components/GroupDetailsProfileOverview";
 import {NavigationBar} from "../components/NavigationBar";
 import { db } from '../firebase-config/firebase';
 import dummy_profile_pic from "../profile-pics/dummy-profile-pic.jpg";
@@ -22,6 +23,16 @@ const UserDetailsContainer = styled.div`
   align-items: left;
 `;
 const PerformerDetailsContainer = styled.div`
+  padding: 0px;
+  margin-bottom: 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: left;
+  overflow-x: hidden;
+  overflow-y: auto;
+`;
+
+const GroupDetailsContainer = styled.div`
   padding: 0px;
   margin-bottom: 3px;
   display: flex;
@@ -207,7 +218,17 @@ const ProfilePage = () => {
         }
 
         //add importing of group details
-
+        if (userData.isInGroup)
+        {
+          const currGroupDetails = [];
+          const querySnapshot = await getDocs(collection(db, "users", userEmail, "groupInfo"));
+          querySnapshot.forEach((doc) => {
+            // doc.data() is never undefined for query doc snapshots
+            console.log(doc.id, " => ", doc.data());
+            currGroupDetails.push(doc.data());
+          });
+          setGroupDetails(currGroupDetails);
+        }
         //add moving of events from upcoming to past based on current date and time
       };
       getUserData();
@@ -262,7 +283,23 @@ const ProfilePage = () => {
         );
       }
     }
-
+    const groupDetailsOverviewComponents = [];
+    if (user.isInGroup)
+    {
+      for (let i = 0; i < groupDetails.length; i++)
+      {
+        groupDetailsOverviewComponents.push(
+          <GroupDetailsProfileOverview
+            groupname={groupDetails[i].groupName}
+            groupdescription={groupDetails[i].groupDescription}
+            genres={groupDetails[i].genres}
+            groupmembers={groupDetails[i].groupMembers}
+           
+            
+          />
+        );
+      }
+    }
     //handle navigation to other pages
     let navigate = useNavigate();
     const goToCreateEventPage = async (e) => {
@@ -414,7 +451,12 @@ const ProfilePage = () => {
                 </UserDetailsContainer>
               }
               {displayGroupDetails &&
-                <p>DISPLAY HERE: GroupDetailsProfileOverview components</p>
+                <UserDetailsContainer>
+                <StyledHeader>Group Details23S:</StyledHeader>
+                <GroupDetailsContainer>
+                    {groupDetailsOverviewComponents}
+                    </GroupDetailsContainer>
+              </UserDetailsContainer>
               }
             </BottomPanel>
           </HorizontalPanel>

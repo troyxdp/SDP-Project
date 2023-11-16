@@ -1,6 +1,6 @@
 import {NavigationBar} from "../components/NavigationBar";
 import styled from "styled-components";
-import { doc, updateDoc, addDoc, collection, getDoc, getDocs} from "firebase/firestore";
+import { doc, updateDoc, addDoc, collection, getDoc, getDocs,setDoc} from "firebase/firestore";
 import { db } from '../firebase-config/firebase';
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation} from "react-router-dom";
@@ -170,7 +170,7 @@ const CreateGroupPage = () => {
       
               let userData = {
                   email : email,
-                  fullName : docSnap.data().fullName,
+                  displayName : docSnap.data().fullName,
                   location : docSnap.data().location,
                   bio : docSnap.data().bio,
                   profilePic : docSnap.data().profilePic,
@@ -178,9 +178,10 @@ const CreateGroupPage = () => {
                   isEventPlanner : docSnap.data().isEventPlanner,
                   isInGroup : docSnap.data().isInGroup
               }
+              
               setUser(userData);
   
-              const querySnapshot = await getDocs(collection(db, "users", email, "groupInfo"));
+              const querySnapshot = await getDocs(collection(db, "users",email,"groupInfo"));
               querySnapshot.forEach((doc) => {
                   setGroupDetails(doc.data());
                   setDocId(doc.id);
@@ -290,16 +291,22 @@ const sendMemberRequest = async (user) => {
             profilePic:null,
             groupMembers: [email], 
             groupDescription: description, 
-            genres: genres,
+            genres: genres
             
         };
 
+        let currUser=user;
+        const userDocRef = doc(db, "users", email);
+        await setDoc(userDocRef, currUser);
        
-        const currGroups = groupDetails;
-        currGroups.push(newGroup);
-        const groupDetailsRef = doc(db, "users", email, "groupInfo", docId);
-        await updateDoc(groupDetailsRef,{groupDetails:newGroup});
-
+       
+        
+        const groupDetailsRef = collection(db, "users", userDocRef.id, "groupInfo");
+        setGroupDetails(newGroup)
+        await addDoc(groupDetailsRef,newGroup);
+        
+        user.isInGroup=true;
+        await updateDoc(userDocRef,user);
         for (let i = 0; i < otherMemberEmails.length; i++)
         {
             sendMemberRequest(otherMemberEmails[i]);
