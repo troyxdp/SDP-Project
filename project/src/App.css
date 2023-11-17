@@ -1,6 +1,6 @@
 .container {
     display: grid;
-    grid-template-columns: 1fr 0.5fr; /* Three columns: two flexible and one 200px wide */
+    grid-template-columns: 1fr 1fr; /* Three columns: two flexible and one 200px wide */
     height: 100vh;
   }
   
