@@ -210,6 +210,10 @@ export default function DetailsPage() {
                 await setDoc(userDocRef, currUser);
                 console.log("ID: " + userDocRef.id);
 
+
+                await setDoc(doc(db, "userChats", email), currUser);
+
+
                 if (isEventPlanner)
                 {
                     const eventPlannerInfoCollection = collection(db, "users", userDocRef.id, "eventPlannerInfo");
