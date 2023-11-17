@@ -45,17 +45,17 @@ const ImageUploader = ({ userEmail }) => {
 
   useEffect(() => {
     if (userEmail === "") return;
-
+  
     listAll(storageRef)
       .then((response) => {
         const promises = response.items.map((item) => {
           return getDownloadURL(item).then((url) => {
-            if (getImageType(url) === "image" || getImageType(url) === "audio") {
+            if (url.toLowerCase().includes("social_media") && (getImageType(url) === "image" || getImageType(url) === "audio" || getImageType(url) === "video")) {
               return url;
             }
           });
         });
-
+  
         return Promise.all(promises);
       })
       .then((filteredUrls) => {
@@ -66,6 +66,7 @@ const ImageUploader = ({ userEmail }) => {
         console.error("Error loading files:", error);
       });
   }, [userEmail, storageRef]);
+  
 
   return (
     <div>
