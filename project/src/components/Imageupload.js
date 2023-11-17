@@ -14,6 +14,7 @@ const ImageUploader = ({ userEmail }) => {
     if (lowercasedUrl.includes(".mp4")) {
       return "video";
     } else if (
+      
       lowercasedUrl.includes(".jpg") ||
       lowercasedUrl.includes(".jpeg") ||
       lowercasedUrl.includes(".png") ||
@@ -80,11 +81,16 @@ const ImageUploader = ({ userEmail }) => {
       {imageUrls.map((url, index) => (
         <div key={index}>
           {getImageType(url) === "image" && (
-            <img style={{ width: 135, height: 135, borderRadius: 135 }} src={url} alt={`image-${index}`} />
+            <img style={{ width: 200, height: 200, display:'inline' }} src={url} alt={`image-${index}`} />
           )}
           {getImageType(url) === "audio" && (
-            <audio controls src={url} type="audio/mp3" />
+            <audio controls src={url} display='inline' type="audio/mp3" />
           )}
+         {getImageType(url) === "video" && (
+
+            <video controls width="200" height="200" src={url} type="video/mp4" />
+          )}
+
         </div>
       ))}
     </div>
