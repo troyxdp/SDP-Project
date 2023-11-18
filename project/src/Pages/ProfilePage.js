@@ -11,10 +11,10 @@ import { ReviewDisplay } from "../components/ReviewDisplay";
 
 import {NavigationBar} from "../components/NavigationBar";
 import { db } from '../firebase-config/firebase';
-import dummy_profile_pic from "../profile-pics/dummy-profile-pic.jpg";
-import no_profile_pic from "../profile-pics/no-profile-pic-image.jpg";
+
 import ImageUploader from "../components/Imageupload";
 
+import Propic from "../components/loadprofilepicture";
 const PageContainer = styled.div`
     position: fixed;
     top: 40px;
@@ -521,12 +521,10 @@ const ProfilePage = () => {
     }
 
     //empty profile pic and dummy profile pic - to be replaced by profile pic imported from database
-    let profilePic = [<img style={{ width : 135, height: 135, borderRadius: 135 }} src={no_profile_pic} alt="Profile" />];
-    if (isProfilePic)
-    {
-      profilePic = [<img style={{ width : 135, height: 135, borderRadius: 135 }} src={dummy_profile_pic} alt="dummy profile pic" />];
-    }
-
+    
+    
+    
+    
     //method to send friend request if it is not user's profile
     const sendFriendRequest = async () => {
       if (userEmail !== profileEmail) //double-check profile is not user's profile
@@ -658,8 +656,7 @@ const ProfilePage = () => {
                     </CreateButton>
                   </CreationButtonsBox>
                 }
-                <StyledHeader>Profile Page</StyledHeader>
-                {profilePic}
+                <Propic userEmail={userEmail}/>
                 <Name>{user.displayName}</Name>
                 <DetailsBox>
                   <Detail><b>Email:</b> {user.email}</Detail>

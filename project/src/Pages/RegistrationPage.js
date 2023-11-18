@@ -7,6 +7,7 @@ import {getAuth,createUserWithEmailAndPassword} from "firebase/auth";
 import { doc, setDoc, collection, addDoc, getDoc } from "firebase/firestore";
 import { db } from '../firebase-config/firebase';
 import Map from "../components/google-maps"
+import ProfilePicture from "../components/uploadprofilepic";
 
 // Check for one instance before @; Check for @; Check for "wits.ac.za" or "students.wits.ac.za".
 const USER_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+(\.[a-zA-Z0-9.-]+){0,3}$/;
@@ -386,7 +387,7 @@ const RegistrationPage = () => {
                         <FontAwesomeIcon icon={faInfoCircle} />
                         Must match the first password input.
                     </p>
-
+                
                     <StyledButton onClick={HandleSubmit}>
                         Sign Up
                     </StyledButton>

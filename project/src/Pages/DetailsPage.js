@@ -6,6 +6,7 @@ import styled from "styled-components";
 import { EventPlannerDetailsForm } from "../components/EventPlannerDetailsForm";
 import { PerformerDetailsForm } from "../components/PerformerDetailsForm";
 import { db } from '../firebase-config/firebase';
+import ProfilePicture from "../components/uploadprofilepic";
 
 const PageContainer = styled.div`
     position: fixed;
@@ -299,7 +300,7 @@ export default function DetailsPage() {
                 {displayEventPlannerForm &&
                     <EventPlannerDetailsForm parentCallback={onSubmitEventPlannerDetails}/>
                 }
-
+                <ProfilePicture userEmail={email}/>
                 <StyledButton onClick={handleSubmit}>
                     Submit All Details
                 </StyledButton>
